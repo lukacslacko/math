@@ -260,8 +260,13 @@ def _double_neg() -> Phrase:
 
 
 double_neg = _double_neg()
+add_double_neg = contra[A, ~~x][B, x](double_neg[x, ~x])
 
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
 print(double_neg)
+print(add_double_neg)
+
+print("Total unique phrases created:", len(phrases))
+print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
