@@ -50,6 +50,16 @@ class Phrase:
     def __invert__(self) -> "Phrase":
         return neg(self)
 
+    def right(self) -> "Phrase":
+        if self.kind != Kind.IMPL:
+            raise ValueError("right() can only be called on implications")
+        return self.children[1]
+
+    def left(self) -> "Phrase":
+        if self.kind != Kind.IMPL:
+            raise ValueError("left() can only be called on implications")
+        return self.children[0]
+
 
 phrases = {}
 
@@ -107,11 +117,11 @@ def mp(impl_phrase: Phrase, p_phrase: Phrase) -> Phrase:
         raise ValueError(f"mp: second argument must be a known truth {p_phrase}")
     if impl_phrase.kind != Kind.IMPL:
         raise ValueError(f"mp: first argument must be an implication {impl_phrase}")
-    if str(impl_phrase.children[0]) != str(p_phrase):
+    if str(impl_phrase.left()) != str(p_phrase):
         raise ValueError(
-            f"mp: antecedent does not match {impl_phrase.children[0]} != {p_phrase}"
+            f"mp: antecedent does not match {impl_phrase.left()} != {p_phrase}"
         )
-    q_phrase = impl_phrase.children[1]
+    q_phrase = impl_phrase.right()
     q_phrase.is_known_truth = True
     return q_phrase
 
@@ -132,14 +142,15 @@ contra = ((neg(A) >> neg(B)) >> (B >> A)).axiom()
 
 impl_refl = distr[A, x][B, x >> x][C, x](ignore[A, x][B, x >> x])(ignore[A, x][B, x])
 
+
 def _commute_antecedents() -> Phrase:
     xyz = x >> (y >> z)
 
     # Define helper aliases for clarity
-    H = xyz          # x -> (y -> z)
-    Q = x >> y       # x -> y
-    R = x >> z       # x -> z
-    D1 = Q >> R      # (x -> y) -> (x -> z)
+    H = xyz  # x -> (y -> z)
+    Q = x >> y  # x -> y
+    R = x >> z  # x -> z
+    D1 = Q >> R  # (x -> y) -> (x -> z)
 
     # Derivation using the Deduction Theorem algorithm:
     # We want to transform the derivation H |- y -> R into a proof of H -> (y -> R).
@@ -183,7 +194,9 @@ def _commute_antecedents() -> Phrase:
     s_lift3 = distr[A, H][B, y >> Q][C, y >> R]
     return s_lift3(step5)(step6)
 
+
 commute_antecedents = _commute_antecedents()
+
 
 def _chain() -> Phrase:
     Q = x >> y
@@ -196,50 +209,55 @@ def _chain() -> Phrase:
     almost = s5(s2)
     return commute_antecedents[x, X][y, Y][z, Z][X, P][Y, Q][Z, R](almost)
 
+
 chain = _chain()
+
 
 def _double_neg() -> Phrase:
     # 1. Start with K: ~~x -> (~~~~x -> ~~x)
     # A = ~~x, B = ~~~~x
-    step1 = ignore[A, ~ ~ x][B, ~ ~ ~ ~ x]
+    step1 = ignore[A, ~~x][B, ~~~~x]
 
     # 2. Use Contraposition: (~~~~x -> ~~x) -> (~x -> ~~~x)
     # Contra: (~A -> ~B) -> (B -> A)
     # Let A = ~~~x, B = ~x.
     # Then ~A = ~~~~x, ~B = ~~x.
-    step2 = contra[A, ~ ~ ~ x][B, ~ x]
+    step2 = contra[A, ~~~x][B, ~x]
 
     # 3. Chain step1 and step2: ~~x -> (~x -> ~~~x)
     # chain implies (x -> y) -> ((y -> z) -> (x -> z))
     # x = ~~x
     # y = ~~~~x -> ~~x (consequent of step1)
     # z = ~x -> ~~~x (consequent of step2)
-    step3 = chain[x, ~ ~ x][y, step1.children[1]][z, step2.children[1]](step1)(step2)
+    step3 = chain[x, ~~x][y, step1.right()][z, step2.right()](step1)(step2)
 
     # 4. Prepare Contraposition for the final result: (~x -> ~~~x) -> (~~x -> x)
     # Contra: (~A -> ~B) -> (B -> A)
     # Let A = x, B = ~~x.
     # Then ~A = ~x, ~B = ~~~x.
-    target_contra = contra[A, x][B, ~ ~ x]
+    target_contra = contra[A, x][B, ~~x]
 
     # 5. Chain step3 and target_contra: ~~x -> (~~x -> x)
     # x = ~~x
     # y = ~x -> ~~~x (consequent of step3)
     # z = ~~x -> x (consequent of target_contra)
-    step5 = chain[x, ~ ~ x][y, step3.children[1]][z, target_contra.children[1]](step3)(target_contra)
+    step5 = chain[x, ~~x][y, step3.right()][z, target_contra.right()](step3)(
+        target_contra
+    )
 
     # 6. Contraction: Reduce (~~x -> (~~x -> x)) to (~~x -> x)
     # Use S: (A -> (B -> C)) -> ((A -> B) -> (A -> C))
     # A = ~~x, B = ~~x, C = x
-    s_dist = distr[A, ~ ~ x][B, ~ ~ x][C, x]
+    s_dist = distr[A, ~~x][B, ~~x][C, x]
 
     # Apply S to step5 to get: (~~x -> ~~x) -> (~~x -> x)
     step6 = s_dist(step5)
 
     # 7. Eliminate the antecedent (~~x -> ~~x) using Identity
-    id_phrase = impl_refl[x, ~ ~ x]
+    id_phrase = impl_refl[x, ~~x]
 
     return step6(id_phrase)
+
 
 double_neg = _double_neg()
 
