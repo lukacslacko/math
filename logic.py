@@ -6,6 +6,16 @@ class Kind(Enum):
     VAR = "var"
     IMPL = "->"
     NEG = "~"
+    EQ = "="
+    ZERO = "0"
+    SUCC = "S"
+    PLUS = "+"
+    MUL = "*"
+
+
+ARITY_1 = {Kind.NEG, Kind.SUCC}
+ARITY_2 = {Kind.IMPL, Kind.EQ, Kind.PLUS, Kind.MUL}
+EXPRESSION = {Kind.VAR, Kind.ZERO, Kind.SUCC, Kind.PLUS, Kind.MUL}
 
 
 @dataclass
@@ -22,6 +32,16 @@ class Phrase:
             return f"({self.children[0]} -> {self.children[1]})"
         elif self.kind == Kind.NEG:
             return f"~{self.children[0]}"
+        elif self.kind == Kind.EQ:
+            return f"({self.children[0]} = {self.children[1]})"
+        elif self.kind == Kind.ZERO:
+            return "0"
+        elif self.kind == Kind.SUCC:
+            return f"S({self.children[0]})"
+        elif self.kind == Kind.PLUS:
+            return f"({self.children[0]} + {self.children[1]})"
+        elif self.kind == Kind.MUL:
+            return f"({self.children[0]} * {self.children[1]})"
         else:
             raise ValueError(f"Unknown kind {self.kind}")
 
@@ -50,14 +70,35 @@ class Phrase:
     def __invert__(self) -> "Phrase":
         return neg(self)
 
+    def __add__(self, q: "Phrase") -> "Phrase":
+        return plus(self, q)
+
+    def __mul__(self, q: "Phrase") -> "Phrase":
+        return mul(self, q)
+
+    def S(self) -> "Phrase":
+        return succ(self)
+
+    def __eq__(self, q: "Phrase") -> "Phrase":
+        return eq(self, q)
+
     def right(self) -> "Phrase":
-        if self.kind != Kind.IMPL:
-            raise ValueError("right() can only be called on implications")
+        if self.kind not in ARITY_2:
+            raise ValueError(
+                f"right() can only be called on {ARITY_2}, got {self.kind}"
+            )
         return self.children[1]
 
     def left(self) -> "Phrase":
-        if self.kind != Kind.IMPL:
-            raise ValueError("left() can only be called on implications")
+        if self.kind not in ARITY_2:
+            raise ValueError(f"left() can only be called on {ARITY_2}, got {self.kind}")
+        return self.children[0]
+
+    def child(self) -> "Phrase":
+        if self.kind not in ARITY_1:
+            raise ValueError(
+                f"child() can only be called on {ARITY_1}, got {self.kind}"
+            )
         return self.children[0]
 
 
@@ -81,10 +122,42 @@ def make_phrase(
 
 
 def impl(p: Phrase, q: Phrase) -> Phrase:
+    if p.kind in EXPRESSION - {Kind.VAR} or q.kind in EXPRESSION - {Kind.VAR}:
+        raise ValueError(f"impl: both p and q must be propositions, got {p}, {q}")
     return make_phrase(Kind.IMPL, [p, q])
 
 
+def eq(p: Phrase, q: Phrase) -> Phrase:
+    if p.kind not in EXPRESSION or q.kind not in EXPRESSION:
+        raise ValueError(f"eq: both p and q must be expressions, got {p}, {q}")
+    return make_phrase(Kind.EQ, [p, q])
+
+
+def zero() -> Phrase:
+    return make_phrase(Kind.ZERO, [])
+
+
+def succ(p: Phrase) -> Phrase:
+    if p.kind not in EXPRESSION:
+        raise ValueError(f"succ: p must be an expression, got {p}")
+    return make_phrase(Kind.SUCC, [p])
+
+
+def plus(p: Phrase, q: Phrase) -> Phrase:
+    if p.kind not in EXPRESSION or q.kind not in EXPRESSION:
+        raise ValueError(f"plus: both p and q must be expressions, got {p}, {q}")
+    return make_phrase(Kind.PLUS, [p, q])
+
+
+def mul(p: Phrase, q: Phrase) -> Phrase:
+    if p.kind not in EXPRESSION or q.kind not in EXPRESSION:
+        raise ValueError(f"mul: both p and q must be expressions, got {p}, {q}")
+    return make_phrase(Kind.MUL, [p, q])
+
+
 def neg(p: Phrase) -> Phrase:
+    if p.kind in EXPRESSION - {Kind.VAR}:
+        raise ValueError(f"neg: p must be a proposition, got {p}")
     return make_phrase(Kind.NEG, [p])
 
 
@@ -98,7 +171,7 @@ def subs(p: Phrase, x: Phrase, q: Phrase) -> Phrase:
     if x.kind != Kind.VAR:
         raise ValueError(f"subs: x must be a variable, got {x}")
     if p.kind == Kind.VAR:
-        if p == x:
+        if p is x:
             return q
         else:
             return p
@@ -141,6 +214,12 @@ distr = ((A >> (B >> C)) >> ((A >> B) >> (A >> C))).axiom()
 contra = ((neg(A) >> neg(B)) >> (B >> A)).axiom()
 
 impl_refl = distr[A, x][B, x >> x][C, x](ignore[A, x][B, x >> x])(ignore[A, x][B, x])
+
+eq_refl = (A == A).axiom()
+
+
+def eq_subs(x: Phrase, y: Phrase, A: Phrase) -> Phrase:
+    return ((x == y) >> (A >> A[x, y])).axiom()
 
 
 def _commute_antecedents() -> Phrase:
@@ -198,6 +277,16 @@ def _commute_antecedents() -> Phrase:
 commute_antecedents = _commute_antecedents()
 
 
+def commute_ante(s: Phrase) -> Phrase:
+    if s.kind != Kind.IMPL:
+        raise ValueError(f"commute_ante: expected implication, got {s}")
+    if s.right().kind != Kind.IMPL:
+        raise ValueError(f"commute_ante: expected implication as consequent, got {s}")
+    return commute_antecedents[x, X][y, Y][z, Z][X, s.left()][Y, s.right().left()][
+        Z, s.right().right()
+    ](s)
+
+
 def _chain() -> Phrase:
     Q = x >> y
     P = y >> z
@@ -211,6 +300,12 @@ def _chain() -> Phrase:
 
 
 chain = _chain()
+
+
+def deduce(a_impl_b: Phrase, b_impl_c: Phrase) -> Phrase:
+    return chain[x, X][y, Y][z, Z][X, a_impl_b.left()][Y, a_impl_b.right()][
+        Z, b_impl_c.right()
+    ](a_impl_b)(b_impl_c)
 
 
 def _double_neg() -> Phrase:
@@ -262,11 +357,16 @@ def _double_neg() -> Phrase:
 double_neg = _double_neg()
 add_double_neg = contra[A, ~~x][B, x](double_neg[x, ~x])
 
+eq_symm = commute_ante(eq_subs(x, y, x == z)[z, x])(eq_refl[A, x])
+eq_trans = deduce(eq_symm, eq_subs(y, x, y == z))
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
 print(double_neg)
 print(add_double_neg)
+print(eq_symm)
+print(eq_trans)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
