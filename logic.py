@@ -303,6 +303,14 @@ chain = _chain()
 
 
 def deduce(a_impl_b: Phrase, b_impl_c: Phrase) -> Phrase:
+    if a_impl_b.kind != Kind.IMPL:
+        raise ValueError(f"deduce: expected implication, got {a_impl_b}")
+    if b_impl_c.kind != Kind.IMPL:
+        raise ValueError(f"deduce: expected implication, got {b_impl_c}")
+    if str(a_impl_b.right()) != str(b_impl_c.left()):
+        raise ValueError(
+            f"deduce: consequents/antecedents do not match {a_impl_b.right()} != {b_impl_c.left()}"
+        )
     return chain[x, X][y, Y][z, Z][X, a_impl_b.left()][Y, a_impl_b.right()][
         Z, b_impl_c.right()
     ](a_impl_b)(b_impl_c)
@@ -360,6 +368,18 @@ add_double_neg = contra[A, ~~x][B, x](double_neg[x, ~x])
 eq_symm = commute_ante(eq_subs(x, y, x == z)[z, x])(eq_refl[A, x])
 eq_trans = deduce(eq_symm, eq_subs(y, x, y == z))
 
+peano1 = (~(zero() == x.S())).axiom()
+peano2 = ((x.S() == y.S()) >> (x == y)).axiom()
+peano3 = ((x + zero()) == x).axiom()
+peano4 = ((x + y.S()) == (x + y).S()).axiom()
+peano5 = ((x * zero()) == zero()).axiom()
+peano6 = ((x * y.S()) == ((x * y) + x)).axiom()
+
+
+def induction(P: Phrase) -> Phrase:
+    return (P[x, zero()] >> ((P >> P[x, x.S()]) >> P)).axiom()
+
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
@@ -367,6 +387,12 @@ print(double_neg)
 print(add_double_neg)
 print(eq_symm)
 print(eq_trans)
+print(peano1)
+print(peano2)
+print(peano3)
+print(peano4)
+print(peano5)
+print(peano6)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
