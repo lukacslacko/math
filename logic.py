@@ -11,10 +11,11 @@ class Kind(Enum):
     SUCC = "S"
     PLUS = "+"
     MUL = "*"
+    FORALL = "∀"
 
 
 ARITY_1 = {Kind.NEG, Kind.SUCC}
-ARITY_2 = {Kind.IMPL, Kind.EQ, Kind.PLUS, Kind.MUL}
+ARITY_2 = {Kind.IMPL, Kind.EQ, Kind.PLUS, Kind.MUL, Kind.FORALL}
 EXPRESSION = {Kind.VAR, Kind.ZERO, Kind.SUCC, Kind.PLUS, Kind.MUL}
 
 
@@ -27,7 +28,7 @@ class Phrase:
 
     def __str__(self) -> str:
         if self.kind == Kind.VAR:
-            return next(iter(self.free))
+            return self.varname()
         elif self.kind == Kind.IMPL:
             return f"({self.children[0]} -> {self.children[1]})"
         elif self.kind == Kind.NEG:
@@ -42,8 +43,15 @@ class Phrase:
             return f"({self.children[0]} + {self.children[1]})"
         elif self.kind == Kind.MUL:
             return f"({self.children[0]} * {self.children[1]})"
+        elif self.kind == Kind.FORALL:
+            return f"(∀{self.children[0]} {self.children[1]})"
         else:
             raise ValueError(f"Unknown kind {self.kind}")
+
+    def varname(self) -> str:
+        if self.kind != Kind.VAR:
+            raise ValueError(f"varname: expected variable, got {self}")
+        return next(iter(self.free))
 
     def axiom(self) -> "Phrase":
         self.is_known_truth = True
@@ -64,8 +72,10 @@ class Phrase:
     def __rshift__(self, q: "Phrase") -> "Phrase":
         return impl(self, q)
 
-    def __call__(self, p_phrase: "Phrase") -> "Phrase":
-        return mp(self, p_phrase)
+    def __call__(self, arg: "Phrase") -> "Phrase":
+        if self.kind == Kind.IMPL:
+            return mp(self, arg)
+        raise ValueError(f"Cannot call phrase of kind {self.kind}")
 
     def __invert__(self) -> "Phrase":
         return neg(self)
@@ -81,6 +91,15 @@ class Phrase:
 
     def __eq__(self, q: "Phrase") -> "Phrase":
         return eq(self, q)
+
+    def forall(self, v: "Phrase") -> "Phrase":
+        if v.kind != Kind.VAR:
+            raise ValueError(f"forall: v must be a variable, got {v}")
+        if self.kind in EXPRESSION - {Kind.VAR}:
+            raise ValueError(f"forall: self must be a proposition, got {self}")
+        phrase = make_phrase(Kind.FORALL, [v, self], is_known_truth=self.is_known_truth)
+        phrase.free.discard(v.varname())
+        return phrase
 
     def right(self) -> "Phrase":
         if self.kind not in ARITY_2:
@@ -175,12 +194,14 @@ def subs(p: Phrase, x: Phrase, q: Phrase) -> Phrase:
             return q
         else:
             return p
-    else:
-        new_children = [subs(child, x, q) for child in p.children]
-        new_free = set()
-        for child in new_children:
-            new_free.update(child.free)
-        return make_phrase(p.kind, new_children, is_known_truth=p.is_known_truth)
+    if p.kind == Kind.FORALL:
+        if p.left() is x:
+            return p
+    new_children = [subs(child, x, q) for child in p.children]
+    new_free = set()
+    for child in new_children:
+        new_free.update(child.free)
+    return make_phrase(p.kind, new_children, is_known_truth=p.is_known_truth)
 
 
 def mp(impl_phrase: Phrase, p_phrase: Phrase) -> Phrase:
@@ -197,6 +218,34 @@ def mp(impl_phrase: Phrase, p_phrase: Phrase) -> Phrase:
     q_phrase = impl_phrase.right()
     q_phrase.is_known_truth = True
     return q_phrase
+
+
+def forall_elim(forall_phrase: Phrase, term: Phrase) -> Phrase:
+    if forall_phrase.kind != Kind.FORALL:
+        raise ValueError(
+            f"forall_elim: first argument must be a universal quantification {forall_phrase}"
+        )
+    var_phrase = forall_phrase.left()
+    body_phrase = forall_phrase.right()
+    return (forall_phrase >> subs(body_phrase, var_phrase, term)).axiom()
+
+
+def forall_permute(forall_phrase: Phrase) -> Phrase:
+    if forall_phrase.kind != Kind.FORALL:
+        raise ValueError(
+            f"forall_permute: argument must be a universal quantification {forall_phrase}"
+        )
+    inner = forall_phrase.right()
+    if inner.kind != Kind.IMPL:
+        raise ValueError(f"forall_permute: inner must be an implication {inner}")
+    var = forall_phrase.left()
+    A = inner.left()
+    B = inner.right()
+    if var.varname() in A.free:
+        raise ValueError(
+            f"forall_permute: variable {var} occurs free in antecedent {A}"
+        )
+    return (forall_phrase >> (A >> forall_phrase.right().forall(var))).axiom()
 
 
 A = var("A")
@@ -380,6 +429,22 @@ def induction(P: Phrase) -> Phrase:
     return (P[x, zero()] >> ((P >> P[x, x.S()]) >> P)).axiom()
 
 
+def _zero_plus_x_eq_x() -> Phrase:
+    P = (zero() + x) == x
+    i = induction(P)
+    step = i(peano3[x, zero()])
+    a = peano4[x, zero()][y, x]
+    aa = eq_trans[x, zero() + x.S()][y, (zero() + x).S()][z, x.S()](a)
+    b = commute_ante(eq_subs(x, zero() + x, x.S() == y.S())[y, x])(eq_refl[A, x.S()])
+    c = eq_symm[x, zero() + x][y, x]
+    d = deduce(c, b)
+    e = deduce(d, aa)
+    f = step(e)
+    return f
+
+zero_plus_x_eq_x = _zero_plus_x_eq_x()
+
+print(zero_plus_x_eq_x)
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
