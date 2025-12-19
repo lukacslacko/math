@@ -517,20 +517,62 @@ def _plus_comm() -> Phrase:
 plus_comm = _plus_comm()
 
 
+def plus_comm_left(p: Phrase) -> Phrase:
+    if p.kind != Kind.EQ:
+        raise ValueError(f"plus_comm_left: expected equality, got {p}")
+    left = p.left()
+    if left.kind != Kind.PLUS:
+        raise ValueError(f"plus_comm_left: expected plus on left side, got {left}")
+    a = plus_comm[x, X][y, Y][X, left.left()][Y, left.right()]
+    b = eq_chain(eq_flip(a), p)
+    return b
+
+
 def _zero_mul_x_eq_zero() -> Phrase:
     P = (zero() * x) == zero()
     i = induction(P, x)
     step = i(peano5[x, zero()])
-    print(step.left())
     a = peano6[x, X][y, Y][X, zero()][Y, x]
     b = peano3[x, X][X, zero() * x]
     c = eq_chain(a, b)
-    print(c)
-    d = eq_subs(x, y, x == zero())[x, X][y, Y][Y, zero() * x.S()][X, zero() * x](eq_flip(c))
+    d = eq_subs(x, y, x == zero())[x, X][y, Y][Y, zero() * x.S()][X, zero() * x](
+        eq_flip(c)
+    )
     return step(d)
 
 
 zero_mul_x_eq_zero = _zero_mul_x_eq_zero()
+
+one = zero().S()
+
+
+def _x_plus_one_eq_Sx() -> Phrase:
+    P = (x + one) == x.S()
+    i = induction(P, x)(zero_plus_x_eq_x[x, one])
+    c = plus_comm_left(peano4[x, X][y, Y][X, one][Y, x])
+    a = plus_comm[y, one]
+    b = x_eq_y_impl_Sx_eq_Sy[x, X][y, Y][X, x + one][Y, one + x](a)
+    d = eq_chain(c, b)
+    e = eq_subs(X, Y, x.S() + one == X.S())[X, x + one][Y, x.S()]
+    f = commute_ante(e)(d)
+    return i(f)
+
+
+x_plus_one_eq_Sx = _x_plus_one_eq_Sx()
+
+
+def _one_mul_x_eq_x() -> Phrase:
+    P = (one * x) == x
+    step = induction(P, x)(peano5[x, one])
+    a = peano6[x, X][y, Y][X, one][Y, x]
+    b = x_plus_one_eq_Sx[x, one * x]
+    c = eq_chain(a, b)
+    d = eq_subs(X, Y, one * x.S() == X.S())[X, one * x][Y, x]
+    e = commute_ante(d)(c)
+    return step(e)
+
+
+one_mul_x_eq_x = _one_mul_x_eq_x()
 
 print(commute_antecedents)
 print(impl_refl)
@@ -550,6 +592,8 @@ print(zero_plus_x_eq_x)
 print(Sx_plus_y_eq_Sx_plus_y)
 print(plus_comm)
 print(zero_mul_x_eq_zero)
+print(x_plus_one_eq_Sx)
+print(one_mul_x_eq_x)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
