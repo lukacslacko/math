@@ -516,6 +516,22 @@ def _plus_comm() -> Phrase:
 
 plus_comm = _plus_comm()
 
+
+def _zero_mul_x_eq_zero() -> Phrase:
+    P = (zero() * x) == zero()
+    i = induction(P, x)
+    step = i(peano5[x, zero()])
+    print(step.left())
+    a = peano6[x, X][y, Y][X, zero()][Y, x]
+    b = peano3[x, X][X, zero() * x]
+    c = eq_chain(a, b)
+    print(c)
+    d = eq_subs(x, y, x == zero())[x, X][y, Y][Y, zero() * x.S()][X, zero() * x](eq_flip(c))
+    return step(d)
+
+
+zero_mul_x_eq_zero = _zero_mul_x_eq_zero()
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
@@ -533,6 +549,7 @@ print(x_eq_y_impl_Sx_eq_Sy)
 print(zero_plus_x_eq_x)
 print(Sx_plus_y_eq_Sx_plus_y)
 print(plus_comm)
+print(zero_mul_x_eq_zero)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
