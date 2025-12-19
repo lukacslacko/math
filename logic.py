@@ -417,6 +417,25 @@ add_double_neg = contra[A, ~~x][B, x](double_neg[x, ~x])
 eq_symm = commute_ante(eq_subs(x, y, x == z)[z, x])(eq_refl[A, x])
 eq_trans = deduce(eq_symm, eq_subs(y, x, y == z))
 
+
+def eq_flip(p: Phrase) -> Phrase:
+    if p.kind != Kind.EQ:
+        raise ValueError(f"eq_flip: expected equality, got {p}")
+    return eq_symm[x, X][y, Y][X, p.left()][Y, p.right()](p)
+
+
+def eq_chain(p: Phrase, q: Phrase) -> Phrase:
+    if p.kind != Kind.EQ:
+        raise ValueError(f"eq_chain: expected equality for p, got {p}")
+    if q.kind != Kind.EQ:
+        raise ValueError(f"eq_chain: expected equality for q, got {q}")
+    if str(p.right()) != str(q.left()):
+        raise ValueError(
+            f"eq_chain: consequents/antecedents do not match {p.right()} != {q.left()}"
+        )
+    return eq_trans[x, X][y, Y][z, Z][X, p.left()][Y, p.right()][Z, q.right()](p)(q)
+
+
 peano1 = (~(zero() == x.S())).axiom()
 peano2 = ((x.S() == y.S()) >> (x == y)).axiom()
 peano3 = ((x + zero()) == x).axiom()
@@ -425,26 +444,78 @@ peano5 = ((x * zero()) == zero()).axiom()
 peano6 = ((x * y.S()) == ((x * y) + x)).axiom()
 
 
-def induction(P: Phrase) -> Phrase:
-    return (P[x, zero()] >> ((P >> P[x, x.S()]) >> P)).axiom()
+def induction(P: Phrase, v: Phrase) -> Phrase:
+    if v.kind != Kind.VAR:
+        raise ValueError(f"induction: v must be a variable, got {v}")
+    return (P[v, zero()] >> ((P >> P[v, v.S()]) >> P)).axiom()
+
+
+x_eq_y_impl_Sx_eq_Sy = commute_ante(eq_subs(x, y, x.S() == z.S())[z, x])(
+    eq_refl[A, x.S()]
+)
 
 
 def _zero_plus_x_eq_x() -> Phrase:
     P = (zero() + x) == x
-    i = induction(P)
+    i = induction(P, x)
     step = i(peano3[x, zero()])
     a = peano4[x, zero()][y, x]
     aa = eq_trans[x, zero() + x.S()][y, (zero() + x).S()][z, x.S()](a)
-    b = commute_ante(eq_subs(x, zero() + x, x.S() == y.S())[y, x])(eq_refl[A, x.S()])
+    b = x_eq_y_impl_Sx_eq_Sy[y, zero() + x]
     c = eq_symm[x, zero() + x][y, x]
     d = deduce(c, b)
     e = deduce(d, aa)
     f = step(e)
     return f
 
+
 zero_plus_x_eq_x = _zero_plus_x_eq_x()
 
-print(zero_plus_x_eq_x)
+
+def _Sx_plus_y_eq_Sx_plus_y() -> Phrase:
+    P = (x.S() + y) == (x + y).S()
+    i = induction(P, y)
+    a = peano3[x, x.S()]
+    b = eq_subs(x, x + zero(), x.S() == z.S())[z, x](eq_flip(peano3))(eq_refl[A, x.S()])
+    c = eq_chain(a, eq_flip(b))
+    step = i(c)
+    d = peano4[x, x.S()][y, y]
+    e = x_eq_y_impl_Sx_eq_Sy[x, X][y, Y][X, peano4.left()][Y, peano4.right()](peano4)
+    f = x_eq_y_impl_Sx_eq_Sy[x, X][y, Y][X, x.S() + y][Y, (x + y).S()]
+    g = eq_trans[x, X][y, Y][z, Z][X, (x + y).S().S()][Y, (x.S() + y).S()][
+        Z, x.S() + y.S()
+    ]
+    h = commute_ante(deduce(f, g))(eq_flip(d))
+    j = deduce(h, eq_symm[x, X][y, Y][X, h.right().left()][Y, h.right().right()])
+    k = eq_trans[x, X][y, Y][z, Z][X, x.S() + y.S()][Y, (x + y).S().S()][
+        Z, (x + y.S()).S()
+    ]
+    m = deduce(j, k)
+    n = commute_ante(m)(e)
+    return step(n)
+
+
+Sx_plus_y_eq_Sx_plus_y = _Sx_plus_y_eq_Sx_plus_y()
+
+
+def _plus_comm() -> Phrase:
+    P = (x + y) == (y + x)
+    i = induction(P, y)(eq_chain(peano3, eq_flip(zero_plus_x_eq_x)))
+    a = peano4
+    c = x_eq_y_impl_Sx_eq_Sy[x, X][y, Y][X, x + y][Y, y + x]
+    d = eq_trans[x, X][y, Y][z, Z][X, (y + x).S()][Y, (x + y).S()][Z, x + y.S()]
+    e = deduce(c, d)
+    f = commute_ante(e)(eq_flip(a))
+    h = eq_symm[x, X][y, Y][X, f.right().left()][Y, f.right().right()]
+    j = deduce(f, h)
+    g = eq_flip(Sx_plus_y_eq_Sx_plus_y[x, X][y, Y][X, y][Y, x])
+    k = eq_trans[x, X][y, Y][z, Z][X, x + y.S()][Y, (y + x).S()][Z, y.S() + x]
+    m = commute_ante(deduce(j, k))(g)
+    return i(m)
+
+
+plus_comm = _plus_comm()
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
@@ -458,6 +529,10 @@ print(peano3)
 print(peano4)
 print(peano5)
 print(peano6)
+print(x_eq_y_impl_Sx_eq_Sy)
+print(zero_plus_x_eq_x)
+print(Sx_plus_y_eq_Sx_plus_y)
+print(plus_comm)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
