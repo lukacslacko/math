@@ -245,7 +245,7 @@ def forall_permute(forall_phrase: Phrase) -> Phrase:
         raise ValueError(
             f"forall_permute: variable {var} occurs free in antecedent {A}"
         )
-    return (forall_phrase >> (A >> forall_phrase.right().forall(var))).axiom()
+    return (forall_phrase >> (A >> B.forall(var))).axiom()
 
 
 A = var("A")
