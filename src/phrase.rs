@@ -186,7 +186,6 @@ impl PhraseData {
         consequent.clone().assert_axiom();
         Ok(consequent.clone())
     }
-    // TODO: forall_elim, forall_permute
 }
 
 pub fn make_logic_variable(name: String) -> Result {
