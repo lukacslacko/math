@@ -528,6 +528,72 @@ def plus_comm_left(p: Phrase) -> Phrase:
     return b
 
 
+def plus_comm_right(p: Phrase) -> Phrase:
+    return eq_flip(plus_comm_left(eq_flip(p)))
+
+
+def _x_eq_y_impl_x_plus_z_eq_y_plus_z() -> Phrase:
+    a = eq_subs(y, x, y + z == X + z)[X, y]
+    b = commute_ante(a)(eq_refl[A, y + z])
+    c = deduce(eq_symm, b)
+    return c
+
+
+x_eq_y_impl_x_plus_z_eq_y_plus_z = _x_eq_y_impl_x_plus_z_eq_y_plus_z()
+
+
+def _x_impl_y_eq_z_impl_x_impl_z_eq_y() -> Phrase:
+    a = ignore[A, eq_symm[x, X][y, Y][X, y][Y, z]][B, x](
+        eq_symm[x, X][y, Y][X, y][Y, z]
+    )
+    b = distr[A, x][B, y == z][C, z == y](a)
+    return b
+
+
+x_impl_y_eq_z_impl_x_impl_z_eq_y = _x_impl_y_eq_z_impl_x_impl_z_eq_y()
+
+
+def _plus_assoc() -> Phrase:
+    P = ((x + y) + z) == (x + (y + z))
+    i = induction(P, z)
+    a = peano3[x, x + y]
+    b = plus_comm_left(
+        x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, y][Y, y + zero()][Z, x](
+            eq_flip(peano3[x, y])
+        )
+    )
+    c = plus_comm_right(eq_chain(a, b))
+    step = i(c)
+
+    d = peano4[x, X][y, Y][X, x + y][Y, z]
+    e = commute_ante(
+        eq_subs(X, Y, X.S() == Z.S())[Z, X][X, (x + y) + z][Y, x + (y + z)]
+    )(eq_refl[A, ((x + y) + z).S()])
+    f = x_impl_y_eq_z_impl_x_impl_z_eq_y[x, X][y, Y][z, Z][X, e.left()][
+        Y, e.right().left()
+    ][Z, e.right().right()](e)
+    g = eq_trans[x, X][y, Y][z, Z][X, d.left()][Y, d.right()][Z, f.right().right()](d)
+    h = deduce(f, g)
+    j = eq_flip(peano4[y, y + z])
+    k = peano4[x, X][y, Y][X, y][Y, z]
+    m = plus_comm_right(
+        plus_comm_left(
+            x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, (y + z).S()][
+                Y, y + z.S()
+            ][Z, x](eq_flip(k))
+        )
+    )
+    n = eq_chain(j, m)
+    p = eq_trans[x, X][y, Y][z, Z][X, h.right().left()][Y, h.right().right()][
+        Z, n.right()
+    ]
+    q = commute_ante(deduce(h, p))(n)
+    return step(q)
+
+
+plus_assoc = _plus_assoc()
+
+
 def _zero_mul_x_eq_zero() -> Phrase:
     P = (zero() * x) == zero()
     i = induction(P, x)
@@ -574,6 +640,89 @@ def _one_mul_x_eq_x() -> Phrase:
 
 one_mul_x_eq_x = _one_mul_x_eq_x()
 
+
+def _Sx_mul_y_eq_x_mul_y_plus_y() -> Phrase:
+    P = (x.S() * y) == ((x * y) + y)
+    i = induction(P, y)
+    a = peano5[x, x.S()]
+    b = peano5
+    c = peano3[x, x * zero()]
+    d = eq_chain(c, b)
+    e = eq_chain(a, eq_flip(d))
+    f = i(e)
+    g = eq_flip(peano6[x, x.S()])
+    h = peano6
+    j = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, x.S() * y][
+        Y, (x * y) + y
+    ][Z, x.S()]
+    k = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, x * y.S()][
+        Y, (x * y) + x
+    ][Z, y.S()](h)
+    m = deduce(j, eq_symm[x, X][y, Y][X, j.right().left()][Y, j.right().right()])
+    n = commute_ante(
+        deduce(
+            m,
+            eq_trans[x, X][y, Y][z, Z][X, m.right().left()][Y, m.right().right()][
+                Z, g.right()
+            ],
+        )
+    )(g)
+    p = x_impl_y_eq_z_impl_x_impl_z_eq_y[x, X][y, Y][z, Z][X, n.left()][
+        Y, n.right().left()
+    ][Z, n.right().right()](n)
+
+    k2 = plus_comm_left(
+        x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, y.S()][Y, y + one][
+            Z, (x * y) + x
+        ](eq_flip(x_plus_one_eq_Sx[x, y]))
+    )
+    k3 = plus_comm_right(eq_chain(k, k2))
+    k4 = plus_assoc[x, X][y, Y][z, Z][X, x * y][Y, x][Z, y + one]
+    k5 = eq_chain(k3, k4)
+
+    ka = plus_assoc[y, one][z, y]
+    kb = eq_subs(X, Y, (x + one) + y == x + X)[X, one + y][Y, y + one](
+        plus_comm[x, one]
+    )(ka)
+    kc = plus_comm_left(
+        plus_comm_right(
+            x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][Z, x * y][X, kb.left()][
+                Y, kb.right()
+            ](kb)
+        )
+    )
+    k6 = eq_chain(kc, eq_flip(k5))
+
+    k7 = plus_comm_left(plus_assoc[x, X][y, Y][z, Z][X, x * y][Y, y][Z, x + one])
+
+    m = plus_comm[x, X][y, Y][X, y][Y, x + one]
+    n = plus_comm_right(
+        plus_comm_left(
+            x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, m.left()][
+                Y, m.right()
+            ][Z, x * y](m)
+        )
+    )
+    n1 = eq_chain(n, k6)
+    n2 = eq_chain(k7, n1)
+
+    q = plus_comm_left(
+        x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, x.S()][Y, x + one][
+            Z, (x * y) + y
+        ](eq_flip(x_plus_one_eq_Sx))
+    )
+    r = eq_trans[x, X][y, Y][z, Z][X, p.right().left()][Y, p.right().right()][
+        Z, q.right()
+    ]
+    s = commute_ante(deduce(p, r))(q)
+    t = eq_trans[x, X][y, Y][z, Z][X, s.right().left()][Y, s.right().right()][Z, n2.right()]
+    u = commute_ante(deduce(s, t))(n2)
+    return f(u)
+
+
+Sx_mul_y_eq_x_mul_y_plus_y = _Sx_mul_y_eq_x_mul_y_plus_y()
+
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
@@ -594,6 +743,11 @@ print(plus_comm)
 print(zero_mul_x_eq_zero)
 print(x_plus_one_eq_Sx)
 print(one_mul_x_eq_x)
+print(x_eq_y_impl_x_plus_z_eq_y_plus_z)
+print(x_impl_y_eq_z_impl_x_impl_z_eq_y)
+print(plus_assoc)
+print(Sx_mul_y_eq_x_mul_y_plus_y)
+
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
