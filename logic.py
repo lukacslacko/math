@@ -77,6 +77,11 @@ class Phrase:
             return mp(self, arg)
         raise ValueError(f"Cannot call phrase of kind {self.kind}")
 
+    def mp(self) -> "Phrase":
+        if self.kind != Kind.IMPL:
+            raise ValueError(f"mp: expected implication, got {self}")
+        return mp(self, self.left())
+
     def __invert__(self) -> "Phrase":
         return neg(self)
 
@@ -254,9 +259,11 @@ C = var("C")
 x = var("x")
 y = var("y")
 z = var("z")
+w = var("w")
 X = var("X")
 Y = var("Y")
 Z = var("Z")
+W = var("W")
 
 ignore = (A >> (B >> A)).axiom()
 distr = ((A >> (B >> C)) >> ((A >> B) >> (A >> C))).axiom()
@@ -754,6 +761,83 @@ def _mul_comm() -> Phrase:
 
 mul_comm = _mul_comm()
 
+
+def sum_of_eq_eq(eq1: Phrase, eq2: Phrase) -> Phrase:
+    if eq1.kind != Kind.EQ:
+        raise ValueError(f"sum_of_eq_eq: expected equality for eq1, got {eq1}")
+    if eq2.kind != Kind.EQ:
+        raise ValueError(f"sum_of_eq_eq: expected equality for eq2, got {eq2}")
+    a = eq1.left()
+    b = eq1.right()
+    c = eq2.left()
+    d = eq2.right()
+    e = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, a][Y, b][Z, c](eq1)
+    f = plus_comm_left(
+        plus_comm_right(
+            x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, c][Y, d][Z, b](eq2)
+        )
+    )
+    return eq_chain(e, f)
+
+
+def plus_four_terms() -> Phrase:
+    a = plus_assoc[x, X][y, Y][z, Z]
+    b = plus_comm_right(a[X, x][Y, y][Z, z + w])
+    c = plus_comm_right(a[X, x][Y, z][Z, y + w])
+    d = a[X, y][Y, z][Z, w]
+    e = a[X, z][Y, y][Z, w]
+    eq_flip(plus_comm[x, z])
+    g = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, y + z][Y, z + y][
+        Z, w
+    ].mp()
+    eq_chain(eq_chain(eq_flip(d), g), e)
+    h = ((X == Y) >> (X + Z == Y + Z))[X, y + (z + w)][Y, z + (y + w)][Z, x].mp()
+    return eq_chain(eq_chain(b, h), eq_flip(c))[x, X][y, Y][z, Z][w, W]
+
+
+plus_four_terms()
+
+
+def _mul_distr() -> Phrase:
+    P = (x + y) * z == (x * z) + (y * z)
+    i = induction(P, z)
+    a = peano5[x, x + y]
+    b = eq_subs(X, Y, (x * zero()) + X == zero())[X, zero()][Y, y * zero()](
+        eq_flip(peano5[x, y])
+    )(eq_chain(peano3[x, x * zero()], peano5))
+    step = i(eq_chain(a, eq_flip(b)))
+
+    c = peano6[x, X][y, Y][X, x + y][Y, z]
+    d1 = peano6[y, z]
+    d2 = peano6[y, z][x, y]
+    e = sum_of_eq_eq(d1, d2)
+
+    start = step.left().left()
+    s1 = eq_symm[x, X][y, Y][X, start.left()][Y, start.right()]
+    s2 = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, s1.right().left()][
+        Y, s1.right().right()
+    ][Z, x + y]
+    s3 = deduce(s1, s2)
+    s4 = deduce(
+        s3,
+        eq_trans[x, X][y, Y][z, Z][X, s3.right().left()][Y, s3.right().right()][
+            Z, c.left()
+        ],
+    )
+    s5 = commute_ante(s4)(eq_flip(c))
+    s6 = ((X + Y) + (Z + W) == (X + Z) + (Y + W))[X, x * z][Y, y * z][Z, x][W, y]
+    s7 = eq_chain(s6, eq_flip(e))
+    s8 = ((x == y) >> ((x == z) >> (y == z)))[x, X][y, Y][z, Z][X, s5.right().left()][
+        Y, s5.right().right()
+    ][Z, s7.right()]
+    s9 = deduce(s5, s8)
+    s10 = commute_ante(s9)(s7)
+
+    return step(s10)
+
+
+mul_distr = _mul_distr()
+
 print(commute_antecedents)
 print(impl_refl)
 print(chain)
@@ -779,6 +863,7 @@ print(x_impl_y_eq_z_impl_x_impl_z_eq_y)
 print(plus_assoc)
 print(Sx_mul_y_eq_x_mul_y_plus_y)
 print(mul_comm)
+print(mul_distr)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
