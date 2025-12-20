@@ -760,6 +760,7 @@ def _mul_comm() -> Phrase:
 
 
 mul_comm = _mul_comm()
+mul_comm[x, X][y, Y]
 
 
 def sum_of_eq_eq(eq1: Phrase, eq2: Phrase) -> Phrase:
@@ -837,6 +838,48 @@ def _mul_distr() -> Phrase:
 
 
 mul_distr = _mul_distr()
+mul_distr[x, x][y, y][z, z]
+
+
+def _mul_distr_left() -> Phrase:
+    a = (X * Y == Y * X)[X, x + y][Y, z]
+    b = (X * Y == Y * X)[X, x][Y, z]
+    c = (X * Y == Y * X)[X, y][Y, z]
+    d = sum_of_eq_eq(b, c)
+    e = eq_chain(eq_chain(eq_flip(a), mul_distr), d)
+    return e[x, X][y, Y][z, Z]
+
+
+mul_distr_left = _mul_distr_left()
+
+mul_eq_eq = commute_ante(eq_subs(z, y, x * z == x * w)[w, z])(eq_refl[A, x * z])[x, X][
+    y, Y
+][z, Z]
+
+
+def mul_assoc() -> Phrase:
+    P = (x * (y * z)) == ((x * y) * z)
+    i = induction(P, z)
+    a = peano5[x, x * y]
+    c = eq_subs(X, Y, x * X == zero())[X, zero()][Y, y * zero()].mp().mp()
+    eq_chain(c, eq_flip(a))
+    i = i.mp()
+
+    d = ((X * Y.S()) == ((X * Y) + X))[X, x * y][Y, z]
+    eq_flip(((X * Y.S()) == ((X * Y) + X))[X, y][Y, z])
+    f = mul_eq_eq[X, x][Y, y * z.S()][Z, (y * z) + y].mp()
+    g = (Z * (X + Y) == (Z * X) + (Z * Y))[Z, x][X, y * z][Y, y]
+    h = eq_chain(f, g)
+    j = ((X == Y) >> (X + Z == Y + Z))[X, x * (y * z)][Y, (x * y) * z][Z, x * y]
+    k = (X == Y) >> ((Y == Z) >> (X == Z))
+    k1 = k[X, ((x * (y * z)) + (x * y))][Y, ((x * y) * z) + (x * y)][Z, (x * y) * z.S()]
+    k2 = commute_ante(deduce(j, k1))(eq_flip(d))
+    k4 = k[X, x * (y * z.S())][Y, (x * (y * z)) + (x * y)][Z, (x * y) * z.S()](h)
+    k5 = deduce(k2, k4)
+    return i(k5)
+
+
+mul_assoc = mul_assoc()
 
 print(commute_antecedents)
 print(impl_refl)
@@ -864,6 +907,7 @@ print(plus_assoc)
 print(Sx_mul_y_eq_x_mul_y_plus_y)
 print(mul_comm)
 print(mul_distr)
+print(mul_assoc)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
