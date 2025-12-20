@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
 
@@ -8,6 +9,7 @@ thread_local! {
 }
 
 pub type Phrase = Rc<PhraseData>;
+pub type Result = std::result::Result<Phrase, Box<dyn Error>>;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum PhraseKind {
@@ -135,33 +137,85 @@ impl PhraseData {
     pub fn is_proposition(&self) -> bool {
         matches!(self.kind, LogicVariable | Imply | Not | Equals | Quantify)
     }
+    pub fn assert_axiom(self: Phrase) {
+        KNOWN_TRUTHS.with_borrow_mut(|known_truths| known_truths.insert(self));
+    }
+    pub fn substitute(self: Phrase, variable: Phrase, term: Phrase) -> Result {
+        match variable.kind {
+            LogicVariable if term.is_proposition() => {}
+            NumericVariable if term.is_numeric() => {}
+            _ => Err("substitute")?,
+        }
+        let new = if self == variable {
+            variable
+        } else if matches!(self.children, Children::Zero()) {
+            self.clone()
+        } else {
+            Rc::new(PhraseData {
+                kind: self.kind,
+                children: match &self.children {
+                    Children::Zero() => Children::Zero(),
+                    Children::One(child) => {
+                        Children::One(child.clone().substitute(variable, term)?)
+                    }
+                    Children::Two(left, right) => Children::Two(
+                        left.clone()
+                            .substitute(variable.clone(), term.clone())?,
+                        right.clone().substitute(variable, term)?,
+                    ),
+                },
+                variable_name: self.variable_name.clone(),
+            })
+        };
+        if self.get_is_proven() {
+            new.clone().assert_axiom();
+        }
+        Ok(new)
+    }
+    pub fn modus_ponens(self: Phrase) -> Result {
+        if self.kind != Imply {
+            Err("modus_ponens not implication")?
+        }
+        let (antecedent, consequent) = self.children.unwrap_two();
+        if !antecedent.get_is_proven() {
+            Err("modus_ponens antecedent not proven")?
+        }
+        if !self.get_is_proven() {
+            Err("modus_ponens implication not proven")?
+        }
+        consequent.clone().assert_axiom();
+        Ok(consequent.clone())
+    }
+    // TODO: forall_elim, forall_permute
 }
 
-pub fn make_logic_variable(name: String) -> Option<Phrase> {
+pub fn make_logic_variable(name: String) -> Result {
     if !name.starts_with('%') {
-        return None;
+        Err("make_logic_variable")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: LogicVariable,
         children: Children::Zero(),
         variable_name: Some(name),
     }))
 }
 
-pub fn make_numeric_variable(name: String) -> Option<Phrase> {
+pub fn make_numeric_variable(name: String) -> Result {
     if name.starts_with('%') {
-        return None;
+        Err("make_numeric_variable")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: NumericVariable,
         children: Children::Zero(),
         variable_name: Some(name),
     }))
 }
 
-pub fn make_numeric_constant_zero(name: String) -> Option<Phrase> {
-    assert_eq!(name, "0");
-    Some(Rc::new(PhraseData {
+pub fn make_numeric_constant_zero(name: String) -> Result {
+    if name != "0" {
+        Err("make_numeric_constant_zero")?
+    }
+    Ok(Rc::new(PhraseData {
         kind: NumericConstant,
         children: Children::Zero(),
         variable_name: Some(name),
@@ -170,77 +224,77 @@ pub fn make_numeric_constant_zero(name: String) -> Option<Phrase> {
 
 // TODO: witness
 
-pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Option<Phrase> {
+pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Result {
     if !antecedent.is_proposition() || !consequent.is_proposition() {
-        return None;
+        Err("make_imply")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Imply,
         children: Children::Two(antecedent, consequent),
         variable_name: None,
     }))
 }
 
-pub fn make_not(negand: Phrase) -> Option<Phrase> {
+pub fn make_not(negand: Phrase) -> Result {
     if !negand.is_proposition() {
-        return None;
+        Err("make_not")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Not,
         children: Children::One(negand),
         variable_name: None,
     }))
 }
 
-pub fn make_equals(left: Phrase, right: Phrase) -> Option<Phrase> {
+pub fn make_equals(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        return None;
+        Err("make_equals")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Equals,
         children: Children::Two(left, right),
         variable_name: None,
     }))
 }
 
-pub fn make_successor(number: Phrase) -> Option<Phrase> {
+pub fn make_successor(number: Phrase) -> Result {
     if !number.is_numeric() {
-        return None;
+        Err("make_successor")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Successor,
         children: Children::One(number),
         variable_name: None,
     }))
 }
 
-pub fn make_add(left: Phrase, right: Phrase) -> Option<Phrase> {
+pub fn make_add(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        return None;
+        Err("make_add")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Add,
         children: Children::Two(left, right),
         variable_name: None,
     }))
 }
 
-pub fn make_multiply(left: Phrase, right: Phrase) -> Option<Phrase> {
+pub fn make_multiply(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        return None;
+        Err("make_multiply")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Multiply,
         children: Children::Two(left, right),
         variable_name: None,
     }))
 }
 
-pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Option<Phrase> {
+pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
     if variable.kind != NumericVariable || !predicate.is_proposition() {
-        return None;
+        Err("make_quantify")?
     }
-    Some(Rc::new(PhraseData {
+    Ok(Rc::new(PhraseData {
         kind: Quantify,
         children: Children::Two(variable, predicate),
         variable_name: None,
