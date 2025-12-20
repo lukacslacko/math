@@ -715,13 +715,44 @@ def _Sx_mul_y_eq_x_mul_y_plus_y() -> Phrase:
         Z, q.right()
     ]
     s = commute_ante(deduce(p, r))(q)
-    t = eq_trans[x, X][y, Y][z, Z][X, s.right().left()][Y, s.right().right()][Z, n2.right()]
+    t = eq_trans[x, X][y, Y][z, Z][X, s.right().left()][Y, s.right().right()][
+        Z, n2.right()
+    ]
     u = commute_ante(deduce(s, t))(n2)
     return f(u)
 
 
 Sx_mul_y_eq_x_mul_y_plus_y = _Sx_mul_y_eq_x_mul_y_plus_y()
 
+
+def _mul_comm() -> Phrase:
+    P = (x * y) == (y * x)
+    i = induction(P, y)(eq_chain(peano5, eq_flip(zero_mul_x_eq_zero)))
+    a = peano6
+    b = Sx_mul_y_eq_x_mul_y_plus_y[x, X][y, Y][X, y][Y, x]
+    c = x_eq_y_impl_x_plus_z_eq_y_plus_z[x, X][y, Y][z, Z][X, x * y][Y, y * x][Z, x]
+    c1 = x_impl_y_eq_z_impl_x_impl_z_eq_y[x, X][y, Y][z, Z][X, c.left()][
+        Y, c.right().left()
+    ][Z, c.right().right()](c)
+    d = commute_ante(
+        eq_trans[x, X][y, Y][z, Z][X, c.right().right()][Y, c.right().left()][
+            Z, a.left()
+        ]
+    )(eq_flip(a))
+    e = deduce(c1, d)
+    e1 = x_impl_y_eq_z_impl_x_impl_z_eq_y[x, X][y, Y][z, Z][X, e.left()][
+        Y, e.right().left()
+    ][Z, e.right().right()](e)
+    f = commute_ante(
+        eq_trans[x, X][y, Y][z, Z][X, e1.right().left()][Y, e1.right().right()][
+            Z, b.left()
+        ]
+    )(eq_flip(b))
+    g = deduce(e1, f)
+    return i(g)
+
+
+mul_comm = _mul_comm()
 
 print(commute_antecedents)
 print(impl_refl)
@@ -747,7 +778,7 @@ print(x_eq_y_impl_x_plus_z_eq_y_plus_z)
 print(x_impl_y_eq_z_impl_x_impl_z_eq_y)
 print(plus_assoc)
 print(Sx_mul_y_eq_x_mul_y_plus_y)
-
+print(mul_comm)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
