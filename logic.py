@@ -907,6 +907,7 @@ print(plus_assoc)
 print(Sx_mul_y_eq_x_mul_y_plus_y)
 print(mul_comm)
 print(mul_distr)
+print(mul_distr_left)
 print(mul_assoc)
 
 print("Total unique phrases created:", len(phrases))
