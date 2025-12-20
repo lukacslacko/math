@@ -840,6 +840,16 @@ def _mul_distr() -> Phrase:
 mul_distr = _mul_distr()
 mul_distr[x, x][y, y][z, z]
 
+two = one.S()
+eq_refl[A, two]
+peano3[x, zero()]
+eq_flip(peano3[x, one])
+eq_chain(
+    peano4[x, one][y, zero()],
+    eq_subs(X, Y, X.S() == two)[Y, one + zero()][X, one].mp().mp(),
+)
+assert (one + one == two).is_known_truth
+
 
 def _mul_distr_left() -> Phrase:
     a = (X * Y == Y * X)[X, x + y][Y, z]
