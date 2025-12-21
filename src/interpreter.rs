@@ -39,20 +39,20 @@ impl Namespace {
 #[derive(Debug, Clone)]
 enum Thing {
     LogicPhrase(String, Phrase),
-    NumericConstant(String, Phrase),
+    NumericPhrase(String, Phrase),
 }
 
 impl Thing {
     fn name(&self) -> &str {
         match self {
-            Self::LogicPhrase(name, _) | Self::NumericConstant(name, _) => name,
+            Self::LogicPhrase(name, _) | Self::NumericPhrase(name, _) => name,
         }
     }
 }
 
 pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
     let namespace: Rc<Namespace> = Rc::default();
-    namespace.set(Thing::NumericConstant(
+    namespace.set(Thing::NumericPhrase(
         "0".to_string(),
         make_numeric_constant_zero("0".to_string())?,
     ));
@@ -63,6 +63,8 @@ pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
 enum Node {
     Identifier(String),
     LogicPhrase(Phrase),
+    NumericPhrase(Phrase),
+    Successor,
     Assertion,
     CloseRound,
     OpenRound,
@@ -79,7 +81,8 @@ enum Node {
 impl Node {
     fn is_operator(&self) -> bool {
         match self {
-            Node::Assertion
+            Node::Successor
+            | Node::Assertion
             | Node::OpenRound
             | Node::ImplyTok
             | Node::AssignTok
@@ -90,6 +93,7 @@ impl Node {
 
             Node::Identifier(_)
             | Node::LogicPhrase(_)
+            | Node::NumericPhrase(_)
             | Node::CloseRound
             | Node::CloseSquare
             | Node::ModusPonens => false,
@@ -139,7 +143,7 @@ fn interpret_inner(
         let token = peek.peek();
         if let (
             Some(Node::OpenRound),
-            Some(Node::LogicPhrase(_)),
+            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)),
             Some(Node::CloseRound),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -150,9 +154,9 @@ fn interpret_inner(
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
             Some(Node::OpenSquare),
-            Some(Node::LogicPhrase(variable)),
+            Some(Node::LogicPhrase(variable) | Node::NumericPhrase(variable)),
             Some(Node::Slash),
-            Some(Node::LogicPhrase(term)),
+            Some(Node::LogicPhrase(term) | Node::NumericPhrase(term)),
             Some(Node::CloseSquare),
         ) = (
             back(&stack, 6),
@@ -162,15 +166,54 @@ fn interpret_inner(
             back(&stack, 2),
             back(&stack, 1),
         ) {
-            if variable.get_kind() != LogicVariable {
-                Err("TODO1")?
+            if variable.get_kind() != LogicVariable
+                && variable.get_kind() != NumericVariable
+            {
+                Err(format!("TODO1 @ {}", peek.location()))?
+            }
+            if variable.is_numeric() != term.is_numeric() {
+                Err(format!("TODO2 @ {}", peek.location()))?
             }
             stack.push(Node::LogicPhrase(
                 logic_phrase
                     .clone()
                     .substitute(variable.clone(), term.clone())?,
             ));
-            eprintln!("{stack:#?}");
+            stack.swap_remove(stack.len() - 7);
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.pop();
+        }
+        if let (
+            Some(Node::NumericPhrase(numeric_phrase)),
+            Some(Node::OpenSquare),
+            Some(Node::LogicPhrase(variable) | Node::NumericPhrase(variable)),
+            Some(Node::Slash),
+            Some(Node::LogicPhrase(term) | Node::NumericPhrase(term)),
+            Some(Node::CloseSquare),
+        ) = (
+            back(&stack, 6),
+            back(&stack, 5),
+            back(&stack, 4),
+            back(&stack, 3),
+            back(&stack, 2),
+            back(&stack, 1),
+        ) {
+            if variable.get_kind() != LogicVariable
+                && variable.get_kind() != NumericVariable
+            {
+                Err(format!("TODO1 @ {}", peek.location()))?
+            }
+            if variable.is_numeric() != term.is_numeric() {
+                Err(format!("TODO2 @ {}", peek.location()))?
+            }
+            stack.push(Node::NumericPhrase(
+                numeric_phrase
+                    .clone()
+                    .substitute(variable.clone(), term.clone())?,
+            ));
             stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
@@ -185,7 +228,7 @@ fn interpret_inner(
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if logic_phrase.get_kind() != Imply {
-                Err("TODO2")?
+                Err(format!("TODO3 @ {}", peek.location()))?
             }
             if !logic_phrase.clone().get_is_proven() {
                 Err(format!(
@@ -218,6 +261,18 @@ fn interpret_inner(
         if token == Some(".".to_string()) {
             peek.take();
             stack.push(Node::Dot);
+            continue;
+        }
+        if let (
+            Some(Node::Successor),
+            Some(Node::NumericPhrase(numeric_phrase)),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::NumericPhrase(make_successor(
+                numeric_phrase.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
             continue;
         }
         if let (Some(Node::NotTok), Some(Node::LogicPhrase(logic_phrase))) =
@@ -258,6 +313,20 @@ fn interpret_inner(
         if let (
             Some(Node::Identifier(ident)),
             Some(Node::AssignTok),
+            Some(Node::NumericPhrase(numeric_phrase)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            namespace.set(Thing::NumericPhrase(
+                ident.clone(),
+                numeric_phrase.clone(),
+            ));
+            stack.pop();
+            stack.pop();
+            stack.pop();
+        }
+        if let (
+            Some(Node::Identifier(ident)),
+            Some(Node::AssignTok),
             Some(Node::LogicPhrase(logic_phrase)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -291,7 +360,9 @@ fn interpret_inner(
             stack.push(Node::CloseRound);
             continue;
         }
-        if let Some(Node::LogicPhrase(_)) = back(&stack, 1) {
+        if let Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)) =
+            back(&stack, 1)
+        {
             stack.pop();
             continue;
         }
@@ -303,6 +374,11 @@ fn interpret_inner(
         if token == Some("(".to_string()) {
             peek.take();
             stack.push(Node::OpenRound);
+            continue;
+        }
+        if token == Some("𝗦".to_string()) {
+            peek.take();
+            stack.push(Node::Successor);
             continue;
         }
         if token == Some("¬".to_string()) {
@@ -335,7 +411,9 @@ fn interpret_inner(
                 Some(Thing::LogicPhrase(_, logic_phrase)) => {
                     stack.push(Node::LogicPhrase(logic_phrase))
                 }
-                Some(Thing::NumericConstant(_, numeric_constant)) => todo!(),
+                Some(Thing::NumericPhrase(_, numeric_phrase)) => {
+                    stack.push(Node::NumericPhrase(numeric_phrase))
+                }
                 None => stack.push(Node::Identifier(token)),
             }
             continue;
