@@ -202,7 +202,7 @@ impl PhraseData {
             new.clone().assert_axiom(NameVariablePhrase(
                 "substitute",
                 variable.variable_name.clone().unwrap(),
-                term,
+                self,
             ))?;
         }
         Ok(new)

@@ -69,6 +69,9 @@ enum Node {
     ImplyTok,
     AssignTok,
     NotTok,
+    OpenSquare,
+    CloseSquare,
+    Slash,
 }
 
 impl Node {
@@ -78,11 +81,14 @@ impl Node {
             | Node::OpenRound
             | Node::ImplyTok
             | Node::AssignTok
-            | Node::NotTok => true,
+            | Node::NotTok
+            | Node::OpenSquare
+            | Node::Slash => true,
 
-            Node::Identifier(_) | Node::LogicPhrase(_) | Node::CloseRound => {
-                false
-            }
+            Node::Identifier(_)
+            | Node::LogicPhrase(_)
+            | Node::CloseRound
+            | Node::CloseSquare => false,
         }
     }
 }
@@ -145,6 +151,36 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
+        if let (
+            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::OpenSquare),
+            Some(Node::LogicPhrase(variable)),
+            Some(Node::Slash),
+            Some(Node::LogicPhrase(term)),
+            Some(Node::CloseSquare),
+        ) = (
+            back(&stack, 6),
+            back(&stack, 5),
+            back(&stack, 4),
+            back(&stack, 3),
+            back(&stack, 2),
+            back(&stack, 1),
+        ) {
+            if variable.get_kind() != LogicVariable {
+                Err("TODO")?
+            }
+            stack.push(Node::LogicPhrase(
+                logic_phrase
+                    .clone()
+                    .substitute(variable.clone(), term.clone())?,
+            ));
+            stack.swap_remove(stack.len() - 7);
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.pop();
+        }
         if token == Some("⇒".to_string()) {
             peek.take();
             stack.push(Node::ImplyTok);
@@ -173,6 +209,21 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
             stack.pop();
+        }
+        if token == Some("[".to_string()) {
+            peek.take();
+            stack.push(Node::OpenSquare);
+            continue;
+        }
+        if token == Some("]".to_string()) {
+            peek.take();
+            stack.push(Node::CloseSquare);
+            continue;
+        }
+        if token == Some("/".to_string()) {
+            peek.take();
+            stack.push(Node::Slash);
+            continue;
         }
         if token == Some("⊦".to_string()) {
             peek.take();
