@@ -63,7 +63,6 @@ pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
 enum Node {
     Identifier(String),
     LogicPhrase(Phrase),
-    LogicVar(String),
     Assertion,
     CloseRound,
     OpenRound,
@@ -79,10 +78,9 @@ impl Node {
             | Node::ImplyTok
             | Node::AssignTok => true,
 
-            Node::Identifier(_)
-            | Node::LogicPhrase(_)
-            | Node::LogicVar(_)
-            | Node::CloseRound => false,
+            Node::Identifier(_) | Node::LogicPhrase(_) | Node::CloseRound => {
+                false
+            }
         }
     }
 }
@@ -127,13 +125,6 @@ fn interpret_inner(
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
-        if let Some(Node::LogicVar(logic_var)) = back(&stack, 1) {
-            stack.push(Node::LogicPhrase(make_logic_variable(
-                logic_var.to_string(),
-            )?));
-            stack.swap_remove(stack.len() - 2);
-            continue;
-        }
         if let (
             Some(Node::OpenRound),
             Some(Node::LogicPhrase(_)),
@@ -222,7 +213,7 @@ fn interpret_inner(
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
             peek.take();
-            stack.push(Node::LogicVar(token.unwrap()));
+            stack.push(Node::LogicPhrase(make_logic_variable(token.unwrap())?));
             continue;
         }
         if let Some(token) = token {
