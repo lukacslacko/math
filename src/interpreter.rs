@@ -72,6 +72,8 @@ enum Node {
     OpenSquare,
     CloseSquare,
     Slash,
+    Dot,
+    ModusPonens,
 }
 
 impl Node {
@@ -83,12 +85,14 @@ impl Node {
             | Node::AssignTok
             | Node::NotTok
             | Node::OpenSquare
-            | Node::Slash => true,
+            | Node::Slash
+            | Node::Dot => true,
 
             Node::Identifier(_)
             | Node::LogicPhrase(_)
             | Node::CloseRound
-            | Node::CloseSquare => false,
+            | Node::CloseSquare
+            | Node::ModusPonens => false,
         }
     }
 }
@@ -143,14 +147,6 @@ fn interpret_inner(
             stack.swap_remove(stack.len() - 2);
             continue;
         }
-        if let (Some(Node::NotTok), Some(Node::LogicPhrase(logic_phrase))) =
-            (back(&stack, 2), back(&stack, 1))
-        {
-            stack.push(Node::LogicPhrase(make_not(logic_phrase.clone())?));
-            stack.swap_remove(stack.len() - 3);
-            stack.pop();
-            continue;
-        }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
             Some(Node::OpenSquare),
@@ -167,13 +163,14 @@ fn interpret_inner(
             back(&stack, 1),
         ) {
             if variable.get_kind() != LogicVariable {
-                Err("TODO")?
+                Err("TODO1")?
             }
             stack.push(Node::LogicPhrase(
                 logic_phrase
                     .clone()
                     .substitute(variable.clone(), term.clone())?,
             ));
+            eprintln!("{stack:#?}");
             stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
@@ -181,9 +178,69 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
         }
+        if let (
+            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::Dot),
+            Some(Node::ModusPonens),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            if logic_phrase.get_kind() != Imply {
+                Err("TODO2")?
+            }
+            if !logic_phrase.clone().get_is_proven() {
+                Err(format!(
+                    "modus ponens implication not proven @ {}",
+                    peek.location()
+                ))?
+            }
+            if !logic_phrase
+                .get_children()
+                .unwrap_two()
+                .0
+                .clone()
+                .get_is_proven()
+            {
+                Err(format!(
+                    "modus ponens antecedent not proven @ {}",
+                    peek.location()
+                ))?
+            }
+            stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+        }
+        if token == Some("MP".to_string()) {
+            peek.take();
+            stack.push(Node::ModusPonens);
+            continue;
+        }
+        if token == Some(".".to_string()) {
+            peek.take();
+            stack.push(Node::Dot);
+            continue;
+        }
+        if let (Some(Node::NotTok), Some(Node::LogicPhrase(logic_phrase))) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(logic_phrase.clone())?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
         if token == Some("⇒".to_string()) {
             peek.take();
             stack.push(Node::ImplyTok);
+            continue;
+        }
+        if token == Some("[".to_string()) {
+            peek.take();
+            stack.push(Node::OpenSquare);
+            continue;
+        }
+        if token == Some("/".to_string()) {
+            peek.take();
+            stack.push(Node::Slash);
             continue;
         }
         if let (
@@ -210,9 +267,18 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
         }
-        if token == Some("[".to_string()) {
-            peek.take();
-            stack.push(Node::OpenSquare);
+        if let (Some(Node::Assertion), Some(Node::LogicPhrase(logic_phrase))) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            if !logic_phrase.get_is_proven() {
+                Err(format!(
+                    "assertion failed {:b} @ {}",
+                    **logic_phrase,
+                    peek.location(),
+                ))?
+            }
+            stack.pop();
+            stack.pop();
             continue;
         }
         if token == Some("]".to_string()) {
@@ -220,9 +286,13 @@ fn interpret_inner(
             stack.push(Node::CloseSquare);
             continue;
         }
-        if token == Some("/".to_string()) {
+        if token == Some(")".to_string()) {
             peek.take();
-            stack.push(Node::Slash);
+            stack.push(Node::CloseRound);
+            continue;
+        }
+        if let Some(Node::LogicPhrase(_)) = back(&stack, 1) {
+            stack.pop();
             continue;
         }
         if token == Some("⊦".to_string()) {
@@ -233,11 +303,6 @@ fn interpret_inner(
         if token == Some("(".to_string()) {
             peek.take();
             stack.push(Node::OpenRound);
-            continue;
-        }
-        if token == Some(")".to_string()) {
-            peek.take();
-            stack.push(Node::CloseRound);
             continue;
         }
         if token == Some("¬".to_string()) {
@@ -254,24 +319,6 @@ fn interpret_inner(
             continue;
         }
 
-        if let (Some(Node::Assertion), Some(Node::LogicPhrase(logic_phrase))) =
-            (back(&stack, 2), back(&stack, 1))
-        {
-            if !logic_phrase.get_is_proven() {
-                Err(format!(
-                    "assertion failed {:b} @ {}",
-                    **logic_phrase,
-                    peek.location(),
-                ))?
-            }
-            stack.pop();
-            stack.pop();
-            continue;
-        }
-        if let Some(Node::LogicPhrase(_)) = back(&stack, 1) {
-            stack.pop();
-            continue;
-        }
         if let Some(top) = back(&stack, 1)
             && !top.is_operator()
         {

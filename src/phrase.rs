@@ -174,7 +174,7 @@ impl PhraseData {
             _ => Err("substitute")?,
         }
         let new = if self == variable {
-            variable.clone()
+            term.clone()
         } else if matches!(self.children, Children::Zero()) {
             self.clone()
         } else {

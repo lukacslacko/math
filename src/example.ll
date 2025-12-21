@@ -7,5 +7,5 @@ contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
 ignore['A / 'x]['B / 'x ⇒ 'x]
 ignore['A / 'x]['B / 'x]
 distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
-1 := succ(0)
 |- 'x ⇒ 'x
+1 := succ(0)
