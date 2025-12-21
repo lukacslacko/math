@@ -838,7 +838,7 @@ def _mul_distr() -> Phrase:
 
 
 mul_distr = _mul_distr()
-mul_distr[x, x][y, y][z, z]
+mul_distr[x, X][y, Y][z, Z]
 
 two = one.S()
 eq_refl[A, two]
@@ -890,6 +890,56 @@ def mul_assoc() -> Phrase:
 
 
 mul_assoc = mul_assoc()
+
+
+class Direction(Enum):
+    LEFT = -1
+    CHILD = 0
+    RIGHT = 1
+
+
+LEFT = Direction.LEFT
+RIGHT = Direction.RIGHT
+CHILD = Direction.CHILD
+
+
+def split(p: Phrase, var: Phrase, path: list[Direction]) -> tuple[Phrase, Phrase]:
+    if not path:
+        return var, p
+    direction = path[0]
+    if direction == Direction.CHILD:
+        if p.kind not in ARITY_1:
+            raise ValueError(f"split: expected unary operator at {p}, got {p.kind}")
+        child = p.child()
+        return split(child, var, path[1:])
+    if p.kind not in ARITY_2:
+        raise ValueError(f"split: expected binary operator at {p}, got {p.kind}")
+    left = p.left()
+    right = p.right()
+    if direction == Direction.LEFT:
+        new_p, removed = split(left, var, path[1:])
+        new_phrase = make_phrase(p.kind, [new_p, right])
+        return new_phrase, removed
+    if direction == Direction.RIGHT:
+        new_p, removed = split(right, var, path[1:])
+        new_phrase = make_phrase(p.kind, [left, new_p])
+        return new_phrase, removed
+    raise ValueError(f"split: unknown direction {direction}")
+
+
+def twice_x() -> Phrase:
+    a = ((X + Y) * Z == (X * Z) + (Y * Z))[X, one][Y, one][Z, x]
+    b, c = split(a, X, [LEFT, LEFT])
+    d = eq_subs(X, Y, b)[X, one + one][Y, two].mp().mp()
+    e, _ = split(d, X, [RIGHT, LEFT])
+    f = eq_subs(X, Y, e)[X, one * x][Y, x].mp().mp()
+    g, _ = split(f, X, [RIGHT, RIGHT])
+    h = eq_subs(X, Y, g)[X, one * x][Y, x].mp().mp()
+    return h[x, X]
+
+
+twice_x()
+assert (two * x == x + x).is_known_truth
 
 print(commute_antecedents)
 print(impl_refl)
