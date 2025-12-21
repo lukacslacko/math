@@ -11,14 +11,16 @@ distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
 1 := succ(0)
 
 distr['A / 'x]['B / 'y]['C / 'z]
-helper := ignore['A / ('x -> 'y) -> 'x -> 'z]['B / 'y]
-ignore['A / helper]['B / 'x -> ('y -> 'z)].MP
+ignore
+    ['A / ignore['A / ('x -> 'y) -> 'x -> 'z]['B / 'y]]
+    ['B / 'x -> ('y -> 'z)].MP
 distr
     ['A / 'x -> ('y -> 'z)]
     ['B / ('x -> 'y) -> 'x -> 'z]
     ['C / 'y -> (('x -> 'y) -> 'x -> 'z)].MP.MP
-inner := distr['A / 'y]['B / 'x -> 'y]['C / 'x -> 'z]
-ignore['A / inner]['B / 'x -> ('y -> 'z)].MP
+ignore
+    ['A / distr['A / 'y]['B / 'x -> 'y]['C / 'x -> 'z]]
+    ['B / 'x -> ('y -> 'z)].MP
 distr
     ['A / 'x -> ('y -> 'z)]
     ['B / 'y -> (('x -> 'y) -> 'x -> 'z)]
