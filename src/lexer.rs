@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_tokenize_example_ll() {
-        let input = include_str!("example.ll");
+        let input = include_str!("test_input.ll");
         let tokens = tokenize(input);
         let expected = vec![
             // Line 1
