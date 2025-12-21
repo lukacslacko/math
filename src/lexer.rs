@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
-    text: String,
-    location: String,
+    pub text: String,
+    pub location: String,
 }
 
 fn tokenize_word(
@@ -9,10 +9,10 @@ fn tokenize_word(
     line_no: usize,
     codepoint_index: usize,
 ) -> Vec<Token> {
-    let location = format!("Line {}, codepoint {}", line_no, codepoint_index);
+    let location = format!("Line {line_no}, codepoint {codepoint_index}");
 
     // Empty word, no tokens.
-    if word == "" {
+    if word.is_empty() {
         return vec![];
     }
 
@@ -58,8 +58,7 @@ fn tokenize_word(
 
     // No known token found as prefix, gather characters until one is found or the word ends.
     let mut current_token = String::new();
-    let mut char_indices = word.char_indices();
-    while let Some((start_byte, ch)) = char_indices.next() {
+    for (start_byte, ch) in word.char_indices() {
         current_token.push(ch);
 
         // Does the remaining part start with any prefix?
@@ -75,7 +74,7 @@ fn tokenize_word(
             break;
         }
     }
-    if current_token != "" {
+    if !current_token.is_empty() {
         tokens.push(Token {
             text: current_token.clone(),
             location: location.clone(),
