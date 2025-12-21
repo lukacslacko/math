@@ -74,8 +74,15 @@ enum Node {
 impl Node {
     fn is_operator(&self) -> bool {
         match self {
-            Node::Assertion | Node::OpenRound | Node::ImplyTok | Node::AssignTok => true,
-            Node::Identifier(_) | Node::LogicPhrase(_) | Node::LogicVar(_) | Node::CloseRound => false,
+            Node::Assertion
+            | Node::OpenRound
+            | Node::ImplyTok
+            | Node::AssignTok => true,
+
+            Node::Identifier(_)
+            | Node::LogicPhrase(_)
+            | Node::LogicVar(_)
+            | Node::CloseRound => false,
         }
     }
 }
@@ -120,21 +127,19 @@ fn interpret_inner(
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
-        if matches!(back(&stack, 1), Some(Node::LogicVar(_))) {
-            let Some(Node::LogicVar(logic_var)) = stack.pop() else {
-                unreachable!();
-            };
-            stack.push(Node::LogicPhrase(make_logic_variable(logic_var)?));
+        if let Some(Node::LogicVar(logic_var)) = back(&stack, 1) {
+            stack.push(Node::LogicPhrase(make_logic_variable(
+                logic_var.to_string(),
+            )?));
+            stack.swap_remove(stack.len() - 2);
             continue;
         }
-        if matches!(
-            (back(&stack, 3), back(&stack, 2), back(&stack, 1)),
-            (
-                Some(Node::OpenRound),
-                Some(Node::LogicPhrase(_)),
-                Some(Node::CloseRound),
-            )
-        ) {
+        if let (
+            Some(Node::OpenRound),
+            Some(Node::LogicPhrase(_)),
+            Some(Node::CloseRound),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
             stack.pop();
             stack.swap_remove(stack.len() - 2);
         }
@@ -143,40 +148,29 @@ fn interpret_inner(
             stack.push(Node::ImplyTok);
             continue;
         }
-        if matches!(
-            (back(&stack, 3), back(&stack, 2), back(&stack, 1)),
-            (
-                Some(Node::LogicPhrase(_)),
-                Some(Node::ImplyTok),
-                Some(Node::LogicPhrase(_))
-            )
-        ) {
-            let Some(Node::LogicPhrase(c)) = stack.pop() else {
-                unreachable!();
-            };
+        if let (
+            Some(Node::LogicPhrase(a)),
+            Some(Node::ImplyTok),
+            Some(Node::LogicPhrase(c)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_imply(a.clone(), c.clone())?));
+            stack.swap_remove(stack.len() - 4);
             stack.pop();
-            let Some(Node::LogicPhrase(a)) = stack.pop() else {
-                unreachable!();
-            };
-            stack.push(Node::LogicPhrase(make_imply(a, c)?));
+            stack.pop();
             continue;
         }
-        if matches!(
-            (back(&stack, 3), back(&stack, 2), back(&stack, 1)),
-            (
-                Some(Node::Identifier(_)),
-                Some(Node::AssignTok),
-                Some(Node::LogicPhrase(_))
-            )
-        ) {
-            let Some(Node::LogicPhrase(logic_phrase)) = stack.pop() else {
-                unreachable!();
-            };
+        if let (
+            Some(Node::Identifier(ident)),
+            Some(Node::AssignTok),
+            Some(Node::LogicPhrase(logic_phrase)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            namespace
+                .set(Thing::LogicPhrase(ident.clone(), logic_phrase.clone()));
             stack.pop();
-            let Some(Node::Identifier(ident)) = stack.pop() else {
-                unreachable!();
-            };
-            namespace.set(Thing::LogicPhrase(ident, logic_phrase));
+            stack.pop();
+            stack.pop();
         }
         // SHIFT
         if token == Some("⊦".to_string()) {
@@ -195,36 +189,35 @@ fn interpret_inner(
             continue;
         }
         if token == Some("≔".to_string()) {
-            if !matches!(back(&stack, 1), Some(Node::Identifier(_))) {
+            let Some(Node::Identifier(_)) = back(&stack, 1) else {
                 Err(format!("syntax error @ {}", peek.location()))?
-            }
+            };
             peek.take();
             stack.push(Node::AssignTok);
             continue;
         }
 
-        if matches!(
-            (back(&stack, 2), back(&stack, 1)),
-            (Some(Node::Assertion), Some(Node::LogicPhrase(_)))
-        ) {
-            let Some(Node::LogicPhrase(logic_phrase)) = stack.pop() else {
-                unreachable!();
-            };
-            stack.pop();
+        if let (Some(Node::Assertion), Some(Node::LogicPhrase(logic_phrase))) =
+            (back(&stack, 2), back(&stack, 1))
+        {
             if !logic_phrase.get_is_proven() {
                 Err(format!(
                     "assertion failed {:b} @ {}",
-                    *logic_phrase,
+                    **logic_phrase,
                     peek.location(),
                 ))?
             }
-            continue;
-        }
-        if matches!(back(&stack, 1), Some(Node::LogicPhrase(_))) {
+            stack.pop();
             stack.pop();
             continue;
         }
-        if let Some(top) = back(&stack, 1) && !top.is_operator() {
+        if let Some(Node::LogicPhrase(_)) = back(&stack, 1) {
+            stack.pop();
+            continue;
+        }
+        if let Some(top) = back(&stack, 1)
+            && !top.is_operator()
+        {
             Err(format!("syntax error @ {}", peek.location()))?
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
