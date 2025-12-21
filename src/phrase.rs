@@ -1,15 +1,25 @@
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
 
 thread_local! {
-    static KNOWN_TRUTHS: RefCell<HashSet<Phrase>> = RefCell::new(HashSet::new());
+    static KNOWN_TRUTHS: RefCell<HashMap<Phrase, Proof>> = RefCell::new(HashMap::new());
 }
 
 pub type Phrase = Rc<PhraseData>;
 pub type Result = std::result::Result<Phrase, Box<dyn Error>>;
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum Proof {
+    Name(&'static str),
+    NamePhrase(&'static str, Phrase),
+    NameVariablePhrase(&'static str, String, Phrase),
+    NamePhrasePhrase(&'static str, Phrase, Phrase),
+}
+
+pub use Proof::*;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum PhraseKind {
@@ -123,7 +133,7 @@ impl PhraseData {
         self.kind
     }
     pub fn get_is_proven(&self) -> bool {
-        KNOWN_TRUTHS.with_borrow(|known_truths| known_truths.contains(self))
+        KNOWN_TRUTHS.with_borrow(|known_truths| known_truths.contains_key(self))
     }
     pub fn get_variable_name(&self) -> &Option<String> {
         &self.variable_name
@@ -137,8 +147,25 @@ impl PhraseData {
     pub fn is_proposition(&self) -> bool {
         matches!(self.kind, LogicVariable | Imply | Not | Equals | Quantify)
     }
-    pub fn assert_axiom(self: Phrase) {
-        KNOWN_TRUTHS.with_borrow_mut(|known_truths| known_truths.insert(self));
+    pub fn assert_axiom(self: Phrase, proof: Proof) -> Result {
+        match &proof {
+            NamePhrase(_, phrase) if !phrase.get_is_proven() => {
+                Err("assert_axiom")?
+            }
+            NameVariablePhrase(_, _, phrase) if !phrase.get_is_proven() => {
+                Err("assert_axiom")?
+            }
+            NamePhrasePhrase(_, phrase1, phrase2)
+                if !phrase1.get_is_proven() || !phrase2.get_is_proven() =>
+            {
+                Err("assert_axiom")?
+            }
+            _ => {}
+        }
+        KNOWN_TRUTHS.with_borrow_mut(|known_truths| {
+            known_truths.insert(self.clone(), proof)
+        });
+        Ok(self)
     }
     pub fn substitute(self: Phrase, variable: Phrase, term: Phrase) -> Result {
         match variable.kind {
@@ -147,7 +174,7 @@ impl PhraseData {
             _ => Err("substitute")?,
         }
         let new = if self == variable {
-            variable
+            variable.clone()
         } else if matches!(self.children, Children::Zero()) {
             self.clone()
         } else {
@@ -155,20 +182,28 @@ impl PhraseData {
                 kind: self.kind,
                 children: match &self.children {
                     Children::Zero() => Children::Zero(),
-                    Children::One(child) => {
-                        Children::One(child.clone().substitute(variable, term)?)
-                    }
+                    Children::One(child) => Children::One(
+                        child
+                            .clone()
+                            .substitute(variable.clone(), term.clone())?,
+                    ),
                     Children::Two(left, right) => Children::Two(
                         left.clone()
                             .substitute(variable.clone(), term.clone())?,
-                        right.clone().substitute(variable, term)?,
+                        right
+                            .clone()
+                            .substitute(variable.clone(), term.clone())?,
                     ),
                 },
                 variable_name: self.variable_name.clone(),
             })
         };
         if self.get_is_proven() {
-            new.clone().assert_axiom();
+            new.clone().assert_axiom(NameVariablePhrase(
+                "substitute",
+                variable.variable_name.clone().unwrap(),
+                term,
+            ))?;
         }
         Ok(new)
     }
@@ -183,13 +218,16 @@ impl PhraseData {
         if !self.get_is_proven() {
             Err("modus_ponens implication not proven")?
         }
-        consequent.clone().assert_axiom();
-        Ok(consequent.clone())
+        consequent.clone().assert_axiom(NamePhrasePhrase(
+            "modus ponens",
+            self.clone(),
+            antecedent.clone(),
+        ))
     }
 }
 
 pub fn make_logic_variable(name: String) -> Result {
-    if !name.starts_with('%') {
+    if !name.starts_with('\'') {
         Err("make_logic_variable")?
     }
     Ok(Rc::new(PhraseData {
@@ -200,7 +238,7 @@ pub fn make_logic_variable(name: String) -> Result {
 }
 
 pub fn make_numeric_variable(name: String) -> Result {
-    if name.starts_with('%') {
+    if name.starts_with('\'') {
         Err("make_numeric_variable")?
     }
     Ok(Rc::new(PhraseData {

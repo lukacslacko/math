@@ -1,3 +1,4 @@
+use crate::UnitResult;
 use crate::phrase::*;
 
 pub fn instantiate(quantification: Phrase, term: Phrase) -> Result {
@@ -6,9 +7,8 @@ pub fn instantiate(quantification: Phrase, term: Phrase) -> Result {
     }
     let (variable, formula) = quantification.get_children().unwrap_two();
     let new = formula.clone().substitute(variable.clone(), term)?;
-    let new = make_quantify(quantification, new)?;
-    new.assert_axiom();
-    new
+    let new = make_imply(quantification, new)?;
+    new.assert_axiom(Name("instantiate"))
 }
 
 pub fn distribute(quantification: Phrase) -> Result {
@@ -30,16 +30,17 @@ pub fn distribute(quantification: Phrase) -> Result {
             make_quantify(variable, right)?,
         )?,
     )?;
-    new.clone().assert_axiom();
-    Ok(new)
+    new.assert_axiom(Name("distribute quantification"))
 }
 
-pub fn axioms() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let var_a = make_logic_variable("%A".to_string())?;
-    let var_b = make_logic_variable("%B".to_string())?;
-    let var_c = make_logic_variable("%C".to_string())?;
+pub fn axioms() -> UnitResult {
+    let var_a = make_logic_variable("'A".to_string())?;
+    let var_b = make_logic_variable("'B".to_string())?;
+    let var_c = make_logic_variable("'C".to_string())?;
+
     make_imply(var_a.clone(), make_imply(var_b.clone(), var_a.clone())?)?
-        .assert_axiom();
+        .assert_axiom(Name("ignore"))?;
+
     make_imply(
         make_imply(var_a.clone(), make_imply(var_b.clone(), var_c.clone())?)?,
         make_imply(
@@ -47,11 +48,13 @@ pub fn axioms() -> std::result::Result<(), Box<dyn std::error::Error>> {
             make_imply(var_a.clone(), var_c.clone())?,
         )?,
     )?
-    .assert_axiom();
+    .assert_axiom(Name("distribute implication"))?;
+
     make_imply(
         make_imply(make_not(var_a.clone())?, make_not(var_b.clone())?)?,
         make_imply(var_b.clone(), var_a.clone())?,
     )?
-    .assert_axiom();
+    .assert_axiom(Name("contrapose"))?;
+
     Ok(())
 }
