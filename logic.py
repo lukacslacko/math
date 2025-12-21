@@ -599,6 +599,8 @@ def _plus_assoc() -> Phrase:
 
 
 plus_assoc = _plus_assoc()
+plus_assoc[x, X][y, Y][z, Z]
+eq_flip(plus_assoc)[x, X][y, Y][z, Z]
 
 
 def _zero_mul_x_eq_zero() -> Phrase:
@@ -927,6 +929,13 @@ def split(p: Phrase, var: Phrase, path: list[Direction]) -> tuple[Phrase, Phrase
     raise ValueError(f"split: unknown direction {direction}")
 
 
+def replace(p: Phrase, term: Phrase, path: list[Direction]) -> Phrase:
+    v1 = var("REPLACE_VAR_1")
+    v2 = var("REPLACE_VAR_2")
+    new_phrase, old_term = split(p, v1, path)
+    return eq_subs(v1, v2, new_phrase)[v1, old_term][v2, term].mp().mp()
+
+
 def twice_x() -> Phrase:
     a = ((X + Y) * Z == (X * Z) + (Y * Z))[X, one][Y, one][Z, x]
     b, c = split(a, X, [LEFT, LEFT])
@@ -940,6 +949,26 @@ def twice_x() -> Phrase:
 
 twice_x()
 assert (two * x == x + x).is_known_truth
+
+
+def x_plus_y_squared() -> Phrase:
+    a = ((X + Y) * Z == (X * Z) + (Y * Z))[X, x][Y, y][Z, x + y]
+    b = (Z * (X + Y) == (Z * X) + (Z * Y))[X, x][Y, y][Z, x]
+    c = (Z * (X + Y) == (Z * X) + (Z * Y))[X, x][Y, y][Z, y]
+    (X * Y == Y * X)[X, y][Y, x]
+    c2 = replace(c, x * y, [RIGHT, LEFT])
+    a2 = replace(a, c2.right(), [RIGHT, RIGHT])
+    a3 = replace(a2, b.right(), [RIGHT, LEFT])
+    a4 = ((X + Y) + Z == X + (Y + Z))[X, x * x][Y, x * y][Z, x * y + y * y]
+    a5 = eq_chain(a3, a4)
+    a6 = (X + (Y + Z) == (X + Y) + Z)[X, x * y][Y, x * y][Z, y * y]
+    a7 = replace(a5, a6.right(), [RIGHT, RIGHT])
+    eq_flip(two * X == X + X)[X, x * y]
+    a8 = replace(a7, two * (x * y), [RIGHT, RIGHT, LEFT])
+    return a8[x, X][y, Y]
+
+print(x_plus_y_squared())
+assert ((X + Y) * (X + Y) == (X * X) + ((two * (X * Y)) + (Y * Y))).is_known_truth
 
 print(commute_antecedents)
 print(impl_refl)
