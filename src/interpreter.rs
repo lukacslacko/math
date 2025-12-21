@@ -68,6 +68,7 @@ enum Node {
     OpenRound,
     ImplyTok,
     AssignTok,
+    NotTok,
 }
 
 impl Node {
@@ -76,7 +77,8 @@ impl Node {
             Node::Assertion
             | Node::OpenRound
             | Node::ImplyTok
-            | Node::AssignTok => true,
+            | Node::AssignTok
+            | Node::NotTok => true,
 
             Node::Identifier(_) | Node::LogicPhrase(_) | Node::CloseRound => {
                 false
@@ -121,7 +123,7 @@ fn interpret_inner(
     let mut peek = Peek(None, tokens);
     let mut stack = vec![];
     loop {
-        // eprintln!("{stack:?}");
+        // eprintln!("{stack:#?}");
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
@@ -133,6 +135,15 @@ fn interpret_inner(
         {
             stack.pop();
             stack.swap_remove(stack.len() - 2);
+            continue;
+        }
+        if let (Some(Node::NotTok), Some(Node::LogicPhrase(logic_phrase))) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(logic_phrase.clone())?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
         }
         if token == Some("⇒".to_string()) {
             peek.take();
@@ -163,7 +174,6 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
         }
-        // SHIFT
         if token == Some("⊦".to_string()) {
             peek.take();
             stack.push(Node::Assertion);
@@ -177,6 +187,11 @@ fn interpret_inner(
         if token == Some(")".to_string()) {
             peek.take();
             stack.push(Node::CloseRound);
+            continue;
+        }
+        if token == Some("¬".to_string()) {
+            peek.take();
+            stack.push(Node::NotTok);
             continue;
         }
         if token == Some("≔".to_string()) {
