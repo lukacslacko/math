@@ -40,6 +40,8 @@ fn tokenize_word(
         ("~", "¬"),
         ("succ", "𝗦"),
         ("𝗦", "𝗦"),
+        ("FAX", "℻"),
+        ("℻", "℻"),
     ];
 
     // Does the word start with any tokens?

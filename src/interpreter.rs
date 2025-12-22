@@ -76,6 +76,7 @@ enum Node {
     Slash,
     Dot,
     ModusPonens,
+    Fax,
 }
 
 impl Node {
@@ -96,7 +97,8 @@ impl Node {
             | Node::NumericPhrase(_)
             | Node::CloseRound
             | Node::CloseSquare
-            | Node::ModusPonens => false,
+            | Node::ModusPonens
+            | Node::Fax => false,
         }
     }
 }
@@ -363,9 +365,13 @@ fn interpret_inner(
             stack.push(Node::CloseRound);
             continue;
         }
-        if let Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)) =
+        if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
             back(&stack, 1)
         {
+            if token == Some("℻".to_string()) {
+                peek.take();
+                println!("{:b}", **phrase);
+            }
             stack.pop();
             continue;
         }
