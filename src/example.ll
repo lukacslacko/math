@@ -44,3 +44,16 @@ distr['A / 'y -> 'z]['B / 'x -> ('y -> 'z)]['C / ('x -> 'y) -> ('x -> 'z)].MP.MP
 chain := commute_antecedents['X / 'y -> 'z]['Y / 'x -> 'y]['Z / 'x -> 'z].MP
     ['x / 'X]['y / 'Y]['z / 'Z]
 |- chain
+
+ignore['A / ~~'x]['B / ~~~~'x]
+contrapose['A / ~~~'x]['B / ~'x]
+chain['X / ~~'x]['Y / ~~~~'x -> ~~'x]['Z / ~'x -> ~~~'x].MP.MP
+contrapose['A / 'x]['B / ~~'x]
+chain['X / ~~'x]['Y / ~'x -> ~~~'x]['Z / ~~'x -> 'x].MP.MP
+('X -> 'X)['X / ~~'x]
+distr['A / ~~'x]['B / ~~'x]['C / 'x].MP.MP['x / 'X]
+|- ~~'X -> 'X
+
+(~~'X -> 'X)['X / ~'x]
+contrapose['A / ~~'x]['B / 'x].MP['x / 'X]
+|- 'X -> ~~'X
