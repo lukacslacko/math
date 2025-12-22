@@ -12,30 +12,27 @@ distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
 1 := succ(0)
 
 distr['A / 'x]['B / 'y]['C / 'z]
-ignore
-    ['A / ignore['A / ('x -> 'y) -> 'x -> 'z]['B / 'y]]
-    ['B / 'x -> ('y -> 'z)].MP
-distr
-    ['A / 'x -> ('y -> 'z)]
-    ['B / ('x -> 'y) -> 'x -> 'z]
-    ['C / 'y -> (('x -> 'y) -> 'x -> 'z)].MP.MP
-ignore
-    ['A / distr['A / 'y]['B / 'x -> 'y]['C / 'x -> 'z]]
-    ['B / 'x -> ('y -> 'z)].MP
-distr
-    ['A / 'x -> ('y -> 'z)]
-    ['B / 'y -> (('x -> 'y) -> 'x -> 'z)]
-    ['C / ('y -> ('x -> 'y)) -> ('y -> ('x -> 'z))].MP.MP
-ignore
-    ['A / ignore['A / 'y]['B / 'x]]
-    ['B / 'x -> ('y -> 'z)].MP
-distr
-    ['A / 'x -> ('y -> 'z)]
-    ['B / 'y -> ('x -> 'y)]
-    ['C / 'y -> ('x -> 'z)].MP.MP
+{
+    ⬎ ignore
+    ⬎ distr
 
-commute_antecedents := (('x -> ('y -> 'z)) -> ('y -> ('x -> 'z)))
-    ['x / 'X]['y / 'Y]['z / 'Z]
+    goal := ('x -> 'y -> 'z) -> 'y -> 'x -> 'z
+
+    p := 'x -> 'y
+    q := 'x -> 'z
+
+    ignore['A / ignore['A / p -> q]['B / 'y]]['B / goal.<].MP
+    distr['A / goal.<]['B / p -> q]['C / 'y -> p -> q].MP.MP
+    ignore['A / distr['A / 'y]['B / p]['C / q]]['B / goal.<].MP
+    distr['A / goal.<]['B / 'y -> p -> q]['C / ('y -> p) -> 'y -> q].MP.MP
+    ignore['A / ignore['A / 'y]['B / 'x]]['B / goal.<].MP
+    distr['A / goal.<]['B / 'y -> p]['C / goal.>].MP.MP
+
+    |- goal
+    commute_antecedents := goal['x / 'X]['y / 'Y]['z / 'Z]
+    ⬏ commute_antecedents
+}
+
 |- commute_antecedents
 |- ('X -> 'Y -> 'Z) -> 'Y -> 'X -> 'Z
 
