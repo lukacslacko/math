@@ -77,6 +77,9 @@ enum Node {
     Dot,
     ModusPonens,
     Fax,
+    Right,
+    Child,
+    Left,
 }
 
 impl Node {
@@ -98,7 +101,10 @@ impl Node {
             | Node::CloseRound
             | Node::CloseSquare
             | Node::ModusPonens
-            | Node::Fax => false,
+            | Node::Fax
+            | Node::Right
+            | Node::Child
+            | Node::Left => false,
         }
     }
 }
@@ -258,6 +264,60 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
         }
+        if let (
+            Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
+            Some(Node::Left),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            let child = match phrase.get_children() {
+                Children::Two(left, _) => left,
+                _ => Err(format!("error @ {}", peek.location()))?,
+            };
+            if child.is_proposition() {
+                stack.push(Node::LogicPhrase(child.clone()));
+            } else {
+                stack.push(Node::NumericPhrase(child.clone()));
+            }
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
+            Some(Node::Right),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            let child = match phrase.get_children() {
+                Children::Two(_, right) => right,
+                _ => Err(format!("error @ {}", peek.location()))?,
+            };
+            if child.is_proposition() {
+                stack.push(Node::LogicPhrase(child.clone()));
+            } else {
+                stack.push(Node::NumericPhrase(child.clone()));
+            }
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
+            Some(Node::Child),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            let child = match phrase.get_children() {
+                Children::One(child) => child,
+                _ => Err(format!("error @ {}", peek.location()))?,
+            };
+            if child.is_proposition() {
+                stack.push(Node::LogicPhrase(child.clone()));
+            } else {
+                stack.push(Node::NumericPhrase(child.clone()));
+            }
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
         if token == Some("MP".to_string()) {
             peek.take();
             stack.push(Node::ModusPonens);
@@ -266,6 +326,21 @@ fn interpret_inner(
         if token == Some(".".to_string()) {
             peek.take();
             stack.push(Node::Dot);
+            continue;
+        }
+        if token == Some("↙".to_string()) {
+            peek.take();
+            stack.push(Node::Left);
+            continue;
+        }
+        if token == Some("↘".to_string()) {
+            peek.take();
+            stack.push(Node::Right);
+            continue;
+        }
+        if token == Some("↓".to_string()) {
+            peek.take();
+            stack.push(Node::Child);
             continue;
         }
         if let (
