@@ -2,6 +2,7 @@
 pub struct Token {
     pub text: String,
     pub location: String,
+    pub line_no: usize,
 }
 
 fn tokenize_word(
@@ -65,6 +66,7 @@ fn tokenize_word(
             tokens.push(Token {
                 text: symbol.to_string(),
                 location: location.clone(),
+                line_no,
             });
             return tokens;
         }
@@ -76,6 +78,7 @@ fn tokenize_word(
             tokens.push(Token {
                 text: symbol.to_string(),
                 location: location.clone(),
+                line_no,
             });
             tokens.extend(tokenize_word(
                 rest,
@@ -112,11 +115,13 @@ fn tokenize_word(
             tokens.push(Token {
                 text: symbol.to_string(),
                 location: location.clone(),
+                line_no,
             });
         } else {
             tokens.push(Token {
                 text: current_token.clone(),
                 location: location.clone(),
+                line_no,
             });
         }
     }
@@ -181,6 +186,7 @@ mod tests {
         Token {
             text: text.to_string(),
             location: format!("Line {}, codepoint {}", line, col),
+            line_no: line,
         }
     }
 
