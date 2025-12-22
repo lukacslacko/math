@@ -202,6 +202,10 @@ def subs(p: Phrase, x: Phrase, q: Phrase) -> Phrase:
     if p.kind == Kind.FORALL:
         if p.left() is x:
             return p
+        if p.left().varname() in q.free:
+            raise ValueError(
+                f"subs: cannot substitute {x} with {q} in {p} due to variable capture"
+            )
     new_children = [subs(child, x, q) for child in p.children]
     new_free = set()
     for child in new_children:
@@ -235,22 +239,18 @@ def forall_elim(forall_phrase: Phrase, term: Phrase) -> Phrase:
     return (forall_phrase >> subs(body_phrase, var_phrase, term)).axiom()
 
 
-def forall_permute(forall_phrase: Phrase) -> Phrase:
+def forall_distribute(forall_phrase: Phrase) -> Phrase:
     if forall_phrase.kind != Kind.FORALL:
         raise ValueError(
-            f"forall_permute: argument must be a universal quantification {forall_phrase}"
+            f"forall_distribute: argument must be a universal quantification {forall_phrase}"
         )
+    var = forall_phrase.left()
     inner = forall_phrase.right()
     if inner.kind != Kind.IMPL:
-        raise ValueError(f"forall_permute: inner must be an implication {inner}")
-    var = forall_phrase.left()
+        raise ValueError(f"forall_distribute: inner must be an implication {inner}")
     A = inner.left()
     B = inner.right()
-    if var.varname() in A.free:
-        raise ValueError(
-            f"forall_permute: variable {var} occurs free in antecedent {A}"
-        )
-    return (forall_phrase >> (A >> B.forall(var))).axiom()
+    return (forall_phrase >> (A.forall(var) >> B.forall(var))).axiom()
 
 
 A = var("A")
@@ -973,6 +973,7 @@ def x_plus_y_squared() -> Phrase:
 x_plus_y_squared()
 assert ((X + Y) * (X + Y) == (X * X) + ((two * (X * Y)) + (Y * Y))).is_known_truth
 
+
 def _recontrapose() -> Phrase:
     s = chain[x, X][y, Y][z, Z][X, ~~x][Y, x][Z, y].mp()
     (x >> ~~x)[x, y]
@@ -982,6 +983,7 @@ def _recontrapose() -> Phrase:
     t = contra[A, ~x][B, ~y]
     g = deduce(r, t)
     return g[x, X][y, Y]
+
 
 recontrapose = _recontrapose()
 assert ((X >> Y) >> (~Y >> ~X)).is_known_truth
