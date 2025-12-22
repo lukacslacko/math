@@ -61,6 +61,7 @@ enum Node {
     ImplyTok,
     AssignTok,
     NotTok,
+    EqualsTok,
     OpenSquare,
     CloseSquare,
     OpenCurly,
@@ -82,6 +83,7 @@ impl Node {
             | Node::ImplyTok
             | Node::AssignTok
             | Node::NotTok
+            | Node::EqualsTok
             | Node::OpenSquare
             | Node::OpenCurly
             | Node::Slash
@@ -377,6 +379,23 @@ fn interpret_inner(
             stack.push(Node::LogicPhrase(make_not(logic_phrase.clone())?));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::NumericPhrase(l)),
+            Some(Node::EqualsTok),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_equals(l.clone(), r.clone())?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some("=".to_string()) {
+            peek.take();
+            stack.push(Node::EqualsTok);
             continue;
         }
         if token == Some("⇒".to_string()) {
