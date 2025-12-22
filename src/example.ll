@@ -37,6 +37,7 @@ distr
 commute_antecedents := (('x -> ('y -> 'z)) -> ('y -> ('x -> 'z)))
     ['x / 'X]['y / 'Y]['z / 'Z]
 |- commute_antecedents
+|- ('X -> 'Y -> 'Z) -> 'Y -> 'X -> 'Z
 
 ignore['A / 'y -> 'z]['B / 'x]
 ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y -> 'z].MP
@@ -44,6 +45,7 @@ distr['A / 'y -> 'z]['B / 'x -> ('y -> 'z)]['C / ('x -> 'y) -> ('x -> 'z)].MP.MP
 chain := commute_antecedents['X / 'y -> 'z]['Y / 'x -> 'y]['Z / 'x -> 'z].MP
     ['x / 'X]['y / 'Y]['z / 'Z]
 |- chain
+|- ('X -> 'Y) -> ('Y -> 'Z) -> 'X -> 'Z
 
 ignore['A / ~~'x]['B / ~~~~'x]
 contrapose['A / ~~~'x]['B / ~'x]
