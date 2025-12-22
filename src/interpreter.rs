@@ -147,6 +147,13 @@ fn interpret_inner(
             stack.swap_remove(stack.len() - 2);
             continue;
         }
+        if let (Some(Node::OpenRound), Some(Node::CloseRound)) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            stack.pop();
+            stack.pop();
+            continue;
+        }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
             Some(Node::OpenSquare),
