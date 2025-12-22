@@ -55,3 +55,24 @@ distr['A / ~~'x]['B / ~~'x]['C / 'x].MP.MP['x / 'X]
 (~~'X -> 'X)['X / ~'x]
 contrapose['A / ~~'x]['B / 'x].MP['x / 'X]
 |- 'X -> ~~'X
+
+recontrapose := {
+    ⬎ contrapose
+    ⬎ chain
+    ⬎ commute_antecedents
+
+    goal := ('x -> 'y) -> ~'y -> ~'x
+
+    s := chain['X / ~~'x]['Y / 'x]['Z / 'y].MP
+    ('X -> ~~'X)['X / 'y]
+    a := chain['X / ~~'x]['Y / 'y]['Z / ~~'y]
+    q := commute_antecedents['X / a.<]['Y / a.>.<]['Z / a.>.>].MP.MP
+    r := chain['X / s.<]['Y / s.>]['Z / q.>].MP.MP
+    t := contrapose['A / ~'x]['B / ~'y]
+    chain['X / r.<]['Y / r.>]['Z / t.>].MP.MP
+
+    |- goal
+    goal['x / 'A]['y / 'B]
+}
+
+recontrapose FAX
