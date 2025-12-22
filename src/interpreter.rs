@@ -123,11 +123,7 @@ impl<I: Iterator<Item = Token>> Peek<I> {
 }
 
 fn back(stack: &[Node], index: usize) -> Option<&Node> {
-    if stack.len() < index {
-        None
-    } else {
-        stack.get(stack.len() - index)
-    }
+    stack.iter().nth_back(index - 1)
 }
 
 fn interpret_inner(
