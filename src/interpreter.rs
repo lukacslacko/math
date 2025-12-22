@@ -481,7 +481,7 @@ fn interpret_inner(
             stack.push(Node::OpenCurly);
             continue;
         }
-        if token == Some("⬎".to_string()) {
+        if token == Some("⤷".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof")?
@@ -505,7 +505,7 @@ fn interpret_inner(
             peek.take();
             continue;
         }
-        if token == Some("⬏".to_string()) {
+        if token == Some("⤶".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof")?

@@ -13,8 +13,8 @@ distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
 
 distr['A / 'x]['B / 'y]['C / 'z]
 commute_antecedents ≔ {
-    ⬎ ignore
-    ⬎ distr
+    ⤷ignore
+    ⤷distr
 
     goal := ('x -> 'y -> 'z) -> 'y -> 'x -> 'z
 
@@ -57,9 +57,9 @@ contrapose['A / ~~'x]['B / 'x].MP['x / 'X]
 |- 'X -> ~~'X
 
 recontrapose := {
-    ⬎ contrapose
-    ⬎ chain
-    ⬎ commute_antecedents
+    ⤷ contrapose
+    ⤷chain
+    import commute_antecedents
 
     goal := ('x -> 'y) -> ~'y -> ~'x
 

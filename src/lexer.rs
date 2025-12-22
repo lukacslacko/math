@@ -44,13 +44,31 @@ fn tokenize_word(
         (")", ")"),
         ("¬", "¬"),
         ("~", "¬"),
-        ("succ", "𝗦"),
         ("𝗦", "𝗦"),
-        ("FAX", "℻"),
         ("℻", "℻"),
         ("{", "{"),
         ("}", "}"),
+        ("⤷", "⤷"),
+        ("⤶", "⤶"),
     ];
+
+    let keywords = [
+        ("export", "⤶"),
+        ("import", "⤷"),
+        ("FAX", "℻"),
+        ("succ", "𝗦"),
+    ];
+
+    // Is the word equal to any keyword?
+    for (keyword, symbol) in keywords.iter() {
+        if word == *keyword {
+            tokens.push(Token {
+                text: symbol.to_string(),
+                location: location.clone(),
+            });
+            return tokens;
+        }
+    }
 
     // Does the word start with any tokens?
     for (prefix, symbol) in prefixes.iter() {
@@ -87,10 +105,20 @@ fn tokenize_word(
         }
     }
     if !current_token.is_empty() {
-        tokens.push(Token {
-            text: current_token.clone(),
-            location: location.clone(),
-        });
+        if let Some((_, symbol)) = keywords
+            .iter()
+            .find(|(keyword, _)| current_token == *keyword)
+        {
+            tokens.push(Token {
+                text: symbol.to_string(),
+                location: location.clone(),
+            });
+        } else {
+            tokens.push(Token {
+                text: current_token.clone(),
+                location: location.clone(),
+            });
+        }
     }
     let rest = &word[current_token.len()..];
     tokens.extend(tokenize_word(
