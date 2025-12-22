@@ -913,7 +913,9 @@ def split(p: Phrase, var: Phrase, path: list[Direction]) -> tuple[Phrase, Phrase
         if p.kind not in ARITY_1:
             raise ValueError(f"split: expected unary operator at {p}, got {p.kind}")
         child = p.child()
-        return split(child, var, path[1:])
+        new_phrase, removed = split(child, var, path[1:])
+        new_phrase = make_phrase(p.kind, [new_phrase])
+        return new_phrase, removed
     if p.kind not in ARITY_2:
         raise ValueError(f"split: expected binary operator at {p}, got {p.kind}")
     left = p.left()
@@ -967,8 +969,69 @@ def x_plus_y_squared() -> Phrase:
     a8 = replace(a7, two * (x * y), [RIGHT, RIGHT, LEFT])
     return a8[x, X][y, Y]
 
-print(x_plus_y_squared())
+
+x_plus_y_squared()
 assert ((X + Y) * (X + Y) == (X * X) + ((two * (X * Y)) + (Y * Y))).is_known_truth
+
+def _recontrapose() -> Phrase:
+    s = chain[x, X][y, Y][z, Z][X, ~~x][Y, x][Z, y].mp()
+    (x >> ~~x)[x, y]
+    a = chain[x, X][y, Y][z, Z][X, ~~x][Y, y][Z, ~~y]
+    q = commute_ante(a).mp()
+    r = chain[x, X][y, Y][z, Z][X, s.left()][Y, s.right()][Z, q.right()].mp().mp()
+    t = contra[A, ~x][B, ~y]
+    g = deduce(r, t)
+    return g[x, X][y, Y]
+
+recontrapose = _recontrapose()
+assert ((X >> Y) >> (~Y >> ~X)).is_known_truth
+
+x_is_odd = (~(x == y + y)).forall(y)
+x_is_even = ~x_is_odd
+
+
+def _one_is_odd():
+    P = ~(one == y + y)
+    i = induction(P, y)
+    a = peano1[x, zero()]
+    print("a", a, a.is_known_truth)
+    b = eq_flip(peano3[x, zero()])
+    print("b", b, b.is_known_truth)
+    d = replace(a, zero() + zero(), [CHILD, LEFT])
+    print("d", d, d.is_known_truth)
+    e = eq_symm[y, zero() + zero()][x, one]
+    print("e", e, e.is_known_truth)
+    f = recontrapose[Y, zero() + zero() == one][X, one == zero() + zero()].mp().mp()
+    print("f", f, f.is_known_truth)
+    step = i.mp()
+
+    g = eq_flip(peano4[x, X][X, y.S()])
+    print("g", g, g.is_known_truth)
+    h = peano2[x, X][y, Y][X, zero()][Y, y.S() + y]
+    print("h", h, h.is_known_truth)
+    h1 = replace(h, y.S() + y.S(), [LEFT, RIGHT])
+    print("h1", h1, h1.is_known_truth)
+    hh = (X + Y == Y + X)[X, y.S()][Y, y]
+    print("hh", hh, hh.is_known_truth)
+    h2 = replace(h1, y + y.S(), [RIGHT, RIGHT])
+    print("h2", h2, h2.is_known_truth)
+    peano4[x, y]
+    h3 = replace(h2, (y + y).S(), [RIGHT, RIGHT])
+    print("h3", h3, h3.is_known_truth)
+    peano1[x, y + y]
+    j = recontrapose[X, h3.left()][Y, h3.right()].mp().mp()
+    print("j", j, j.is_known_truth)
+    k = ignore[A, j][B, step.left().left()].mp()
+    print("k", k, k.is_known_truth)
+
+    print()
+    print(step.mp().forall(y))
+
+    return x_is_odd[x, one]
+
+
+one_is_odd = _one_is_odd()
+assert x_is_odd[x, one].is_known_truth
 
 print(commute_antecedents)
 print(impl_refl)
@@ -998,6 +1061,7 @@ print(mul_comm)
 print(mul_distr)
 print(mul_distr_left)
 print(mul_assoc)
+print(one_is_odd)
 
 print("Total unique phrases created:", len(phrases))
 print("Known truths among them:", sum(1 for p in phrases.values() if p.is_known_truth))
