@@ -7,7 +7,8 @@ contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
 ignore['A / 'x]['B / 'x ⇒ 'x]
 ignore['A / 'x]['B / 'x]
 distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
-|- 'x ⇒ 'x
+('x -> 'x)['x / 'X]
+|- 'X ⇒ 'X
 1 := succ(0)
 
 distr['A / 'x]['B / 'y]['C / 'z]
@@ -32,4 +33,14 @@ distr
     ['A / 'x -> ('y -> 'z)]
     ['B / 'y -> ('x -> 'y)]
     ['C / 'y -> ('x -> 'z)].MP.MP
-|- ('x -> ('y -> 'z)) -> ('y -> ('x -> 'z))
+
+commute_antecedents := (('x -> ('y -> 'z)) -> ('y -> ('x -> 'z)))
+    ['x / 'X]['y / 'Y]['z / 'Z]
+|- commute_antecedents
+
+ignore['A / 'y -> 'z]['B / 'x]
+ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y -> 'z].MP
+distr['A / 'y -> 'z]['B / 'x -> ('y -> 'z)]['C / ('x -> 'y) -> ('x -> 'z)].MP.MP
+chain := commute_antecedents['X / 'y -> 'z]['Y / 'x -> 'y]['Z / 'x -> 'z].MP
+    ['x / 'X]['y / 'Y]['z / 'Z]
+|- chain
