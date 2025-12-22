@@ -13,7 +13,7 @@ struct Namespace {
 }
 
 impl Namespace {
-    fn find_self(&self, name: &str) -> Option<Thing> {
+    fn find(&self, name: &str) -> Option<Thing> {
         self.stuff
             .borrow()
             .iter()
@@ -21,17 +21,7 @@ impl Namespace {
             .find(|thing| thing.name() == name)
             .cloned()
     }
-    fn find(self: &Rc<Self>, name: &str) -> Option<Thing> {
-        let mut this = Some(self.clone());
-        while let Some(namespace) = this {
-            if let Some(thing) = namespace.find_self(name) {
-                return Some(thing);
-            }
-            this = namespace.parent.clone();
-        }
-        None
-    }
-    fn set(self: &Rc<Self>, thing: Thing) {
+    fn set(&self, thing: Thing) {
         self.stuff.borrow_mut().push(thing);
     }
 }
@@ -76,7 +66,6 @@ enum Node {
     Slash,
     Dot,
     ModusPonens,
-    Fax,
     Right,
     Child,
     Left,
@@ -101,7 +90,6 @@ impl Node {
             | Node::CloseRound
             | Node::CloseSquare
             | Node::ModusPonens
-            | Node::Fax
             | Node::Right
             | Node::Child
             | Node::Left => false,
@@ -440,6 +428,14 @@ fn interpret_inner(
             stack.push(Node::CloseRound);
             continue;
         }
+        if token == Some("}".to_string()) {
+            let Some(parent) = namespace.parent.clone() else {
+                Err(format!("syntax error @ {}", peek.location()))?
+            };
+            peek.take();
+            namespace = parent;
+            continue;
+        }
         if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
             back(&stack, 1)
         {
@@ -448,6 +444,62 @@ fn interpret_inner(
                 println!("{:b}", **phrase);
             }
             stack.pop();
+            continue;
+        }
+        if token == Some("{".to_string()) {
+            peek.take();
+            namespace = Namespace {
+                parent: Some(namespace),
+                stuff: vec![].into(),
+            }
+            .into();
+            continue;
+        }
+        if token == Some("⬎".to_string()) {
+            peek.take();
+            let Some(ident) = peek.peek() else {
+                Err("unexpected eof")?
+            };
+            if namespace.find(&ident).is_some() {
+                Err(format!("TODO @ {}", peek.location()))?
+            }
+            let Some(parent) = namespace.parent.clone() else {
+                Err(format!(
+                    "cannot import into global namespace @ {}",
+                    peek.location()
+                ))?
+            };
+            let Some(thing) = parent.find(&ident) else {
+                Err(format!(
+                    "parent namespace does not contain {ident} @ {}",
+                    peek.location()
+                ))?
+            };
+            namespace.set(thing);
+            peek.take();
+            continue;
+        }
+        if token == Some("⬏".to_string()) {
+            peek.take();
+            let Some(ident) = peek.peek() else {
+                Err("unexpected eof")?
+            };
+            let Some(thing) = namespace.find(&ident) else {
+                Err(format!(
+                    "namespace does not contain {ident} @ {}",
+                    peek.location()
+                ))?
+            };
+            let Some(parent) = namespace.parent.clone() else {
+                Err(format!(
+                    "cannot export from global namespace @ {}",
+                    peek.location()
+                ))?
+            };
+            if parent.find(&ident).is_some() {
+                Err(format!("TODO @ {}", peek.location()))?
+            }
+            parent.set(thing);
             continue;
         }
         if token == Some("⊦".to_string()) {

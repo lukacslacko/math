@@ -48,6 +48,8 @@ fn tokenize_word(
         ("𝗦", "𝗦"),
         ("FAX", "℻"),
         ("℻", "℻"),
+        ("{", "{"),
+        ("}", "}"),
     ];
 
     // Does the word start with any tokens?
