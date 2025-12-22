@@ -12,7 +12,7 @@ distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
 1 := succ(0)
 
 distr['A / 'x]['B / 'y]['C / 'z]
-{
+commute_antecedents ≔ {
     ⬎ ignore
     ⬎ distr
 
@@ -29,8 +29,7 @@ distr['A / 'x]['B / 'y]['C / 'z]
     distr['A / goal.<]['B / 'y -> p]['C / goal.>].MP.MP
 
     |- goal
-    commute_antecedents := goal['x / 'X]['y / 'Y]['z / 'Z]
-    ⬏ commute_antecedents
+    goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 
 |- commute_antecedents

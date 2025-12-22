@@ -63,6 +63,8 @@ enum Node {
     NotTok,
     OpenSquare,
     CloseSquare,
+    OpenCurly,
+    CloseCurly,
     Slash,
     Dot,
     ModusPonens,
@@ -81,6 +83,7 @@ impl Node {
             | Node::AssignTok
             | Node::NotTok
             | Node::OpenSquare
+            | Node::OpenCurly
             | Node::Slash
             | Node::Dot => true,
 
@@ -89,6 +92,7 @@ impl Node {
             | Node::NumericPhrase(_)
             | Node::CloseRound
             | Node::CloseSquare
+            | Node::CloseCurly
             | Node::ModusPonens
             | Node::Right
             | Node::Child
@@ -149,6 +153,30 @@ fn interpret_inner(
             stack.pop();
             stack.pop();
             continue;
+        }
+        if let (
+            Some(Node::OpenCurly),
+            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)),
+            Some(Node::CloseCurly),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            let len = stack.len();
+            stack.swap(len - 3, len - 2);
+            continue;
+        }
+        if let (Some(Node::OpenCurly), Some(Node::CloseCurly)) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            let Some(parent) = namespace.parent.clone() else {
+                Err(format!("syntax error @ {}", peek.location()))?
+            };
+            namespace = parent;
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if let Some(Node::CloseCurly) = back(&stack, 1) {
+            Err(format!("syntax error @ {}", peek.location()))?
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -429,11 +457,8 @@ fn interpret_inner(
             continue;
         }
         if token == Some("}".to_string()) {
-            let Some(parent) = namespace.parent.clone() else {
-                Err(format!("syntax error @ {}", peek.location()))?
-            };
             peek.take();
-            namespace = parent;
+            stack.push(Node::CloseCurly);
             continue;
         }
         if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
@@ -453,6 +478,7 @@ fn interpret_inner(
                 stuff: vec![].into(),
             }
             .into();
+            stack.push(Node::OpenCurly);
             continue;
         }
         if token == Some("⬎".to_string()) {
