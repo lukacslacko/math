@@ -76,3 +76,32 @@ recontrapose ≔ {
 }
 
 recontrapose ℻
+
+reflexivity ≔ X = X
+
+equals_symmetric ≔ {
+    ⤷ commute_antecedents
+    ⤷ reflexivity
+
+    goal ≔ x = y ⇒ y = x
+
+    a ≔ x = z; x; y | substitute_equals [z / x]
+    reflexivity[X / x]
+    commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+
+    ⊦ goal
+    goal[x / X][y / Y]
+}
+
+equals_transitive ≔ {
+    ⤷ chain
+    ⤷ equals_symmetric
+
+    goal ≔ x = y ⇒ y = z ⇒ x = z
+
+    a ≔ y = z; y; x | substitute_equals
+    chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
+
+    ⊦ goal
+    goal[x / X][y / Y][z / Z]
+}

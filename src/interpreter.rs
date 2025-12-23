@@ -54,6 +54,7 @@ enum Node {
     Identifier(String),
     LogicPhrase(Phrase),
     NumericPhrase(Phrase),
+    List(Vec<Phrase>),
     Successor,
     Assertion,
     CloseRound,
@@ -61,11 +62,13 @@ enum Node {
     ImplyTok,
     AssignTok,
     NotTok,
+    EqSubs,
     EqualsTok,
     OpenSquare,
     CloseSquare,
     OpenCurly,
     CloseCurly,
+    Semicolon,
     Slash,
     Dot,
     ModusPonens,
@@ -86,13 +89,16 @@ impl Node {
             | Node::EqualsTok
             | Node::OpenSquare
             | Node::OpenCurly
+            | Node::Semicolon
             | Node::Slash
             | Node::Dot => true,
 
             Node::Identifier(_)
             | Node::LogicPhrase(_)
             | Node::NumericPhrase(_)
+            | Node::List(_)
             | Node::CloseRound
+            | Node::EqSubs
             | Node::CloseSquare
             | Node::CloseCurly
             | Node::ModusPonens
@@ -139,9 +145,24 @@ fn interpret_inner(
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
+        if token == Some("≔".to_string()) {
+            let Some(Node::Identifier(_)) = back(&stack, 1) else {
+                Err(format!("syntax error @ {}", peek.location()))?
+            };
+            peek.take();
+            stack.push(Node::AssignTok);
+            continue;
+        }
+        if let Some(Node::Identifier(ident)) = back(&stack, 1) {
+            stack.push(Node::NumericPhrase(make_numeric_variable(
+                ident.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 2);
+            continue;
+        }
         if let (
             Some(Node::OpenRound),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)),
+            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
             Some(Node::CloseRound),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -158,7 +179,7 @@ fn interpret_inner(
         }
         if let (
             Some(Node::OpenCurly),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)),
+            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
             Some(Node::CloseCurly),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -241,18 +262,42 @@ fn interpret_inner(
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!("TODO2 @ {}", peek.location()))?
             }
-            stack.push(Node::NumericPhrase(
-                numeric_phrase
-                    .clone()
-                    .substitute(variable.clone(), term.clone())?,
-            ));
-            stack.swap_remove(stack.len() - 7);
+            let phrase = match numeric_phrase
+                .clone()
+                .substitute(variable.clone(), term.clone())
+            {
+                Ok(phrase) => phrase,
+                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
+            };
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
+            stack.pop();
+            stack.push(Node::NumericPhrase(phrase));
         }
+        if let (Some(Node::List(list)), Some(Node::Dot), Some(Node::EqSubs)) =
+            (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            if list.len() != 3 {
+                Err(format!("TODO @ {}", peek.location()))?
+            }
+            let phrase = list[0].clone();
+            let x = list[1].clone();
+            let y = list[2].clone();
+            if !phrase.is_proposition() {
+                Err(format!("TODO @ {}", peek.location()))?
+            }
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.push(Node::LogicPhrase(match peano::eq_subs(phrase, x, y) {
+                Ok(phrase) => phrase,
+                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
+            }));
+        }
+
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
             Some(Node::Dot),
@@ -339,10 +384,17 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("MP".to_string()) {
-            peek.take();
-            stack.push(Node::ModusPonens);
-            continue;
+        if let Some(Node::Dot) = back(&stack, 1) {
+            if token == Some("MP".to_string()) {
+                peek.take();
+                stack.push(Node::ModusPonens);
+                continue;
+            }
+            if token == Some("substitute_equals".to_string()) {
+                peek.take();
+                stack.push(Node::EqSubs);
+                continue;
+            }
         }
         if token == Some(".".to_string()) {
             peek.take();
@@ -426,6 +478,44 @@ fn interpret_inner(
             stack.swap_remove(stack.len() - 4);
             stack.pop();
             stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::List(_)),
+            Some(Node::Semicolon),
+            Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            let phrase = phrase.clone();
+            stack.pop();
+            stack.pop();
+            let Some(Node::List(mut list)) = stack.pop() else {
+                unreachable!()
+            };
+            list.push(phrase);
+            stack.push(Node::List(list));
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(l) | Node::NumericPhrase(l)),
+            Some(Node::Semicolon),
+            Some(Node::LogicPhrase(r) | Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::List(vec![l.clone(), r.clone()]));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some(";".to_string()) {
+            peek.take();
+            stack.push(Node::Semicolon);
+            continue;
+        }
+        if token == Some("|".to_string()) {
+            peek.take();
+            stack.push(Node::Dot);
             continue;
         }
         if let (
@@ -570,18 +660,13 @@ fn interpret_inner(
             stack.push(Node::NotTok);
             continue;
         }
-        if token == Some("≔".to_string()) {
-            let Some(Node::Identifier(_)) = back(&stack, 1) else {
-                Err(format!("syntax error @ {}", peek.location()))?
-            };
-            peek.take();
-            stack.push(Node::AssignTok);
-            continue;
-        }
 
         if let Some(top) = back(&stack, 1)
             && !top.is_operator()
         {
+            if token.is_none() {
+                Err("unexpected eof")?
+            }
             Err(format!("syntax error @ {}", peek.location()))?
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {

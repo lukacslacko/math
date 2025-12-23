@@ -19,6 +19,7 @@ fn tokenize_word(
 
     let mut tokens = Vec::new();
     let prefixes = [
+        (";", ";"),
         ("[", "["),
         ("]", "]"),
         ("⊦", "⊦"),
@@ -51,6 +52,7 @@ fn tokenize_word(
         ("}", "}"),
         ("⤷", "⤷"),
         ("⤶", "⤶"),
+        ("|", "|"),
     ];
 
     let keywords = [

@@ -205,7 +205,7 @@ impl PhraseData {
         }
         let new = {
             if self.kind == Quantify {
-                let (left, right) = self.children.unwrap_two();
+                let (left, _) = self.children.unwrap_two();
                 if **left == *variable {
                     return Ok(self);
                 } else if term.is_free(left)? {
@@ -365,9 +365,16 @@ pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
     if variable.kind != NumericVariable || !predicate.is_proposition() {
         Err("make_quantify")?
     }
-    Ok(Rc::new(PhraseData {
+    let new = Rc::new(PhraseData {
         kind: Quantify,
-        children: Children::Two(variable, predicate),
+        children: Children::Two(variable, predicate.clone()),
         variable_name: None,
-    }))
+    });
+    if predicate.clone().get_is_proven() {
+        new.clone().assert_axiom(NamePhrase(
+            "universal generalization",
+            predicate.clone(),
+        ))?;
+    }
+    Ok(new)
 }

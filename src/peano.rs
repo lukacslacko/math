@@ -2,8 +2,8 @@ use crate::UnitResult;
 use crate::phrase::*;
 
 pub fn axioms() -> UnitResult {
-    let var_x = make_numeric_variable("x".to_string())?;
-    let var_y = make_numeric_variable("y".to_string())?;
+    let var_x = make_numeric_variable("X".to_string())?;
+    let var_y = make_numeric_variable("Y".to_string())?;
     let zero = make_numeric_constant_zero("0".to_string())?;
 
     make_not(make_equals(zero.clone(), make_successor(var_x.clone())?)?)?
@@ -36,11 +36,14 @@ pub fn axioms() -> UnitResult {
     )?
     .assert_axiom(Name("peano 6"))?;
 
+    make_equals(var_x.clone(), var_x.clone())?
+        .assert_axiom(Name("reflexivity"))?;
+
     Ok(())
 }
 
 pub fn induction(
-    #[allow(non_snake_case)] P: Phrase,
+    #[expect(non_snake_case)] P: Phrase,
     variable: Phrase,
 ) -> Result {
     if variable.get_kind() != NumericVariable {
@@ -58,4 +61,22 @@ pub fn induction(
         )?,
     )?
     .assert_axiom(Name("induction"))
+}
+
+pub fn eq_subs(
+    #[expect(non_snake_case)] A: Phrase,
+    x: Phrase,
+    y: Phrase,
+) -> Result {
+    if !matches!(x.get_kind(), NumericVariable | NumericConstant) {
+        Err("eq_subs")?
+    }
+    if !matches!(y.get_kind(), NumericVariable | NumericConstant) {
+        Err("eq_subs")?
+    }
+    make_imply(
+        make_equals(x.clone(), y.clone())?,
+        make_imply(A.clone(), A.substitute(x, y)?)?,
+    )?
+    .assert_axiom(Name("indiscernibility of identicals"))
 }
