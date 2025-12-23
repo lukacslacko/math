@@ -49,6 +49,7 @@ fn main() {
         for _ in 0..depth {
             print!("    ");
         }
+        let mut prev_token: Option<&math::lexer::Token> = None;
         for token in line_tokens {
             let token_text = &token.text;
             let nice_text = nice_tokens
@@ -57,9 +58,15 @@ fn main() {
                 .map(|(_, nice)| *nice)
                 .unwrap_or(token_text);
             print!("{}", nice_text);
+            if let Some(prev) = &prev_token {
+                if prev.text == "∀" {
+                    print!(" ");
+                }
+            }
             if token.text == "{" {
                 depth += 1;
             }
+            prev_token = Some(token);
         }
         println!();
     }
