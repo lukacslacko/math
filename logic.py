@@ -999,39 +999,34 @@ x_is_odd = (~(x == y + y)).forall(y)
 x_is_even = ~x_is_odd
 
 
+def neq_symm() -> Phrase:
+    eq_symm[x, X][y, Y][X, y][Y, x]
+    recontrapose[X, y == x][Y, x == y].mp()[x, X][y, Y]
+
+
+neq_symm()
+
+
 def _one_is_odd():
     P = ~(one == y + y)
     i = induction(P, y)
     a = peano1[x, zero()]
-    print("a", a, a.is_known_truth)
-    b = eq_flip(peano3[x, zero()])
-    print("b", b, b.is_known_truth)
-    d = replace(a, zero() + zero(), [CHILD, LEFT])
-    print("d", d, d.is_known_truth)
-    e = eq_symm[y, zero() + zero()][x, one]
-    print("e", e, e.is_known_truth)
-    f = recontrapose[Y, zero() + zero() == one][X, one == zero() + zero()].mp().mp()
-    print("f", f, f.is_known_truth)
+    eq_flip(peano3[x, zero()])
+    replace(a, zero() + zero(), [CHILD, LEFT])
+    eq_symm[y, zero() + zero()][x, one]
+    recontrapose[Y, zero() + zero() == one][X, one == zero() + zero()].mp().mp()
     step = i.mp()
 
-    g = eq_flip(peano4[x, X][X, y.S()])
-    print("g", g, g.is_known_truth)
+    eq_flip(peano4[x, X][X, y.S()])
     h = peano2[x, X][y, Y][X, zero()][Y, y.S() + y]
-    print("h", h, h.is_known_truth)
     h1 = replace(h, y.S() + y.S(), [LEFT, RIGHT])
-    print("h1", h1, h1.is_known_truth)
-    hh = (X + Y == Y + X)[X, y.S()][Y, y]
-    print("hh", hh, hh.is_known_truth)
+    (X + Y == Y + X)[X, y.S()][Y, y]
     h2 = replace(h1, y + y.S(), [RIGHT, RIGHT])
-    print("h2", h2, h2.is_known_truth)
     peano4[x, y]
     h3 = replace(h2, (y + y).S(), [RIGHT, RIGHT])
-    print("h3", h3, h3.is_known_truth)
     peano1[x, y + y]
     j = recontrapose[X, h3.left()][Y, h3.right()].mp().mp()
-    print("j", j, j.is_known_truth)
-    k = ignore[A, j][B, step.left().left()].mp()
-    print("k", k, k.is_known_truth)
+    ignore[A, j][B, step.left().left()].mp()
 
     print()
     print(step.mp().forall(y))
@@ -1040,7 +1035,50 @@ def _one_is_odd():
 
 
 one_is_odd = _one_is_odd()
+print("one_is_odd:", one_is_odd, one_is_odd.is_known_truth)
 assert x_is_odd[x, one].is_known_truth
+
+
+def succ_of_even_is_odd():
+    goal = x_is_even >> x_is_odd[x, x.S()]
+    print("goal", goal, goal.is_known_truth)
+    # goal2 = x_is_even >> (~(x.S() == z + z))
+    # print("goal2", goal2, goal2.is_known_truth)
+    # i = induction(goal2, z)
+    # print("i", i, i.is_known_truth)
+    # first = i.left()
+    # print("first", first, first.is_known_truth)
+    # a = peano1
+    # print("a", a, a.is_known_truth)
+    # b = (~(X == Y) >> ~(Y == X))[X, zero()][Y, x.S()].mp()
+    # print("b", b, b.is_known_truth)
+    # c = replace(b, zero() + zero(), [CHILD, RIGHT])
+    # print("c", c, c.is_known_truth)
+    # ignore[A, c][B, first.left()].mp()
+    # print("first", first, first.is_known_truth)
+    # step = i.mp().left()
+    # print("step", step, step.is_known_truth)
+    exit()
+
+
+P = ~(x == one)
+i = induction(P, x)
+print(i, i.is_known_truth)
+m = peano1[x, zero()]
+print("m", m, m.is_known_truth)
+k = peano2[x, one][y, zero()]
+print("k", k, k.is_known_truth)
+k2 = deduce(k, eq_symm[y, zero()][x, one])
+print("k2", k2, k2.is_known_truth)
+k3 = recontrapose[X, two == one][Y, zero() == one].mp().mp()
+print("k3", k3, k3.is_known_truth)
+k4 = ignore[A, k3][B, ~(one == one)].mp()
+print("k4", k4, k4.is_known_truth)
+j = i[x, one].mp().mp()
+print(j, j.is_known_truth)
+exit()
+
+succ_of_even_is_odd()
 
 print(commute_antecedents)
 print(impl_refl)
