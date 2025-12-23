@@ -75,8 +75,6 @@ recontrapose ≔ {
     goal['x / 'A]['y / 'B]
 }
 
-recontrapose ℻
-
 reflexivity ≔ X = X
 
 equals_symmetric ≔ {
