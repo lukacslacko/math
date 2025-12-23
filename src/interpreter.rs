@@ -55,6 +55,8 @@ enum Node {
     LogicPhrase(Phrase),
     NumericPhrase(Phrase),
     List(Vec<Phrase>),
+    QuantifyVar(Phrase),
+    Quantify,
     Successor,
     Assertion,
     CloseRound,
@@ -80,7 +82,9 @@ enum Node {
 impl Node {
     fn is_operator(&self) -> bool {
         match self {
-            Node::Successor
+            Node::Quantify
+            | Node::QuantifyVar(_)
+            | Node::Successor
             | Node::Assertion
             | Node::OpenRound
             | Node::ImplyTok
@@ -90,8 +94,7 @@ impl Node {
             | Node::OpenSquare
             | Node::OpenCurly
             | Node::Semicolon
-            | Node::Slash
-            | Node::Dot => true,
+            | Node::Slash => true,
 
             Node::Identifier(_)
             | Node::LogicPhrase(_)
@@ -101,6 +104,7 @@ impl Node {
             | Node::EqSubs
             | Node::CloseSquare
             | Node::CloseCurly
+            | Node::Dot
             | Node::ModusPonens
             | Node::Right
             | Node::Child
@@ -151,6 +155,15 @@ fn interpret_inner(
             };
             peek.take();
             stack.push(Node::AssignTok);
+            continue;
+        }
+        if let (Some(Node::Quantify), Some(Node::Identifier(ident))) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            stack
+                .push(Node::QuantifyVar(make_numeric_variable(ident.clone())?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
             continue;
         }
         if let Some(Node::Identifier(ident)) = back(&stack, 1) {
@@ -481,6 +494,19 @@ fn interpret_inner(
             continue;
         }
         if let (
+            Some(Node::QuantifyVar(variable)),
+            Some(Node::LogicPhrase(logic_phrase)),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_quantify(
+                variable.clone(),
+                logic_phrase.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (
             Some(Node::List(_)),
             Some(Node::Semicolon),
             Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
@@ -638,6 +664,11 @@ fn interpret_inner(
                 Err(format!("TODO @ {}", peek.location()))?
             }
             parent.set(thing);
+            continue;
+        }
+        if token == Some("∀".to_string()) {
+            peek.take();
+            stack.push(Node::Quantify);
             continue;
         }
         if token == Some("⊦".to_string()) {

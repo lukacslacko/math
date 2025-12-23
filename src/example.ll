@@ -116,3 +116,5 @@ not_equals_symmetric ≔ {
     ⊦ goal
     goal[x / X][y / Y]
 }
+
+∀x ¬0 = 𝗦x ℻
