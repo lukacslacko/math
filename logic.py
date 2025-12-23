@@ -208,7 +208,7 @@ def subs(p: Phrase, x: Phrase, q: Phrase) -> Phrase:
             #
             # Consider P = ∀x ((∀y (y = 0 -> x = 0)) -> x = 0).
             # P is true, but substituting x with y would yield
-            # (∀y (y = 0 -> y = 0)) -> y = 0, which is not true.
+            # ∀y ((∀y (y = 0 -> y = 0)) -> y = 0), which is not true.
             #
             raise ValueError(
                 f"subs: cannot substitute {x} with {q} in {p} due to variable capture"
