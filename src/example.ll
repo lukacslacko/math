@@ -119,7 +119,9 @@ not_equals_symmetric ≔ {
 }
 
 peano1 ≔ ∀X ¬0 = 𝗦(X)
+peano2 ≔ ∀X ∀Y 𝗦(X) = 𝗦(Y) ⇒ X = Y
 ⊦ peano1
+⊦ peano2
 peano1[1].MP ℻
 ⊦ ¬0 = 2
 ∀X 0 = x ⇒ x = 0 ⇆ ℻
