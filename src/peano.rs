@@ -6,8 +6,11 @@ pub fn axioms() -> UnitResult {
     let var_y = make_numeric_variable("Y".to_string())?;
     let zero = make_numeric_constant_zero("0".to_string())?;
 
-    make_not(make_equals(zero.clone(), make_successor(var_x.clone())?)?)?
-        .assert_axiom(Name("peano 1"))?;
+    make_quantify(
+        var_x.clone(),
+        make_not(make_equals(zero.clone(), make_successor(var_x.clone())?)?)?,
+    )?
+    .assert_axiom(Name("peano 1"))?;
 
     make_imply(
         make_equals(

@@ -253,6 +253,30 @@ fn interpret_inner(
             stack.push(Node::LogicPhrase(phrase));
         }
         if let (
+            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::OpenSquare),
+            Some(Node::NumericPhrase(numeric_term)),
+            Some(Node::CloseSquare),
+        ) = (
+            back(&stack, 4),
+            back(&stack, 3),
+            back(&stack, 2),
+            back(&stack, 1),
+        ) {
+            let phrase = match logic::instantiate(
+                logic_phrase.clone(),
+                numeric_term.clone(),
+            ) {
+                Ok(phrase) => phrase,
+                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
+            };
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.push(Node::LogicPhrase(phrase));
+        }
+        if let (
             Some(Node::NumericPhrase(numeric_phrase)),
             Some(Node::OpenSquare),
             Some(Node::LogicPhrase(variable) | Node::NumericPhrase(variable)),
