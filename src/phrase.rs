@@ -138,6 +138,31 @@ impl PhraseData {
     pub fn get_variable_name(&self) -> &Option<String> {
         &self.variable_name
     }
+    pub fn is_free(
+        &self,
+        variable: &PhraseData,
+    ) -> std::result::Result<bool, Box<dyn Error>> {
+        if !matches!(variable.kind, NumericVariable | LogicVariable) {
+            Err("is_free")?
+        }
+        Ok(self == variable
+            || if self.kind == Quantify {
+                let (left, right) = self.children.unwrap_two();
+                if &**left == variable {
+                    false
+                } else {
+                    right.is_free(variable)?
+                }
+            } else {
+                match &self.children {
+                    Children::Zero() => false,
+                    Children::One(child) => child.is_free(variable)?,
+                    Children::Two(left, right) => {
+                        left.is_free(variable)? || right.is_free(variable)?
+                    }
+                }
+            })
+    }
     pub fn is_numeric(&self) -> bool {
         matches!(
             self.kind,
@@ -173,11 +198,20 @@ impl PhraseData {
             NumericVariable if term.is_numeric() => {}
             _ => Err("substitute")?,
         }
-        let new = if self == variable {
-            term.clone()
+        if self == variable {
+            return Ok(term.clone());
         } else if matches!(self.children, Children::Zero()) {
-            self.clone()
-        } else {
+            return Ok(self.clone());
+        }
+        let new = {
+            if self.kind == Quantify {
+                let (left, right) = self.children.unwrap_two();
+                if **left == *variable {
+                    return Ok(self);
+                } else if term.is_free(left)? {
+                    Err("substitute")?
+                }
+            }
             Rc::new(PhraseData {
                 kind: self.kind,
                 children: match &self.children {

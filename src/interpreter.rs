@@ -203,17 +203,20 @@ fn interpret_inner(
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!("TODO2 @ {}", peek.location()))?
             }
-            stack.push(Node::LogicPhrase(
-                logic_phrase
-                    .clone()
-                    .substitute(variable.clone(), term.clone())?,
-            ));
-            stack.swap_remove(stack.len() - 7);
+            let phrase = match logic_phrase
+                .clone()
+                .substitute(variable.clone(), term.clone())
+            {
+                Ok(phrase) => phrase,
+                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
+            };
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
+            stack.pop();
+            stack.push(Node::LogicPhrase(phrase));
         }
         if let (
             Some(Node::NumericPhrase(numeric_phrase)),
