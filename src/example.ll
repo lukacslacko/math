@@ -10,6 +10,7 @@ distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
 ('x ⇒ 'x)['x / 'X]
 ⊦ 'X ⇒ 'X
 1 ≔ 𝗦(0)
+2 := succ(1)
 
 distr['A / 'x]['B / 'y]['C / 'z]
 commute_antecedents ≔ {
@@ -117,4 +118,8 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-(∀X ¬0 = 𝗦(X))[1].MP ℻
+peano1 ≔ ∀X ¬0 = 𝗦(X)
+⊦ peano1
+peano1[1].MP ℻
+⊦ ¬0 = 2
+∀X 0 = x ⇒ x = 0 ⇆ ℻

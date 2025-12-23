@@ -74,6 +74,7 @@ enum Node {
     Slash,
     Dot,
     ModusPonens,
+    DistributeQuantification,
     Right,
     Child,
     Left,
@@ -106,6 +107,7 @@ impl Node {
             | Node::CloseCurly
             | Node::Dot
             | Node::ModusPonens
+            | Node::DistributeQuantification
             | Node::Right
             | Node::Child
             | Node::Left => false,
@@ -334,6 +336,21 @@ fn interpret_inner(
                 Err(err) => Err(format!("{err} @ {}", peek.location()))?,
             }));
         }
+        if let (
+            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::DistributeQuantification),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(
+                match logic::distribute(logic_phrase.clone()) {
+                    Ok(phrase) => phrase,
+                    Err(err) => Err(format!("{err} @ {}", peek.location()))?,
+                },
+            ));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
 
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -561,6 +578,11 @@ fn interpret_inner(
         if token == Some(";".to_string()) {
             peek.take();
             stack.push(Node::Semicolon);
+            continue;
+        }
+        if token == Some("⇆".to_string()) {
+            peek.take();
+            stack.push(Node::DistributeQuantification);
             continue;
         }
         if token == Some("|".to_string()) {

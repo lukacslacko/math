@@ -53,6 +53,7 @@ fn tokenize_word(
         ("⤷", "⤷"),
         ("⤶", "⤶"),
         ("|", "|"),
+        ("⇆", "⇆"),
     ];
 
     let keywords = [
@@ -60,6 +61,7 @@ fn tokenize_word(
         ("import", "⤷"),
         ("FAX", "℻"),
         ("succ", "𝗦"),
+        ("<distribute>", "⇆"),
     ];
 
     // Is the word equal to any keyword?
