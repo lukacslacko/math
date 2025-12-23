@@ -65,7 +65,7 @@ pub fn axioms() -> UnitResult {
     )?
     .assert_axiom(Name("peano 6"))?;
 
-    make_equals(var_x.clone(), var_x.clone())?
+    make_quantify(var_x.clone(), make_equals(var_x.clone(), var_x.clone())?)?
         .assert_axiom(Name("reflexivity"))?;
 
     Ok(())
@@ -112,9 +112,15 @@ pub fn eq_subs(
     if !matches!(y.get_kind(), NumericVariable | NumericConstant) {
         Err("eq_subs")?
     }
-    make_imply(
-        make_equals(x.clone(), y.clone())?,
-        make_imply(A.clone(), A.substitute(x, y)?)?,
+    make_quantify(
+        x.clone(),
+        make_quantify(
+            y.clone(),
+            make_imply(
+                make_equals(x.clone(), y.clone())?,
+                make_imply(A.clone(), A.substitute(x, y)?)?,
+            )?,
+        )?,
     )?
     .assert_axiom(Name("indiscernibility of identicals"))
 }

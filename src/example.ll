@@ -76,7 +76,7 @@ recontrapose ≔ {
     goal['x / 'A]['y / 'B]
 }
 
-reflexivity ≔ X = X
+reflexivity ≔ !X X = X
 
 equals_symmetric ≔ {
     ⤷ commute_antecedents
@@ -84,8 +84,8 @@ equals_symmetric ≔ {
 
     goal ≔ x = y ⇒ y = x
 
-    a ≔ x = z; x; y | substitute_equals [z / x]
-    reflexivity[X / x]
+    a ≔ x = z; x; y | substitute_equals[x].MP[y].MP[z / x]
+    reflexivity[x].MP
     commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
     ⊦ goal
@@ -98,7 +98,7 @@ equals_transitive ≔ {
 
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
-    a ≔ y = z; y; x | substitute_equals
+    a ≔ y = z; y; x | substitute_equals[y].MP[x].MP
     chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
 
     ⊦ goal
