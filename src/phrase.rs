@@ -367,14 +367,8 @@ pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
     }
     let new = Rc::new(PhraseData {
         kind: Quantify,
-        children: Children::Two(variable, predicate.clone()),
+        children: Children::Two(variable, predicate),
         variable_name: None,
     });
-    if predicate.clone().get_is_proven() {
-        new.clone().assert_axiom(NamePhrase(
-            "universal generalization",
-            predicate.clone(),
-        ))?;
-    }
     Ok(new)
 }

@@ -103,3 +103,16 @@ equals_transitive ≔ {
     ⊦ goal
     goal[x / X][y / Y][z / Z]
 }
+
+not_equals_symmetric ≔ {
+    ⤷ equals_symmetric
+    ⤷ recontrapose
+
+    goal ≔ ¬x = y ⇒ ¬y = x
+
+    equals_symmetric[X / y][Y / x]
+    recontrapose['A / y = x]['B / x = y].MP
+
+    ⊦ goal
+    goal[x / X][y / Y]
+}
