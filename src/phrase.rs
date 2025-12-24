@@ -135,9 +135,6 @@ impl PhraseData {
     pub fn get_is_proven(&self) -> bool {
         KNOWN_TRUTHS.with_borrow(|known_truths| known_truths.contains_key(self))
     }
-    pub fn get_variable_name(&self) -> &Option<String> {
-        &self.variable_name
-    }
     pub fn is_free(
         &self,
         variable: &PhraseData,
