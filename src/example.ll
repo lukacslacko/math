@@ -132,36 +132,16 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-zero_plus_x_eq_x ≔ {
-    ⤷ 0
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ commute_antecedents
-
-    goal ≔ 0 + x = x
-
-    peano3[0]
-    peano4[0].MP[x].MP
-    a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
-
-    TODO this should be commute_ante(a)
-    ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
-
-    goal; x | ↺.MP.MP[x].MP
-
-    this is an example comment here
-
-    ⊦ goal
-    ∀x goal
-}
-
 this is also a comment
 
 plus_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
-    ⤷ zero_plus_x_eq_x
+    ⤷ 0
+    ⤷ chain
+    ⤷ commute_antecedents
     ⤷ peano3
+    ⤷ peano4
     ⤷ equals_symmetric
     ⤷ equals_transitive
 
@@ -169,14 +149,98 @@ plus_comm ≔ {
 
     first prove that x + 0 = 0 + x which is the base case
     p ≔ peano3[x].MP
-    a ≔ zero_plus_x_eq_x[x].MP
+
+    a ≔ {
+        ⤷ 0
+        ⤷ peano3
+        ⤷ peano4
+        ⤷ commute_antecedents
+
+        goal ≔ 0 + x = x
+
+        peano3[0]
+        peano4[0].MP[x].MP
+        a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
+
+        TODO this should be commute_ante(a)
+        ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+
+        goal; x | ↺.MP.MP[x].MP
+        ⊦ goal
+        goal
+    }
 
     TODO this should be eq_flip(a)
     e ≔ equals_symmetric[X / a↙][Y / a↘].MP
 
     TODO this should be eq_trans(p, e)
     equals_transitive[X / p↙][Y / p↘][Z / e↘].MP.MP
-    i.MP ℻
 
-    a
+    peano4[x].MP[y].MP
+
+    b ≔ {
+        goal ≔ (𝗦(x) + y) = 𝗦(x + y)
+
+        ⤷ 0
+        ⤷ chain
+        ⤷ commute_antecedents
+        ⤷ equals_symmetric
+        ⤷ equals_transitive
+        ⤷ peano3
+        ⤷ peano4
+
+        peano3[𝗦(x)].MP
+
+        TODO this should be eq_flip(peano3[x].MP)
+        p3x ≔ peano3[x].MP
+        equals_symmetric[X / p3x↙][Y / p3x↘].MP
+
+        (X = X)[X / 𝗦(x)]
+        𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP
+        equals_symmetric[X / 𝗦(x + 0)][Y / 𝗦(x)].MP
+        equals_transitive[X / 𝗦(x) + 0][Y / 𝗦(x)][Z / 𝗦(x + 0)].MP.MP
+
+        i ≔ goal; y | ↺
+
+        peano4[𝗦(x)].MP[y].MP
+        a ≔ 𝗦(x) + 𝗦(y) = 𝗦(z); z; w | ⪮[z / 𝗦(x) + y][w / 𝗦(x + y)]
+        b ≔ commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+
+        equals_transitive[X / 𝗦(𝗦(x) + y)][Y / 𝗦(𝗦(x + y))][Z / 𝗦(x) + 𝗦(y)]
+
+        equals_symmetric[X / x + 𝗦(y)][Y / 𝗦(x + y)].MP
+
+        c ≔ 𝗦(x) + 𝗦(y) = 𝗦(z); z; w | ⪮[z / 𝗦(x + y)][w / x + 𝗦(y)].MP
+
+        ∀y chain['X / b↙]['Y / b↘]['Z / c↘].MP.MP
+
+        i.MP.MP[y].MP
+
+        ⊦ goal
+        goal
+    }
+
+    b[x / X][y / Y][X / y][Y / x]
+    equals_symmetric[X / 𝗦(y) + x][Y / 𝗦(y + x)].MP
+
+    c ≔ 𝗦(x + y) = 𝗦(z); z; w | ⪮[z / x + y][w / y + x]
+    (X = X)[X / 𝗦(x + y)]
+    d ≔ commute_antecedents['X / c↙]['Y / c↘↙]['Z / c↘↘].MP.MP
+
+    d has the value(((x + y) = (y + x)) ⇒ (𝗦((x + y)) = 𝗦((y + x))))
+    TODO split would be helpful here by replacing right left right in d by z
+    f ≔ x + y = y + x ⇒ z = 𝗦(y + x); z; w | ⪮[z / 𝗦(x + y)][w / x + 𝗦(y)].MP.MP
+
+    g ≔ x + 𝗦(y) = z; z; w | ⪮[z / 𝗦(y + x)][w / 𝗦(y) + x].MP
+
+    TODO this would also be better as a macro deduct(f, g)
+    h ≔ chain['X / f↙]['Y / f↘]['Z / g↘].MP.MP
+    ∀y h
+
+    i.MP.MP[y].MP
+
+    ⊦ goal
+    goal
 }
+
+plus_comm ℻
