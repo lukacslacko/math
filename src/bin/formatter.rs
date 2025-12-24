@@ -59,10 +59,10 @@ fn main() {
                 .map(|(_, nice)| *nice)
                 .unwrap_or(token_text);
             print!("{}", nice_text);
-            if let Some(prev) = &prev_token {
-                if prev.text == "∀" {
-                    print!(" ");
-                }
+            if let Some(prev) = &prev_token
+                && prev.text == "∀"
+            {
+                print!(" ");
             }
             if token.text == "{" {
                 depth += 1;
