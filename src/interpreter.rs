@@ -40,15 +40,6 @@ impl Thing {
     }
 }
 
-pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
-    let namespace: Rc<Namespace> = Rc::default();
-    namespace.set(Thing::NumericPhrase(
-        "0".to_string(),
-        make_numeric_constant_zero("0".to_string())?,
-    ));
-    interpret_inner(tokens, namespace)
-}
-
 #[derive(Debug, PartialEq, Eq)]
 enum Node {
     Identifier(String),
@@ -140,12 +131,19 @@ fn back(stack: &[Node], index: usize) -> Option<&Node> {
     stack.iter().nth_back(index - 1)
 }
 
-fn interpret_inner(
-    tokens: impl Iterator<Item = Token>,
-    mut namespace: Rc<Namespace>,
-) -> UnitResult {
+pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
     let mut peek = Peek(None, tokens);
+    interpret_inner(&mut peek)
+        .map_err(|err| format!("{err} @ {}", peek.location()).into())
+}
+
+fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
     let mut stack = vec![];
+    let mut namespace: Rc<Namespace> = Rc::default();
+    namespace.set(Thing::NumericPhrase(
+        "0".to_string(),
+        make_numeric_constant_zero("0".to_string())?,
+    ));
     loop {
         // eprintln!("{stack:#?}");
         // let mut line = String::new();
@@ -153,7 +151,7 @@ fn interpret_inner(
         let token = peek.peek();
         if token == Some("≔".to_string()) {
             let Some(Node::Identifier(_)) = back(&stack, 1) else {
-                Err(format!("syntax error @ {}", peek.location()))?
+                Err("syntax error")?
             };
             peek.take();
             stack.push(Node::AssignTok);
@@ -206,7 +204,7 @@ fn interpret_inner(
             (back(&stack, 2), back(&stack, 1))
         {
             let Some(parent) = namespace.parent.clone() else {
-                Err(format!("syntax error @ {}", peek.location()))?
+                Err("syntax error")?
             };
             namespace = parent;
             stack.pop();
@@ -214,7 +212,7 @@ fn interpret_inner(
             continue;
         }
         if let Some(Node::CloseCurly) = back(&stack, 1) {
-            Err(format!("syntax error @ {}", peek.location()))?
+            Err("syntax error")?
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -234,25 +232,22 @@ fn interpret_inner(
             if variable.get_kind() != LogicVariable
                 && variable.get_kind() != NumericVariable
             {
-                Err(format!("TODO1 @ {}", peek.location()))?
+                Err("TODO1")?
             }
             if variable.is_numeric() != term.is_numeric() {
-                Err(format!("TODO2 @ {}", peek.location()))?
+                Err("TODO2")?
             }
-            let phrase = match logic_phrase
-                .clone()
-                .substitute(variable.clone(), term.clone())
-            {
-                Ok(phrase) => phrase,
-                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
-            };
+            stack.push(Node::LogicPhrase(
+                logic_phrase
+                    .clone()
+                    .substitute(variable.clone(), term.clone())?,
+            ));
+            stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.pop();
-            stack.push(Node::LogicPhrase(phrase));
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -265,18 +260,14 @@ fn interpret_inner(
             back(&stack, 2),
             back(&stack, 1),
         ) {
-            let phrase = match logic::instantiate(
+            stack.push(Node::LogicPhrase(logic::instantiate(
                 logic_phrase.clone(),
                 numeric_term.clone(),
-            ) {
-                Ok(phrase) => phrase,
-                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
-            };
+            )?));
+            stack.swap_remove(stack.len() - 5);
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.pop();
-            stack.push(Node::LogicPhrase(phrase));
         }
         if let (
             Some(Node::NumericPhrase(numeric_phrase)),
@@ -296,57 +287,48 @@ fn interpret_inner(
             if variable.get_kind() != LogicVariable
                 && variable.get_kind() != NumericVariable
             {
-                Err(format!("TODO1 @ {}", peek.location()))?
+                Err("TODO1")?
             }
             if variable.is_numeric() != term.is_numeric() {
-                Err(format!("TODO2 @ {}", peek.location()))?
+                Err("TODO2")?
             }
-            let phrase = match numeric_phrase
-                .clone()
-                .substitute(variable.clone(), term.clone())
-            {
-                Ok(phrase) => phrase,
-                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
-            };
+            stack.push(Node::NumericPhrase(
+                numeric_phrase
+                    .clone()
+                    .substitute(variable.clone(), term.clone())?,
+            ));
+            stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.pop();
-            stack.push(Node::NumericPhrase(phrase));
         }
         if let (Some(Node::List(list)), Some(Node::Dot), Some(Node::EqSubs)) =
             (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if list.len() != 3 {
-                Err(format!("TODO @ {}", peek.location()))?
+                Err("TODO")?
             }
             let phrase = list[0].clone();
             let x = list[1].clone();
             let y = list[2].clone();
             if !phrase.is_proposition() {
-                Err(format!("TODO @ {}", peek.location()))?
+                Err("TODO")?
             }
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.push(Node::LogicPhrase(match peano::eq_subs(phrase, x, y) {
-                Ok(phrase) => phrase,
-                Err(err) => Err(format!("{err} @ {}", peek.location()))?,
-            }));
+            stack.push(Node::LogicPhrase(peano::eq_subs(phrase, x, y)?));
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
             Some(Node::DistributeQuantification),
         ) = (back(&stack, 2), back(&stack, 1))
         {
-            stack.push(Node::LogicPhrase(
-                match logic::distribute(logic_phrase.clone()) {
-                    Ok(phrase) => phrase,
-                    Err(err) => Err(format!("{err} @ {}", peek.location()))?,
-                },
-            ));
+            stack.push(Node::LogicPhrase(logic::distribute(
+                logic_phrase.clone(),
+            )?));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;
@@ -359,13 +341,10 @@ fn interpret_inner(
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if logic_phrase.get_kind() != Imply {
-                Err(format!("TODO3 @ {}", peek.location()))?
+                Err("TODO3")?
             }
             if !logic_phrase.clone().get_is_proven() {
-                Err(format!(
-                    "modus ponens implication not proven @ {}",
-                    peek.location()
-                ))?
+                Err("modus ponens implication not proven")?
             }
             if !logic_phrase
                 .get_children()
@@ -374,10 +353,7 @@ fn interpret_inner(
                 .clone()
                 .get_is_proven()
             {
-                Err(format!(
-                    "modus ponens antecedent not proven @ {}",
-                    peek.location()
-                ))?
+                Err("modus ponens antecedent not proven")?
             }
             stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
             stack.swap_remove(stack.len() - 4);
@@ -391,7 +367,7 @@ fn interpret_inner(
         {
             let child = match phrase.get_children() {
                 Children::Two(left, _) => left,
-                _ => Err(format!("error @ {}", peek.location()))?,
+                _ => Err("error")?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -409,7 +385,7 @@ fn interpret_inner(
         {
             let child = match phrase.get_children() {
                 Children::Two(_, right) => right,
-                _ => Err(format!("error @ {}", peek.location()))?,
+                _ => Err("error")?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -427,7 +403,7 @@ fn interpret_inner(
         {
             let child = match phrase.get_children() {
                 Children::One(child) => child,
-                _ => Err(format!("error @ {}", peek.location()))?,
+                _ => Err("error")?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -620,11 +596,7 @@ fn interpret_inner(
             (back(&stack, 2), back(&stack, 1))
         {
             if !logic_phrase.get_is_proven() {
-                Err(format!(
-                    "assertion failed {:b} @ {}",
-                    **logic_phrase,
-                    peek.location(),
-                ))?
+                Err(format!("assertion failed {:b}", **logic_phrase,))?
             }
             stack.pop();
             stack.pop();
@@ -671,19 +643,13 @@ fn interpret_inner(
                 Err("unexpected eof")?
             };
             if namespace.find(&ident).is_some() {
-                Err(format!("TODO @ {}", peek.location()))?
+                Err("TODO")?
             }
             let Some(parent) = namespace.parent.clone() else {
-                Err(format!(
-                    "cannot import into global namespace @ {}",
-                    peek.location()
-                ))?
+                Err("cannot import into global namespace")?
             };
             let Some(thing) = parent.find(&ident) else {
-                Err(format!(
-                    "parent namespace does not contain {ident} @ {}",
-                    peek.location()
-                ))?
+                Err(format!("parent namespace does not contain {ident}"))?
             };
             namespace.set(thing);
             peek.take();
@@ -695,19 +661,13 @@ fn interpret_inner(
                 Err("unexpected eof")?
             };
             let Some(thing) = namespace.find(&ident) else {
-                Err(format!(
-                    "namespace does not contain {ident} @ {}",
-                    peek.location()
-                ))?
+                Err(format!("namespace does not contain {ident}"))?
             };
             let Some(parent) = namespace.parent.clone() else {
-                Err(format!(
-                    "cannot export from global namespace @ {}",
-                    peek.location()
-                ))?
+                Err("cannot export from global namespace")?
             };
             if parent.find(&ident).is_some() {
-                Err(format!("TODO @ {}", peek.location()))?
+                Err("TODO @")?
             }
             parent.set(thing);
             continue;
@@ -744,7 +704,7 @@ fn interpret_inner(
             if token.is_none() {
                 Err("unexpected eof")?
             }
-            Err(format!("syntax error @ {}", peek.location()))?
+            Err("syntax error")?
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
             peek.take();
