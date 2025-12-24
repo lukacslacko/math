@@ -1,6 +1,6 @@
 use core::panic;
 
-use math::lexer::tokenize;
+use math::lexer::{PREFIXES, tokenize};
 use std::fmt::Write;
 
 // Run with cargo run --bin formatter [input_file]
@@ -55,24 +55,27 @@ fn main() {
         for _ in 0..depth {
             write!(output, "    ").unwrap();
         }
-        let mut prev_token: Option<&math::lexer::Token> = None;
+        let mut previous_token_was_special = true;
         for token in line_tokens {
             let token_text = &token.text;
-            let nice_text = nice_tokens
-                .iter()
-                .find(|(orig, _)| *orig == token_text)
-                .map(|(_, nice)| *nice)
-                .unwrap_or(token_text);
-            write!(output, "{}", nice_text).unwrap();
-            if let Some(prev) = &prev_token
-                && prev.text == "∀"
-            {
-                write!(output, " ").unwrap();
+            if PREFIXES.iter().any(|(_, symbol)| *symbol == *token_text) {
+                let nice_text = nice_tokens
+                    .iter()
+                    .find(|(orig, _)| *orig == token_text)
+                    .map(|(_, nice)| *nice)
+                    .unwrap_or(token_text);
+                write!(output, "{}", nice_text).unwrap();
+                previous_token_was_special = true;
+            } else {
+                if !previous_token_was_special {
+                    write!(output, " ").unwrap();
+                }
+                write!(output, "{}", token_text).unwrap();
+                previous_token_was_special = false;
             }
             if token.text == "{" {
                 depth += 1;
             }
-            prev_token = Some(token);
         }
         writeln!(output).unwrap();
     }

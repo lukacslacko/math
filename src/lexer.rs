@@ -5,6 +5,56 @@ pub struct Token {
     pub line_no: usize,
 }
 
+pub const PREFIXES: &[(&'static str, &'static str)] = &[
+    (";", ";"),
+    ("[", "["),
+    ("]", "]"),
+    ("⊦", "⊦"),
+    ("|-", "⊦"),
+    (":=", "≔"),
+    ("≔", "≔"),
+    ("/", "/"),
+    ("⇒", "⇒"),
+    ("=>", "⇒"),
+    ("->", "⇒"),
+    (".<", "↙"),
+    ("↙", "↙"),
+    (".v", "↓"),
+    ("↓", "↓"),
+    (".>", "↘"),
+    ("↘", "↘"),
+    (".", "."),
+    ("=", "="),
+    ("+", "+"),
+    ("*", "*"),
+    ("!", "∀"),
+    ("∀", "∀"),
+    ("(", "("),
+    (")", ")"),
+    ("¬", "¬"),
+    ("~", "¬"),
+    ("𝗦", "𝗦"),
+    ("℻", "℻"),
+    ("{", "{"),
+    ("}", "}"),
+    ("⤷", "⤷"),
+    ("⤶", "⤶"),
+    ("|", "|"),
+    ("⇆", "⇆"),
+    ("⪮", "⪮"),
+    ("↺", "↺"),
+];
+
+pub const KEYWORDS: &[(&'static str, &'static str)] = &[
+    ("export", "⤶"),
+    ("import", "⤷"),
+    ("FAX", "℻"),
+    ("succ", "𝗦"),
+    ("<distribute>", "⇆"),
+    ("<eq_subs>", "⪮"),
+    ("<induction>", "↺"),
+];
+
 fn tokenize_word(
     word: &str,
     filename: &str,
@@ -19,58 +69,9 @@ fn tokenize_word(
     }
 
     let mut tokens = Vec::new();
-    let prefixes = [
-        (";", ";"),
-        ("[", "["),
-        ("]", "]"),
-        ("⊦", "⊦"),
-        ("|-", "⊦"),
-        (":=", "≔"),
-        ("≔", "≔"),
-        ("/", "/"),
-        ("⇒", "⇒"),
-        ("=>", "⇒"),
-        ("->", "⇒"),
-        (".<", "↙"),
-        ("↙", "↙"),
-        (".v", "↓"),
-        ("↓", "↓"),
-        (".>", "↘"),
-        ("↘", "↘"),
-        (".", "."),
-        ("=", "="),
-        ("+", "+"),
-        ("*", "*"),
-        ("!", "∀"),
-        ("∀", "∀"),
-        ("(", "("),
-        (")", ")"),
-        ("¬", "¬"),
-        ("~", "¬"),
-        ("𝗦", "𝗦"),
-        ("℻", "℻"),
-        ("{", "{"),
-        ("}", "}"),
-        ("⤷", "⤷"),
-        ("⤶", "⤶"),
-        ("|", "|"),
-        ("⇆", "⇆"),
-        ("⪮", "⪮"),
-        ("↺", "↺"),
-    ];
-
-    let keywords = [
-        ("export", "⤶"),
-        ("import", "⤷"),
-        ("FAX", "℻"),
-        ("succ", "𝗦"),
-        ("<distribute>", "⇆"),
-        ("<eq_subs>", "⪮"),
-        ("<induction>", "↺"),
-    ];
 
     // Is the word equal to any keyword?
-    for (keyword, symbol) in keywords.iter() {
+    for (keyword, symbol) in KEYWORDS.iter() {
         if word == *keyword {
             tokens.push(Token {
                 text: symbol.to_string(),
@@ -82,7 +83,7 @@ fn tokenize_word(
     }
 
     // Does the word start with any tokens?
-    for (prefix, symbol) in prefixes.iter() {
+    for (prefix, symbol) in PREFIXES.iter() {
         if let Some(rest) = word.strip_prefix(prefix) {
             tokens.push(Token {
                 text: symbol.to_string(),
@@ -107,7 +108,7 @@ fn tokenize_word(
         // Does the remaining part start with any prefix?
         let rest = &word[start_byte + ch.len_utf8()..];
         let mut matched_prefix = false;
-        for (prefix, _) in prefixes.iter() {
+        for (prefix, _) in PREFIXES.iter() {
             if rest.starts_with(prefix) {
                 matched_prefix = true;
                 break;
@@ -118,7 +119,7 @@ fn tokenize_word(
         }
     }
     if !current_token.is_empty() {
-        if let Some((_, symbol)) = keywords
+        if let Some((_, symbol)) = KEYWORDS
             .iter()
             .find(|(keyword, _)| current_token == *keyword)
         {

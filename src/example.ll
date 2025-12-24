@@ -118,12 +118,12 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-peano1 ≔ ∀X ¬0 = 𝗦(X)
-peano2 ≔ ∀X ∀Y 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano1 ≔ ∀X¬0 = 𝗦(X)
+peano2 ≔ ∀X∀Y𝗦(X) = 𝗦(Y) ⇒ X = Y
 peano3 ≔ ∀X X + 0 = X
-peano4 ≔ ∀X ∀Y X + 𝗦(Y) = 𝗦(X + Y)
+peano4 ≔ ∀X∀Y X + 𝗦(Y) = 𝗦(X + Y)
 peano5 ≔ ∀X X * 0 = 0
-peano6 ≔ ∀X ∀Y X * 𝗦(Y) = (X * Y) + X
+peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 
 ⊦ peano1
 ⊦ peano2
@@ -141,13 +141,17 @@ zero_plus_x_eq_x ≔ {
     goal ≔ 0 + x = x
 
     peano3[0]
-    peano4[0].MP[x].MP ℻
+    peano4[0].MP[x].MP
     a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
     ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
     goal; x | ↺.MP.MP[x].MP
+
+    this is an example comment here
 
     ⊦ goal
     ∀x goal
 }
 
-zero_plus_x_eq_x ℻
+this is also a comment
+
+zero_plus_x_eq_x ℻ 
