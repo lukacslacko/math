@@ -154,4 +154,22 @@ zero_plus_x_eq_x ≔ {
 
 this is also a comment
 
-zero_plus_x_eq_x ℻ 
+plus_comm ≔ {
+    goal ≔ (x + y) = (y + x)
+
+    ⤷ zero_plus_x_eq_x
+    ⤷ peano3
+    ⤷ equals_symmetric
+    ⤷ equals_transitive
+
+    i ≔ goal; y | ↺
+
+    first prove that x + 0 = 0 + x which is the base case
+    p ≔ peano3[x].MP
+    a ≔ zero_plus_x_eq_x[x].MP
+    e ≔ equals_symmetric[X / a↙][Y / a↘].MP TODO eq_flip(a)
+    equals_transitive[X / p↙][Y / p↘][Z / e↘].MP.MP TODO eq_trans(p, e)
+    i.MP ℻ 
+
+    a
+}
