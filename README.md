@@ -19,21 +19,52 @@ Also, `0` is added as an identifier to the global namespace.
 | Logical variable | `'name` | | Identifiers starting with `'` are logical variables |
 | Numeric variable | `name` | | Must not start with `'` |
 | Assignment | `identifier ≔ value` | `:=` | Anything can be an identifier |
-| Universal quantification | `∀x P` | `!` | Variable must be numeric |
+| Substitution | `P[x / term]` | | Substitutes `x` with `term` in `P`. **TODO** condition on free variables of `term`. Note: if `P` is proven, this is the "Substitution" inference rule below. |
+| Universal quantification | `∀x P` | `!x P` | Variable must be numeric. Note if `P` is a *proven phrase* then this is the "Universal generalization" inference rule below. |
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
 | Namespaces | `{ ... }` | | Forget all identifiers within the namespace. The value of a namespace is its last phrase. |
+| Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x` |
+| Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A` |
+| Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
+| Negation | `¬A` | `~A` | `A` must be a logic phrase |
+| Equality | `x = y` | | `x` and `y` must be numeric phrases |
+| Implication | `A ⇒ B` | `A -> B` `A => B` | `A` and `B` must be logic phrases |
+| List | `x; y` | | Syntax for providing arguments to [axiom schemas](#axiom-schemas) |
+| Assertion | `⊦ P` | `\|- P` | Asserts that `P` is a *proven phrase*. Panics if not. `P` must be a logic phrase |
+| Print | `P ℻` | `P FAX` | Prints out the phrase `P` |
+| Import identifier | `⤷ name` | `import name` | Imports the name and value of `name` from the surrounding namespace into the current one |
+| Export identifier | `⤶ name` | `export name` | Exports the name and value of `name` into the surrounding namespace. For namespaces with a single result, `result ≔ { ... result }` is an alternative to this |
+| Successor | `𝗦(x)` | `succ(x)` | The successor of `x`. `x` must be a numeric phrase |
+| Addition | `x + y` | | The sum of `x` and `y`. `x` and `y` must be numeric phrases |
+| Multiplication | `x * y` | | The product of `x` and `y`. `x` and `y` must be numeric phrases |
 
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
-| Substitution | `phrase[var / term]` | | `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. |
-| Instantiation | `quantified_phrase[term]` | | `quantified_phrase` must be of the shape `∀x P` and the result is `P[x / term]` |
+| Substitution | `phrase[var / term]` | | `phrase` must be a *proven phrase*, `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
+| Instantiation | `phrase[term]` | | `phrase` must be a *proven phrase* of the shape `∀x P` and the result is `P[x / term]` |
+| Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B` |
+| Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note: if `P` is not proven, this is still a valid expression |
 
 ## Axioms
+
+`X` and `Y` are numeric variables, `0` is a numeric constant.
+
+| Name | Axiom |
+| -- | -- |
+| Peano 1 | `¬0 = 𝗦(X)` |
+| Peano 2 | `𝗦(X) = 𝗦(Y) ⇒ X = Y` |
+| Peano 3 | `X + 0 = X` |
+| Peano 4 | `X + 𝗦(Y) = 𝗦(X + Y)` |
+| Peano 5 | `X * 0 = 0` |
+| Peano 6 | `X * 𝗦(Y) = (X * Y) + X` |
+| Reflexivity of equality | `X = X` |
 
 ## Axiom schemas
 
 | Axiom schema | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
 | Indiscernibility of identicals | `P; x; y \| substitute_equals` | |  `x = y ⇒ P ⇒ P[x / y]` |
+| Distribution of quantification | `P ⇆` \| `<distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
+| Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
