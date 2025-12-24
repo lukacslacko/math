@@ -56,6 +56,7 @@ enum Node {
     AssignTok,
     NotTok,
     EqSubs,
+    Induction,
     AddTok,
     Multiply,
     EqualsTok,
@@ -98,6 +99,7 @@ impl Node {
             | Node::List(_)
             | Node::CloseRound
             | Node::EqSubs
+            | Node::Induction
             | Node::CloseSquare
             | Node::CloseCurly
             | Node::Dot
@@ -252,6 +254,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -272,6 +275,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (
             Some(Node::NumericPhrase(numeric_phrase)),
@@ -307,6 +311,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (Some(Node::List(list)), Some(Node::Dot), Some(Node::EqSubs)) =
             (back(&stack, 3), back(&stack, 2), back(&stack, 1))
@@ -324,6 +329,27 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.push(Node::LogicPhrase(peano::eq_subs(phrase, x, y)?));
+            continue;
+        }
+        if let (
+            Some(Node::List(list)),
+            Some(Node::Dot),
+            Some(Node::Induction),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            if list.len() != 2 {
+                Err("TODO")?
+            }
+            let phrase = list[0].clone();
+            let x = list[1].clone();
+            if !phrase.is_proposition() {
+                Err("TODO")?
+            }
+            stack.pop();
+            stack.pop();
+            stack.pop();
+            stack.push(Node::LogicPhrase(peano::induction(phrase, x)?));
+            continue;
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -363,6 +389,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.swap_remove(stack.len() - 4);
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (
             Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
@@ -427,6 +454,11 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             if token == Some("substitute_equals".to_string()) {
                 peek.take();
                 stack.push(Node::EqSubs);
+                continue;
+            }
+            if token == Some("↺".to_string()) {
+                peek.take();
+                stack.push(Node::Induction);
                 continue;
             }
         }
@@ -620,6 +652,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (
             Some(Node::Identifier(ident)),
@@ -632,6 +665,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             stack.pop();
             stack.pop();
+            continue;
         }
         if let (Some(Node::Assertion), Some(Node::LogicPhrase(logic_phrase))) =
             (back(&stack, 2), back(&stack, 1))
