@@ -49,7 +49,6 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | Rule | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
 | Substitution | `phrase[var / term]` | | `phrase` must be a *proven phrase*, `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
-| Instantiation | `phrase[term]` | | `phrase` must be a *proven phrase* of the shape `∀x P` and the result is `P[x / term]` |
 | Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B` |
 | Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note: if `P` is not proven, this is still a valid expression |
 
@@ -73,4 +72,5 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | -- | -- | -- | -- |
 | Indiscernibility of identicals | `P; x; y \| substitute_equals` | |  `x = y ⇒ P ⇒ P[x / y]` |
 | Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
+| Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
