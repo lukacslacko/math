@@ -84,7 +84,7 @@ equals_symmetric ≔ {
 
     goal ≔ x = y ⇒ y = x
 
-    a ≔ x = z; x; y |  ⪮[z / x]
+    a ≔ x = z; x; y | ⪮[z / x]
     reflexivity[X / x]
     commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
@@ -98,7 +98,7 @@ equals_transitive ≔ {
 
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
-    a ≔ y = z; y; x |  ⪮
+    a ≔ y = z; y; x | ⪮
     chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
 
     ⊦ goal
@@ -118,12 +118,12 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-peano1 ≔ ¬0 = 𝗦(X)
-peano2 ≔ 𝗦(X) = 𝗦(Y) ⇒ X = Y
-peano3 ≔ X + 0 = X
-peano4 ≔ X + 𝗦(Y) = 𝗦(X + Y)
-peano5 ≔ X * 0 = 0
-peano6 ≔ X * 𝗦(Y) = (X * Y) + X
+peano1 ≔ ∀X ¬0 = 𝗦(X)
+peano2 ≔ ∀X ∀Y 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano3 ≔ ∀X X + 0 = X
+peano4 ≔ ∀X ∀Y X + 𝗦(Y) = 𝗦(X + Y)
+peano5 ≔ ∀X X * 0 = 0
+peano6 ≔ ∀X ∀Y X * 𝗦(Y) = (X * Y) + X
 
 ⊦ peano1
 ⊦ peano2
@@ -132,7 +132,22 @@ peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-peano1[X / 1] ℻
-⊦ ¬0 = 2
-∀X 0 = x ⇒ x = 0 ⇆ ℻
-(0 + x = x); x |  ↺ ℻
+zero_plus_x_eq_x ≔ {
+    ⤷ 0
+    ⤷ peano3
+    ⤷ peano4
+    ⤷ commute_antecedents
+
+    goal ≔ 0 + x = x
+
+    peano3[0]
+    peano4[0].MP[x].MP ℻
+    a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
+    ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+    goal; x | ↺.MP.MP[x].MP
+
+    ⊦ goal
+    ∀x goal
+}
+
+zero_plus_x_eq_x ℻
