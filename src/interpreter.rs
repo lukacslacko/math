@@ -56,6 +56,8 @@ enum Node {
     AssignTok,
     NotTok,
     EqSubs,
+    AddTok,
+    Multiply,
     EqualsTok,
     OpenSquare,
     CloseSquare,
@@ -82,6 +84,8 @@ impl Node {
             | Node::ImplyTok
             | Node::AssignTok
             | Node::NotTok
+            | Node::AddTok
+            | Node::Multiply
             | Node::EqualsTok
             | Node::OpenSquare
             | Node::OpenCurly
@@ -464,6 +468,43 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.push(Node::LogicPhrase(make_not(logic_phrase.clone())?));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::NumericPhrase(l)),
+            Some(Node::Multiply),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::NumericPhrase(make_multiply(
+                l.clone(),
+                r.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some("*".to_string()) {
+            peek.take();
+            stack.push(Node::Multiply);
+            continue;
+        }
+        if let (
+            Some(Node::NumericPhrase(l)),
+            Some(Node::AddTok),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::NumericPhrase(make_add(l.clone(), r.clone())?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some("+".to_string()) {
+            peek.take();
+            stack.push(Node::AddTok);
             continue;
         }
         if let (
