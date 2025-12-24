@@ -14,6 +14,12 @@ There are also [axiom schemas](#axiom-schemas) which can be instantiated to add 
 
 Also, `0` is added as an identifier to the global namespace.
 
+### Formatting
+
+To format a file, run `cargo run --bin formatter filename.ll`.
+
+## Expressions
+
 | Expression | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
 | Logical variable | `'name` | | Identifiers starting with `'` are logical variables |
