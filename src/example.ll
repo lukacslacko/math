@@ -84,7 +84,7 @@ equals_symmetric ≔ {
 
     goal ≔ x = y ⇒ y = x
 
-    a ≔ x = z; x; y | substitute_equals [z / x]
+    a ≔ x = z; x; y | substitute_equals[z / x]
     reflexivity[X / x]
     commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
@@ -120,8 +120,18 @@ not_equals_symmetric ≔ {
 
 peano1 ≔ ¬0 = 𝗦(X)
 peano2 ≔ 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano3 ≔ X + 0 = X
+peano4 ≔ X + 𝗦(Y) = 𝗦(X + Y)
+peano5 ≔ X * 0 = 0
+peano6 ≔ X * 𝗦(Y) = (X * Y) + X
+
 ⊦ peano1
 ⊦ peano2
-peano1[X / 1] ℻
+⊦ peano3
+⊦ peano4
+⊦ peano5
+⊦ peano6
+
+peano1[X / 1] ℻ 
 ⊦ ¬0 = 2
-∀X 0 = x ⇒ x = 0 ⇆ ℻
+∀X 0 = x ⇒ x = 0 ⇆ ℻ 

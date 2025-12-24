@@ -32,6 +32,7 @@ fn main() {
     let tokens = tokenize(
         &std::fs::read_to_string(input_file)
             .expect("Failed to read input file"),
+        input_file,
     );
     let mut depth = 0;
     let max_line = tokens.iter().map(|t| t.line_no).max().unwrap_or(1);
