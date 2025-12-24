@@ -66,5 +66,5 @@ Also, `0` is added as an identifier to the global namespace.
 | Axiom schema | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
 | Indiscernibility of identicals | `P; x; y \| substitute_equals` | |  `x = y ⇒ P ⇒ P[x / y]` |
-| Distribution of quantification | `P ⇆` \| `<distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
+| Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
