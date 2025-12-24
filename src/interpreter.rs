@@ -451,7 +451,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
                 stack.push(Node::ModusPonens);
                 continue;
             }
-            if token == Some("substitute_equals".to_string()) {
+            if token == Some("⪮".to_string()) {
                 peek.take();
                 stack.push(Node::EqSubs);
                 continue;

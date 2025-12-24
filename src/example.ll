@@ -84,7 +84,7 @@ equals_symmetric ≔ {
 
     goal ≔ x = y ⇒ y = x
 
-    a ≔ x = z; x; y | substitute_equals[z / x]
+    a ≔ x = z; x; y |  ⪮[z / x]
     reflexivity[X / x]
     commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
@@ -98,7 +98,7 @@ equals_transitive ≔ {
 
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
-    a ≔ y = z; y; x | substitute_equals
+    a ≔ y = z; y; x |  ⪮
     chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
 
     ⊦ goal
@@ -132,6 +132,7 @@ peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-peano1[X / 1] ℻ 
+peano1[X / 1] ℻
 ⊦ ¬0 = 2
-∀X 0 = x ⇒ x = 0 ⇆ ℻ 
+∀X 0 = x ⇒ x = 0 ⇆ ℻
+(0 + x = x); x |  ↺ ℻

@@ -70,7 +70,7 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 
 | Axiom schema | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
-| Indiscernibility of identicals | `P; x; y \| substitute_equals` | |  `x = y ⇒ P ⇒ P[x / y]` |
+| Indiscernibility of identicals | `P; x; y \| ⪮` | `P; x; y \| <eq_subs>` |  `x = y ⇒ P ⇒ P[x / y]` |
 | Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
 | Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
