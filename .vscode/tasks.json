@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Format Logic Language",
+            "type": "shell",
+            "command": "cargo run --bin formatter -- ${file}",
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}

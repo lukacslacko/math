@@ -16,7 +16,7 @@ Also, `0` is added as an identifier to the global namespace.
 
 ### Formatting
 
-To format a file, run `cargo run --bin formatter filename.ll`.
+To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Shift+B` in VSCode and select "Format Logic Language" when editing a program.
 
 ## Expressions
 

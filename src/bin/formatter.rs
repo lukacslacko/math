@@ -1,6 +1,7 @@
 use core::panic;
 
 use math::lexer::tokenize;
+use std::fmt::Write;
 
 // Run with cargo run --bin formatter [input_file]
 fn main() {
@@ -8,8 +9,6 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let input_file = if args.len() == 2 {
         &args[1]
-    } else if args.len() == 1 {
-        "example.ll"
     } else {
         panic!("Usage: formatter [input_file]");
     };
@@ -36,11 +35,14 @@ fn main() {
     );
     let mut depth = 0;
     let max_line = tokens.iter().map(|t| t.line_no).max().unwrap_or(1);
+
+    let mut output = String::new();
+
     for line in 1..=max_line {
         let line_tokens: Vec<&math::lexer::Token> =
             tokens.iter().filter(|t| t.line_no == line).collect();
         if line_tokens.is_empty() {
-            println!();
+            writeln!(output).unwrap();
             continue;
         }
         let first_token = &line_tokens[0];
@@ -48,7 +50,7 @@ fn main() {
             depth -= 1;
         }
         for _ in 0..depth {
-            print!("    ");
+            write!(output, "    ").unwrap();
         }
         let mut prev_token: Option<&math::lexer::Token> = None;
         for token in line_tokens {
@@ -58,17 +60,18 @@ fn main() {
                 .find(|(orig, _)| *orig == token_text)
                 .map(|(_, nice)| *nice)
                 .unwrap_or(token_text);
-            print!("{}", nice_text);
+            write!(output, "{}", nice_text).unwrap();
             if let Some(prev) = &prev_token
                 && prev.text == "∀"
             {
-                print!(" ");
+                write!(output, " ").unwrap();
             }
             if token.text == "{" {
                 depth += 1;
             }
             prev_token = Some(token);
         }
-        println!();
+        writeln!(output).unwrap();
     }
+    std::fs::write(input_file, output).expect("Failed to write to file");
 }
