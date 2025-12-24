@@ -143,7 +143,10 @@ zero_plus_x_eq_x ≔ {
     peano3[0]
     peano4[0].MP[x].MP
     a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
+
+    TODO this should be commute_ante(a)
     ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+
     goal; x | ↺.MP.MP[x].MP
 
     this is an example comment here
@@ -167,9 +170,13 @@ plus_comm ≔ {
     first prove that x + 0 = 0 + x which is the base case
     p ≔ peano3[x].MP
     a ≔ zero_plus_x_eq_x[x].MP
-    e ≔ equals_symmetric[X / a↙][Y / a↘].MP TODO eq_flip(a)
-    equals_transitive[X / p↙][Y / p↘][Z / e↘].MP.MP TODO eq_trans(p, e)
-    i.MP ℻ 
+
+    TODO this should be eq_flip(a)
+    e ≔ equals_symmetric[X / a↙][Y / a↘].MP
+
+    TODO this should be eq_trans(p, e)
+    equals_transitive[X / p↙][Y / p↘][Z / e↘].MP.MP
+    i.MP ℻
 
     a
 }
