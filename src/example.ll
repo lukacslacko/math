@@ -76,7 +76,7 @@ recontrapose ≔ {
     goal['x / 'A]['y / 'B]
 }
 
-reflexivity ≔ ∀X X = X
+reflexivity ≔ X = X
 
 equals_symmetric ≔ {
     ⤷ commute_antecedents
@@ -84,8 +84,8 @@ equals_symmetric ≔ {
 
     goal ≔ x = y ⇒ y = x
 
-    a ≔ x = z; x; y | substitute_equals[x].MP[y].MP[z / x]
-    reflexivity[x].MP
+    a ≔ x = z; x; y | substitute_equals [z / x]
+    reflexivity[X / x]
     commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
     ⊦ goal
@@ -98,7 +98,7 @@ equals_transitive ≔ {
 
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
-    a ≔ y = z; y; x | substitute_equals[y].MP[x].MP
+    a ≔ y = z; y; x | substitute_equals
     chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
 
     ⊦ goal
@@ -118,10 +118,10 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-peano1 ≔ ∀X ¬0 = 𝗦(X)
-peano2 ≔ ∀X ∀Y 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano1 ≔ ¬0 = 𝗦(X)
+peano2 ≔ 𝗦(X) = 𝗦(Y) ⇒ X = Y
 ⊦ peano1
 ⊦ peano2
-peano1[1].MP ℻ 
+peano1[X / 1] ℻
 ⊦ ¬0 = 2
-∀X 0 = x ⇒ x = 0 ⇆ ℻ 
+∀X 0 = x ⇒ x = 0 ⇆ ℻

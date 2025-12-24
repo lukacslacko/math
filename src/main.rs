@@ -12,7 +12,7 @@ fn main() -> UnitResult {
     logic::axioms()?;
     peano::axioms()?;
     let input = std::fs::read_to_string("example.ll")?;
-    let tokens = lexer::tokenize(&input);
+    let tokens = lexer::tokenize(&input, "example.ll");
     interpreter::interpret(tokens.into_iter())?;
     println!("Hello, world!");
     Ok(())

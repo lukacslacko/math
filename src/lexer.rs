@@ -7,10 +7,11 @@ pub struct Token {
 
 fn tokenize_word(
     word: &str,
+    filename: &str,
     line_no: usize,
     codepoint_index: usize,
 ) -> Vec<Token> {
-    let location = format!("Line {line_no}, codepoint {codepoint_index}");
+    let location = format!("{filename}:{line_no}:{codepoint_index}");
 
     // Empty word, no tokens.
     if word.is_empty() {
@@ -86,6 +87,7 @@ fn tokenize_word(
             });
             tokens.extend(tokenize_word(
                 rest,
+                filename,
                 line_no,
                 codepoint_index + prefix.chars().count(),
             ));
@@ -132,6 +134,7 @@ fn tokenize_word(
     let rest = &word[current_token.len()..];
     tokens.extend(tokenize_word(
         rest,
+        filename,
         line_no,
         codepoint_index + current_token.chars().count(),
     ));
@@ -139,7 +142,7 @@ fn tokenize_word(
     tokens
 }
 
-fn tokenize_line(line: &str, line_no: usize) -> Vec<Token> {
+fn tokenize_line(line: &str, filename: &str, line_no: usize) -> Vec<Token> {
     let mut tokens = Vec::new();
 
     let mut codepoint_index = 0; // 0-based Unicode codepoint index
@@ -168,17 +171,17 @@ fn tokenize_line(line: &str, line_no: usize) -> Vec<Token> {
 
         let word = &line[start_byte..end_byte];
 
-        tokens.extend(tokenize_word(word, line_no, start_codepoint));
+        tokens.extend(tokenize_word(word, filename, line_no, start_codepoint));
     }
 
     tokens
 }
 
-pub fn tokenize(input: &str) -> Vec<Token> {
+pub fn tokenize(input: &str, filename: &str) -> Vec<Token> {
     input
         .lines()
         .enumerate()
-        .flat_map(|(line_no, line)| tokenize_line(line, line_no + 1))
+        .flat_map(|(line_no, line)| tokenize_line(line, filename, line_no + 1))
         .collect()
 }
 
@@ -189,7 +192,7 @@ mod tests {
     fn t(text: &str, line: usize, col: usize) -> Token {
         Token {
             text: text.to_string(),
-            location: format!("Line {}, codepoint {}", line, col),
+            location: format!("test_input.ll:{line},{col}"),
             line_no: line,
         }
     }
@@ -197,7 +200,7 @@ mod tests {
     #[test]
     fn test_tokenize_example_ll() {
         let input = include_str!("test_input.ll");
-        let tokens = tokenize(input);
+        let tokens = tokenize(input, "test_input.ll");
         let expected = vec![
             // Line 1
             t("ignore", 1, 0),
