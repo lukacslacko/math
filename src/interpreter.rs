@@ -157,7 +157,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         let token = peek.peek();
         if token == Some("≔".to_string()) {
             let Some(Node::Identifier(_)) = back(&stack, 1) else {
-                Err("syntax error")?
+                Err("missing identifier to assign to")?
             };
             peek.take();
             stack.push(Node::AssignTok);
@@ -210,7 +210,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             (back(&stack, 2), back(&stack, 1))
         {
             let Some(parent) = namespace.parent.clone() else {
-                Err("syntax error")?
+                Err(
+                    "parent namespace does not exist, this should never happen",
+                )?
             };
             namespace = parent;
             stack.pop();
@@ -218,7 +220,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             continue;
         }
         if let Some(Node::CloseCurly) = back(&stack, 1) {
-            Err("syntax error")?
+            Err("} without matching {")?
         }
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -238,10 +240,14 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             if variable.get_kind() != LogicVariable
                 && variable.get_kind() != NumericVariable
             {
-                Err("TODO1")?
+                Err(format!(
+                    "substitution requires a numeric or logic variable before the slash, got '{variable:?}'"
+                ))?
             }
             if variable.is_numeric() != term.is_numeric() {
-                Err("TODO2")?
+                Err(format!(
+                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term:?}'"
+                ))?
             }
             stack.push(Node::LogicPhrase(
                 logic_phrase
@@ -295,10 +301,14 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             if variable.get_kind() != LogicVariable
                 && variable.get_kind() != NumericVariable
             {
-                Err("TODO1")?
+                Err(format!(
+                    "substitution requires a numeric or logic variable before the slash, got '{variable:?}'"
+                ))?
             }
             if variable.is_numeric() != term.is_numeric() {
-                Err("TODO2")?
+                Err(format!(
+                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term:?}'"
+                ))?
             }
             stack.push(Node::NumericPhrase(
                 numeric_phrase
@@ -317,13 +327,17 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if list.len() != 3 {
-                Err("TODO")?
+                Err(format!(
+                    "⪮ requires three elements in its argument list, a logic phrase and two variables, got {list:?}"
+                ))?
             }
             let phrase = list[0].clone();
             let x = list[1].clone();
             let y = list[2].clone();
             if !phrase.is_proposition() {
-                Err("TODO")?
+                Err(format!(
+                    "⪮ requires a proposition as the first element in its argument list, got {phrase:?}"
+                ))?
             }
             stack.pop();
             stack.pop();
@@ -338,12 +352,16 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if list.len() != 2 {
-                Err("TODO")?
+                Err(format!(
+                    "↺ requires two elements in its argument list, a logic phrase and a variable, got {list:?}"
+                ))?
             }
             let phrase = list[0].clone();
             let x = list[1].clone();
             if !phrase.is_proposition() {
-                Err("TODO")?
+                Err(format!(
+                    "↺ requires a proposition as the first element in its argument list, got {phrase:?}"
+                ))?
             }
             stack.pop();
             stack.pop();
@@ -371,19 +389,20 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if logic_phrase.get_kind() != Imply {
-                Err("TODO3")?
+                Err(format!(
+                    "modus ponens requires an implication, got {logic_phrase:?}"
+                ))?
             }
             if !logic_phrase.clone().get_is_proven() {
-                Err("modus ponens implication not proven")?
+                Err(format!(
+                    "modus ponens requires a proven implication, got {logic_phrase:?}"
+                ))?
             }
-            if !logic_phrase
-                .get_children()
-                .unwrap_two()
-                .0
-                .clone()
-                .get_is_proven()
-            {
-                Err("modus ponens antecedent not proven")?
+            let antecedent = logic_phrase.get_children().unwrap_two().0;
+            if !antecedent.clone().get_is_proven() {
+                Err(format!(
+                    "modus ponens antecedent not proven: {antecedent:?}"
+                ))?
             }
             stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
             stack.swap_remove(stack.len() - 4);
@@ -398,7 +417,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             let child = match phrase.get_children() {
                 Children::Two(left, _) => left,
-                _ => Err("error")?,
+                _ => Err(format!(
+                    "left child requires a binary phrase, got '{phrase:?}'"
+                ))?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -416,7 +437,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             let child = match phrase.get_children() {
                 Children::Two(_, right) => right,
-                _ => Err("error")?,
+                _ => Err(format!(
+                    "right child requires a binary phrase, got '{phrase:?}'"
+                ))?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -434,7 +457,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             let child = match phrase.get_children() {
                 Children::One(child) => child,
-                _ => Err("error")?,
+                _ => Err(format!(
+                    "child requires a unary phrase, got '{phrase:?}'"
+                ))?,
             };
             if child.is_proposition() {
                 stack.push(Node::LogicPhrase(child.clone()));
@@ -718,16 +743,20 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         if token == Some("⤷".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
-                Err("unexpected eof")?
+                Err("unexpected eof while importing")?
             };
             if namespace.find(&ident).is_some() {
-                Err("TODO")?
+                Err(format!(
+                    "identifier {ident} already exists in namespace, cannot import it"
+                ))?
             }
             let Some(parent) = namespace.parent.clone() else {
                 Err("cannot import into global namespace")?
             };
             let Some(thing) = parent.find(&ident) else {
-                Err(format!("parent namespace does not contain {ident}"))?
+                Err(format!(
+                    "parent namespace does not contain identifier {ident}, cannot import"
+                ))?
             };
             namespace.set(thing);
             peek.take();
@@ -736,16 +765,20 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         if token == Some("⤶".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
-                Err("unexpected eof")?
+                Err("unexpected eof while exporting")?
             };
             let Some(thing) = namespace.find(&ident) else {
-                Err(format!("namespace does not contain {ident}"))?
+                Err(format!(
+                    "namespace does not contain identifier {ident}, cannot export"
+                ))?
             };
             let Some(parent) = namespace.parent.clone() else {
                 Err("cannot export from global namespace")?
             };
             if parent.find(&ident).is_some() {
-                Err("TODO @")?
+                Err(format!(
+                    "identifier {ident} already exists in parent namespace, cannot export"
+                ))?
             }
             parent.set(thing);
             continue;
@@ -780,9 +813,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             && !top.is_operator()
         {
             if token.is_none() {
-                Err("unexpected eof")?
+                Err(format!("unexpected eof, top of stack is {top:?}"))?
             }
-            Err("syntax error")?
+            Err(format!("syntax error, top of stack is {top:?}"))?
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
             peek.take();
@@ -803,7 +836,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             continue;
         }
         if !stack.is_empty() {
-            Err("unexpected eof")?
+            Err(format!(
+                "unexpected eof, with some things left on stack: {stack:?}"
+            ))?
         }
         return Ok(());
     }

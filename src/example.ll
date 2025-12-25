@@ -145,8 +145,6 @@ plus_comm ≔ {
     ⤷ equals_symmetric
     ⤷ equals_transitive
 
-    i ≔ goal; y | ↺
-
     first prove that x + 0 = 0 + x which is the base case
     p ≔ peano3[x].MP
 
@@ -237,7 +235,7 @@ plus_comm ≔ {
     h ≔ chain['X / f↙]['Y / f↘]['Z / g↘].MP.MP
     ∀y h
 
-    i.MP.MP[y].MP
+    goal; y | ↺.MP.MP[y].MP
 
     ⊦ goal
     goal

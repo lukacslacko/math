@@ -47,7 +47,7 @@ pub fn induction(
     variable: Phrase,
 ) -> Result {
     if variable.get_kind() != NumericVariable {
-        Err("induction")?
+        Err(format!("induction requires a numeric variable, got {variable:?}"))?
     }
     // P[v / 0] ⇒ (∀v P ⇒ P[v / 𝗦(v)]) ⇒ ∀v P
     make_imply(
@@ -78,10 +78,10 @@ pub fn eq_subs(
     y: Phrase,
 ) -> Result {
     if !matches!(x.get_kind(), NumericVariable | NumericConstant) {
-        Err("eq_subs")?
+        Err(format!("eq_subs requires a numeric variable or constant as its second argument, got {x:?}"))?
     }
     if !matches!(y.get_kind(), NumericVariable | NumericConstant) {
-        Err("eq_subs")?
+        Err(format!("eq_subs requires a numeric variable or constant as its third argument, got {y:?}"))?
     }
     make_imply(
         make_equals(x.clone(), y.clone())?,

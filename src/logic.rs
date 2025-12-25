@@ -3,7 +3,9 @@ use crate::phrase::*;
 
 pub fn instantiate(quantification: Phrase, term: Phrase) -> Result {
     if quantification.get_kind() != Quantify {
-        Err("instantiate")?
+        Err(format!(
+            "instantation requires a quantification, got {quantification}"
+        ))?
     }
     let (variable, formula) = quantification.get_children().unwrap_two();
     let new = formula.clone().substitute(variable.clone(), term)?;
@@ -13,11 +15,15 @@ pub fn instantiate(quantification: Phrase, term: Phrase) -> Result {
 
 pub fn distribute(quantification: Phrase) -> Result {
     if quantification.get_kind() != Quantify {
-        Err("distribute not quantification")?
+        Err(format!(
+            "distribute requires a quantification, got {quantification}"
+        ))?
     }
     let (variable, formula) = quantification.get_children().unwrap_two();
     if formula.get_kind() != Imply {
-        Err("distribute not implication")?
+        Err(format!(
+            "distribute requires an implication as the formula of the quantification, got {formula}"
+        ))?
     }
     let (left, right) = formula.get_children().unwrap_two();
     let variable = variable.clone();

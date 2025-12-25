@@ -140,7 +140,9 @@ impl PhraseData {
         variable: &PhraseData,
     ) -> std::result::Result<bool, Box<dyn Error>> {
         if !matches!(variable.kind, NumericVariable | LogicVariable) {
-            Err("is_free")?
+            Err(format!(
+                "freedom can only be checked for a variable, got {variable:?}"
+            ))?
         }
         Ok(self == variable
             || if self.kind == Quantify {
@@ -172,15 +174,17 @@ impl PhraseData {
     pub fn assert_axiom(self: Phrase, proof: Proof) -> Result {
         match &proof {
             NamePhrase(_, phrase) if !phrase.get_is_proven() => {
-                Err("assert_axiom")?
+                Err(format!("assert_axiom: phrase not proven: {phrase}"))?
             }
             NameVariablePhrase(_, _, phrase) if !phrase.get_is_proven() => {
-                Err("assert_axiom")?
+                Err(format!("assert_axiom: phrase not proven: {phrase}"))?
             }
             NamePhrasePhrase(_, phrase1, phrase2)
                 if !phrase1.get_is_proven() || !phrase2.get_is_proven() =>
             {
-                Err("assert_axiom")?
+                Err(format!(
+                    "assert_axiom: phrases are not both proven: {phrase1} and {phrase2}"
+                ))?
             }
             _ => {}
         }
@@ -193,7 +197,9 @@ impl PhraseData {
         match variable.kind {
             LogicVariable if term.is_proposition() => {}
             NumericVariable if term.is_numeric() => {}
-            _ => Err("substitute")?,
+            _ => Err(format!(
+                "substitute requires a variable and a term of matching kind, got variable: {variable:?}, term: {term:?}"
+            ))?,
         }
         if self == variable {
             return Ok(term.clone());
@@ -206,7 +212,9 @@ impl PhraseData {
                 if **left == *variable {
                     return Ok(self);
                 } else if term.is_free(left)? {
-                    Err("substitute")?
+                    Err(format!(
+                        "substitute would capture a free variable in the quantification {self} when substituting {term} for {variable}"
+                    ))?
                 }
             }
             Rc::new(PhraseData {
@@ -240,14 +248,14 @@ impl PhraseData {
     }
     pub fn modus_ponens(self: Phrase) -> Result {
         if self.kind != Imply {
-            Err("modus_ponens not implication")?
+            Err(format!("modus_ponens requires an implication, got {self}"))?
         }
         let (antecedent, consequent) = self.children.unwrap_two();
         if !antecedent.get_is_proven() {
-            Err("modus_ponens antecedent not proven")?
+            Err(format!("modus ponens antecedent not proven: {antecedent}"))?
         }
         if !self.get_is_proven() {
-            Err("modus_ponens implication not proven")?
+            Err(format!("modus ponens implication not proven: {self}"))?
         }
         consequent.clone().assert_axiom(NamePhrasePhrase(
             "modus ponens",
@@ -259,7 +267,9 @@ impl PhraseData {
 
 pub fn make_logic_variable(name: String) -> Result {
     if !name.starts_with('\'') {
-        Err("make_logic_variable")?
+        Err(format!(
+            "logic variable must start with an apostrophe, got {name}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: LogicVariable,
@@ -270,7 +280,9 @@ pub fn make_logic_variable(name: String) -> Result {
 
 pub fn make_numeric_variable(name: String) -> Result {
     if name.starts_with('\'') {
-        Err("make_numeric_variable")?
+        Err(format!(
+            "numeric variable must not start with an apostrophe, got {name}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: NumericVariable,
@@ -281,7 +293,7 @@ pub fn make_numeric_variable(name: String) -> Result {
 
 pub fn make_numeric_constant_zero(name: String) -> Result {
     if name != "0" {
-        Err("make_numeric_constant_zero")?
+        Err(format!("numeric constant zero must be '0', got {name}"))?
     }
     Ok(Rc::new(PhraseData {
         kind: NumericConstant,
@@ -294,7 +306,9 @@ pub fn make_numeric_constant_zero(name: String) -> Result {
 
 pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Result {
     if !antecedent.is_proposition() || !consequent.is_proposition() {
-        Err("make_imply")?
+        Err(format!(
+            "make_imply requires propositions, got antecedent: {antecedent}, consequent: {consequent}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: Imply,
@@ -305,7 +319,7 @@ pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Result {
 
 pub fn make_not(negand: Phrase) -> Result {
     if !negand.is_proposition() {
-        Err("make_not")?
+        Err(format!("make_not requires a proposition, got {negand}"))?
     }
     Ok(Rc::new(PhraseData {
         kind: Not,
@@ -316,7 +330,9 @@ pub fn make_not(negand: Phrase) -> Result {
 
 pub fn make_equals(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        Err("make_equals")?
+        Err(format!(
+            "make_equals requires numeric phrases, got left: {left}, right: {right}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: Equals,
@@ -327,7 +343,9 @@ pub fn make_equals(left: Phrase, right: Phrase) -> Result {
 
 pub fn make_successor(number: Phrase) -> Result {
     if !number.is_numeric() {
-        Err("make_successor")?
+        Err(format!(
+            "make_successor requires a numeric phrase, got {number}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: Successor,
@@ -338,7 +356,9 @@ pub fn make_successor(number: Phrase) -> Result {
 
 pub fn make_add(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        Err("make_add")?
+        Err(format!(
+            "make_add requires numeric phrases, got left: {left}, right: {right}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: Add,
@@ -349,7 +369,9 @@ pub fn make_add(left: Phrase, right: Phrase) -> Result {
 
 pub fn make_multiply(left: Phrase, right: Phrase) -> Result {
     if !left.is_numeric() || !right.is_numeric() {
-        Err("make_multiply")?
+        Err(format!(
+            "make_multiply requires numeric phrases, got left: {left}, right: {right}"
+        ))?
     }
     Ok(Rc::new(PhraseData {
         kind: Multiply,
@@ -360,7 +382,9 @@ pub fn make_multiply(left: Phrase, right: Phrase) -> Result {
 
 pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
     if variable.kind != NumericVariable || !predicate.is_proposition() {
-        Err("make_quantify")?
+        Err(format!(
+            "make_quantify requires a numeric variable and a proposition, got variable: {variable}, predicate: {predicate}"
+        ))?
     }
     let new = Rc::new(PhraseData {
         kind: Quantify,
