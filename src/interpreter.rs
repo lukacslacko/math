@@ -639,6 +639,13 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.push(Node::Dot);
             continue;
         }
+        if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
+            back(&stack, 1)
+            && token == Some("℻".to_string())
+        {
+            peek.take();
+            println!("{:b}", **phrase);
+        }
         if let (
             Some(Node::Identifier(ident)),
             Some(Node::AssignTok),
@@ -692,13 +699,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.push(Node::CloseCurly);
             continue;
         }
-        if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
+        if let Some(Node::LogicPhrase(_) | Node::NumericPhrase(_)) =
             back(&stack, 1)
         {
-            if token == Some("℻".to_string()) {
-                peek.take();
-                println!("{:b}", **phrase);
-            }
             stack.pop();
             continue;
         }
