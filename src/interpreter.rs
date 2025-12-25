@@ -155,6 +155,9 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
+        if token == Some("⛔".to_string()) {
+            Err("stopping the program as requested")?;
+        }
         if token == Some("≔".to_string()) {
             let Some(Node::Identifier(_)) = back(&stack, 1) else {
                 Err("missing identifier to assign to")?
@@ -670,6 +673,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             peek.take();
             println!("{:b}", **phrase);
+            continue;
         }
         if let (
             Some(Node::Identifier(ident)),
