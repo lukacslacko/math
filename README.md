@@ -39,6 +39,7 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | List | `x; y` | | Syntax for providing arguments to [axiom schemas](#axiom-schemas) |
 | Assertion | `⊦ P` | `\|- P` | Asserts that `P` is a *proven phrase*. Panics if not. `P` must be a logic phrase |
 | Print | `P ℻` | `P FAX` | Prints out the phrase `P` |
+| Stop | `⛔` | `<stop>` | Stops the program |
 | Import identifier | `⤷ name` | `import name` | Imports the name and value of `name` from the surrounding namespace into the current one |
 | Export identifier | `⤶ name` | `export name` | Exports the name and value of `name` into the surrounding namespace. For namespaces with a single result, `result ≔ { ... result }` is an alternative to this |
 | Successor | `𝗦(x)` | `succ(x)` | The successor of `x`. `x` must be a numeric phrase |
