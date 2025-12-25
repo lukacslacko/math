@@ -35,6 +35,7 @@ commute_antecedents ≔ {
 
 ⊦ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
+commute_antecedents
 
 ignore['A / 'y ⇒ 'z]['B / 'x]
 ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
@@ -291,3 +292,4 @@ plus_assoc ≔ {
 }
 
 plus_assoc ℻
+plus_assoc <proof>

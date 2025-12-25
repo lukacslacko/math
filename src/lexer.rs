@@ -43,6 +43,7 @@ pub const PREFIXES: &[(&str, &str)] = &[
     ("⪮", "⪮"),
     ("↺", "↺"),
     ("⛔", "⛔"),
+    ("📜", "📜"),
 ];
 
 pub const KEYWORDS: &[(&str, &str)] = &[
@@ -54,6 +55,7 @@ pub const KEYWORDS: &[(&str, &str)] = &[
     ("<eq_subs>", "⪮"),
     ("<induction>", "↺"),
     ("<stop>", "⛔"),
+    ("<proof>", "📜"),
 ];
 
 fn tokenize_word(

@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
@@ -17,6 +17,21 @@ pub enum Proof {
     NamePhrase(&'static str, Phrase),
     NameVariablePhrase(&'static str, String, Phrase),
     NamePhrasePhrase(&'static str, Phrase, Phrase),
+}
+
+impl fmt::Display for Proof {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Name(name) => write!(f, "Axiom: {name}"),
+            NamePhrase(name, phrase) => write!(f, "Proof: {name} on {phrase}"),
+            NameVariablePhrase(name, var_name, phrase) => {
+                write!(f, "Proof: {name} on {var_name} in {phrase}")
+            }
+            NamePhrasePhrase(name, phrase1, phrase2) => {
+                write!(f, "Proof: {name} on {phrase1} and {phrase2}")
+            }
+        }
+    }
 }
 
 pub use Proof::*;
@@ -189,7 +204,7 @@ impl PhraseData {
             _ => {}
         }
         KNOWN_TRUTHS.with_borrow_mut(|known_truths| {
-            known_truths.insert(self.clone(), proof)
+            known_truths.entry(self.clone()).or_insert(proof);
         });
         Ok(self)
     }
@@ -262,6 +277,61 @@ impl PhraseData {
             self.clone(),
             antecedent.clone(),
         ))
+    }
+
+    pub fn show_proof(&self) -> Option<Vec<(String, Proof)>> {
+        if !self.get_is_proven() {
+            panic!("I am false! {self}");
+        }
+        KNOWN_TRUTHS.with_borrow(|known_truths| {
+            let my_proof = known_truths.get(self)?;
+            let me_and_my_proof = (self.to_string(), my_proof.clone());
+            match my_proof {
+                Name(_) => Some(vec![me_and_my_proof]),
+                NamePhrase(_, phrase) => {
+                    if **phrase == *self {
+                        panic!("circular proof detected for {self}");
+                    }
+                    let mut subproof = phrase.show_proof()?;
+                    if subproof.contains(&me_and_my_proof) {
+                        panic!("circular proof detected for {self}");
+                    }
+                    subproof.push(me_and_my_proof);
+                    Some(subproof)
+                }
+                NameVariablePhrase(_, _, phrase) => {
+                    let mut subproof = phrase.show_proof()?;
+                    if **phrase == *self {
+                        panic!("circular proof detected for {self}");
+                    }
+                    if subproof.contains(&me_and_my_proof) {
+                        panic!("circular proof detected for {self}");
+                    }
+                    subproof.push(me_and_my_proof);
+                    Some(subproof)
+                }
+                NamePhrasePhrase(_, phrase1, phrase2) => {
+                    if **phrase1 == *self {
+                        panic!("circular proof detected for {self}");
+                    }
+                    if **phrase2 == *self {
+                        panic!("circular proof detected for {self}");
+                    }
+                    let mut subproof = phrase1.show_proof()?;
+                    for proof in phrase2.show_proof()? {
+                        if subproof.contains(&proof) {
+                            continue;
+                        }
+                        subproof.push(proof);
+                    }
+                    if subproof.contains(&me_and_my_proof) {
+                        panic!("circular proof detected for {self}");
+                    }
+                    subproof.push(me_and_my_proof);
+                    Some(subproof)
+                }
+            }
+        })
     }
 }
 

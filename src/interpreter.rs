@@ -4,6 +4,7 @@ use crate::logic;
 use crate::peano;
 use crate::phrase::*;
 use std::cell::RefCell;
+use std::fmt::Write;
 use std::rc::Rc;
 
 #[derive(Debug, Default)]
@@ -673,6 +674,21 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             peek.take();
             println!("{:b}", **phrase);
+            continue;
+        }
+        if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
+            back(&stack, 1)
+            && token == Some("📜".to_string())
+        {
+            peek.take();
+            let proof = phrase.show_proof().unwrap_or_default();
+            let mut result = String::new();
+            writeln!(result, "Proof of {phrase}:").unwrap();
+            for step in proof {
+                writeln!(result, " - {} by {}", step.0, step.1).unwrap();
+            }
+            std::fs::write("proof.txt", result)
+                .expect("failed to write proof to proof.txt");
             continue;
         }
         if let (
