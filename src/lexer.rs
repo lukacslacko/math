@@ -5,7 +5,7 @@ pub struct Token {
     pub line_no: usize,
 }
 
-pub const PREFIXES: &[(&'static str, &'static str)] = &[
+pub const PREFIXES: &[(&str, &str)] = &[
     (";", ";"),
     ("[", "["),
     ("]", "]"),
@@ -44,7 +44,7 @@ pub const PREFIXES: &[(&'static str, &'static str)] = &[
     ("↺", "↺"),
 ];
 
-pub const KEYWORDS: &[(&'static str, &'static str)] = &[
+pub const KEYWORDS: &[(&str, &str)] = &[
     ("export", "⤶"),
     ("import", "⤷"),
     ("FAX", "℻"),
