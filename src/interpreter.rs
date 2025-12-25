@@ -249,7 +249,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             }
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!(
-                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term:?}'"
+                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
             stack.push(Node::LogicPhrase(
@@ -310,7 +310,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             }
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!(
-                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term:?}'"
+                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
             stack.push(Node::NumericPhrase(
@@ -339,7 +339,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             let y = list[2].clone();
             if !phrase.is_proposition() {
                 Err(format!(
-                    "⪮ requires a proposition as the first element in its argument list, got {phrase:?}"
+                    "⪮ requires a proposition as the first element in its argument list, got {phrase}"
                 ))?
             }
             stack.pop();
@@ -363,7 +363,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             let x = list[1].clone();
             if !phrase.is_proposition() {
                 Err(format!(
-                    "↺ requires a proposition as the first element in its argument list, got {phrase:?}"
+                    "↺ requires a proposition as the first element in its argument list, got {phrase}"
                 ))?
             }
             stack.pop();
@@ -393,18 +393,18 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
         {
             if logic_phrase.get_kind() != Imply {
                 Err(format!(
-                    "modus ponens requires an implication, got {logic_phrase:?}"
+                    "modus ponens requires an implication, got {logic_phrase}"
                 ))?
             }
             if !logic_phrase.clone().get_is_proven() {
                 Err(format!(
-                    "modus ponens requires a proven implication, got {logic_phrase:?}"
+                    "modus ponens requires a proven implication, got {logic_phrase}"
                 ))?
             }
             let antecedent = logic_phrase.get_children().unwrap_two().0;
             if !antecedent.clone().get_is_proven() {
                 Err(format!(
-                    "modus ponens antecedent not proven: {antecedent:?}"
+                    "modus ponens antecedent not proven: {antecedent}"
                 ))?
             }
             stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
@@ -421,7 +421,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             let child = match phrase.get_children() {
                 Children::Two(left, _) => left,
                 _ => Err(format!(
-                    "left child requires a binary phrase, got '{phrase:?}'"
+                    "left child requires a binary phrase, got '{phrase}'"
                 ))?,
             };
             if child.is_proposition() {
@@ -441,7 +441,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             let child = match phrase.get_children() {
                 Children::Two(_, right) => right,
                 _ => Err(format!(
-                    "right child requires a binary phrase, got '{phrase:?}'"
+                    "right child requires a binary phrase, got '{phrase}'"
                 ))?,
             };
             if child.is_proposition() {
@@ -461,7 +461,7 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             let child = match phrase.get_children() {
                 Children::One(child) => child,
                 _ => Err(format!(
-                    "child requires a unary phrase, got '{phrase:?}'"
+                    "child requires a unary phrase, got '{phrase}'"
                 ))?,
             };
             if child.is_proposition() {

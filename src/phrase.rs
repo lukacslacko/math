@@ -198,7 +198,7 @@ impl PhraseData {
             LogicVariable if term.is_proposition() => {}
             NumericVariable if term.is_numeric() => {}
             _ => Err(format!(
-                "substitute requires a variable and a term of matching kind, got variable: {variable:?}, term: {term:?}"
+                "substitute requires a variable and a term of matching kind, got variable: {variable:?}, term: {term}"
             ))?,
         }
         if self == variable {

@@ -241,4 +241,53 @@ plus_comm ≔ {
     goal
 }
 
-plus_comm ℻
+{
+    goal ≔ X = Y ⇒ 𝗦(X) = 𝗦(Y)
+
+    ⤷ commute_antecedents
+
+    a ≔ 𝗦(X) = 𝗦(Z); Z; Y | ⪮[Z / X]
+    (X = X)[X / 𝗦(X)]
+    commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+
+    ⊦ goal
+}
+
+plus_assoc ≔ {
+    goal ≔ (x + y) + z = x + (y + z)
+
+    ⤷ 0
+    ⤷ peano3
+    ⤷ peano4
+    ⤷ equals_symmetric
+    ⤷ equals_transitive
+
+    peano3[x + y].MP
+    peano3[y].MP
+    equals_symmetric[X / y + 0][Y / y].MP
+    (X = X)[X / x + y]
+    x + y = x + z; z; w | ⪮[z / y][w / y + 0].MP.MP
+    equals_transitive[X / (x + y) + 0][Y / x + y][Z / x + (y + 0)].MP.MP
+
+    a ≔ peano4[X].MP[Y].MP[X / x + y][Y / z]
+    equals_symmetric[X / a↙][Y / a↘].MP
+    peano4[X].MP[Y].MP[X / y][Y / z]
+    peano4[x].MP[y + z].MP
+    (X = Y ⇒ Y = X)[X / y + 𝗦(z)][Y / 𝗦(y + z)].MP
+    x + u = 𝗦(x + (y + z)); u; v | ⪮[v / y + 𝗦(z)][u / 𝗦(y + z)].MP.MP
+    (X = Y ⇒ Y = X)[X / x + (y + 𝗦(z))][Y / 𝗦(x + (y + z))].MP
+
+    b ≔ (X = Y ⇒ 𝗦(X) = 𝗦(Y))[X / (x + y) + z][Y / x + (y + z)]
+    (x + y) + z = x + (y + z) ⇒ u = 𝗦(x + (y + z)); u; v | ⪮
+    [u / 𝗦((x + y) + z)][v / (x + y) + 𝗦(z)].MP.MP
+    c ≔ (x + y) + z = x + (y + z) ⇒ (x + y) + 𝗦(z) = u; u; v | ⪮
+    [u / 𝗦(x + (y + z))][v / x + (y + 𝗦(z))].MP.MP
+    ∀y c
+
+    goal; z | ↺.MP.MP[z].MP
+
+    ⊦ goal
+    goal
+}
+
+plus_assoc ℻
