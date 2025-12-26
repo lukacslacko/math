@@ -12,7 +12,8 @@ fn main() -> UnitResult {
     let tokens = preprocessor::preprocess(input_file)?;
     let tokens = preprocessor::strip_macro_definitions(tokens);
     format::write_formatted_file(&tokens, "preprocessed.ll");
-    interpreter::interpret(tokens.into_iter())?;
+    let mut interpreter = interpreter::Interpreter::new();
+    interpreter.interpret(tokens.into_iter())?;
     println!("Hello, world!");
     Ok(())
 }

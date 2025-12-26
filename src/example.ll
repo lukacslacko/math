@@ -138,7 +138,6 @@ this is also a comment
 plus_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
-    ⤷ 0
     ⤷ chain
     ⤷ commute_antecedents
     ⤷ peano3
@@ -150,7 +149,6 @@ plus_comm ≔ {
     p ≔ peano3[x].MP
 
     a ≔ {
-        ⤷ 0
         ⤷ peano3
         ⤷ peano4
         ⤷ commute_antecedents
@@ -180,7 +178,6 @@ plus_comm ≔ {
     b ≔ {
         goal ≔ (𝗦(x) + y) = 𝗦(x + y)
 
-        ⤷ 0
         ⤷ chain
         ⤷ commute_antecedents
         ⤷ equals_symmetric
@@ -257,7 +254,6 @@ plus_comm ≔ {
 plus_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
 
-    ⤷ 0
     ⤷ peano3
     ⤷ peano4
     ⤷ equals_symmetric
@@ -292,4 +288,4 @@ plus_assoc ≔ {
 }
 
 plus_assoc ℻
-plus_assoc <proof>
+plus_assoc📜

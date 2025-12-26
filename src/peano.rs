@@ -4,7 +4,7 @@ use crate::phrase::*;
 pub fn axioms() -> UnitResult {
     let var_x = make_numeric_variable("X".to_string())?;
     let var_y = make_numeric_variable("Y".to_string())?;
-    let zero = make_numeric_constant_zero("0".to_string())?;
+    let zero = make_numeric_constant_zero();
 
     make_not(make_equals(zero.clone(), make_successor(var_x.clone())?)?)?
         .assert_axiom(Name("peano 1"))?;
@@ -47,14 +47,14 @@ pub fn induction(
     variable: Phrase,
 ) -> Result {
     if variable.get_kind() != NumericVariable {
-        Err(format!("induction requires a numeric variable, got {variable:?}"))?
+        Err(format!(
+            "induction requires a numeric variable, got {variable:?}"
+        ))?
     }
     // P[v / 0] ⇒ (∀v P ⇒ P[v / 𝗦(v)]) ⇒ ∀v P
     make_imply(
-        P.clone().substitute(
-            variable.clone(),
-            make_numeric_constant_zero("0".to_string())?,
-        )?,
+        P.clone()
+            .substitute(variable.clone(), make_numeric_constant_zero())?,
         make_imply(
             make_quantify(
                 variable.clone(),
@@ -77,11 +77,15 @@ pub fn eq_subs(
     x: Phrase,
     y: Phrase,
 ) -> Result {
-    if !matches!(x.get_kind(), NumericVariable | NumericConstant) {
-        Err(format!("eq_subs requires a numeric variable or constant as its second argument, got {x:?}"))?
+    if x.get_kind() != NumericVariable {
+        Err(format!(
+            "eq_subs requires a numeric variable as its second argument, got {x:?}"
+        ))?
     }
-    if !matches!(y.get_kind(), NumericVariable | NumericConstant) {
-        Err(format!("eq_subs requires a numeric variable or constant as its third argument, got {y:?}"))?
+    if y.get_kind() != NumericVariable {
+        Err(format!(
+            "eq_subs requires a numeric variable as its third argument, got {y:?}"
+        ))?
     }
     make_imply(
         make_equals(x.clone(), y.clone())?,

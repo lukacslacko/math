@@ -1,11 +1,12 @@
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
 
 thread_local! {
     static KNOWN_TRUTHS: RefCell<HashMap<Phrase, Proof>> = RefCell::new(HashMap::new());
+    static ZERO: Phrase = Rc::new(PhraseData{kind: Zero,children:Children::Zero(),variable_name:None});
 }
 
 pub type Phrase = Rc<PhraseData>;
@@ -40,7 +41,7 @@ pub use Proof::*;
 pub enum PhraseKind {
     LogicVariable,
     NumericVariable,
-    NumericConstant,
+    Zero,
     Imply,
     Not,
     Equals,
@@ -69,7 +70,7 @@ pub struct PhraseData {
 impl fmt::Display for PhraseData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
-            LogicVariable | NumericVariable | NumericConstant => {
+            LogicVariable | NumericVariable => {
                 self.children.unwrap_zero();
                 if let Some(variable_name) = &self.variable_name {
                     write!(f, "{variable_name}")
@@ -77,6 +78,7 @@ impl fmt::Display for PhraseData {
                     Ok(())
                 }
             }
+            Zero => write!(f, "0"),
             Imply => {
                 let (left, right) = self.children.unwrap_two();
                 write!(f, "({left} ⇒ {right})")
@@ -178,10 +180,7 @@ impl PhraseData {
             })
     }
     pub fn is_numeric(&self) -> bool {
-        matches!(
-            self.kind,
-            NumericVariable | NumericConstant | Successor | Add | Multiply
-        )
+        !self.is_proposition()
     }
     pub fn is_proposition(&self) -> bool {
         matches!(self.kind, LogicVariable | Imply | Not | Equals | Quantify)
@@ -361,18 +360,9 @@ pub fn make_numeric_variable(name: String) -> Result {
     }))
 }
 
-pub fn make_numeric_constant_zero(name: String) -> Result {
-    if name != "0" {
-        Err(format!("numeric constant zero must be '0', got {name}"))?
-    }
-    Ok(Rc::new(PhraseData {
-        kind: NumericConstant,
-        children: Children::Zero(),
-        variable_name: Some(name),
-    }))
+pub fn make_numeric_constant_zero() -> Phrase {
+    ZERO.with(Rc::clone)
 }
-
-// TODO: witness
 
 pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Result {
     if !antecedent.is_proposition() || !consequent.is_proposition() {

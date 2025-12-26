@@ -37,33 +37,19 @@ commute_antecedents ≔ {
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
 commute_antecedents
 
-
-chain ≔ {
-    goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ 'x ⇒ 'z
-
-    ⤷ commute_antecedents
-    ⤷ ignore
-    ⤷ distr
-
-    ignore['A / 'y ⇒ 'z]['B / 'x]
-    ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
-    commute_antecedents['X / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↙]['Y / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↘↙]['Z / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↘↘].MP
-
-    ⊦ goal
-    goal['x / 'X]['y / 'Y]['z / 'Z]
-}
+ignore['A / 'y ⇒ 'z]['B / 'x]
+ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
+distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP
+chain ≔ commute_antecedents['X / 'y ⇒ 'z]['Y / 'x ⇒ 'y]['Z / 'x ⇒ 'z].MP
+['x / 'X]['y / 'Y]['z / 'Z]
 ⊦ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
-
-
-chain['X / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↙↙]['Y / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↙↘]['Z / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↘↙↘].MP.MP
-
-
-
-
-
-
+ignore['A / ¬¬'x]['B / ¬¬¬¬'x]
+contrapose['A / ¬¬¬'x]['B / ¬'x]
+chain['X / ¬¬'x]['Y / ¬¬¬¬'x ⇒ ¬¬'x]['Z / ¬'x ⇒ ¬¬¬'x].MP.MP
+contrapose['A / 'x]['B / ¬¬'x]
+chain['X / ¬¬'x]['Y / ¬'x ⇒ ¬¬¬'x]['Z / ¬¬'x ⇒ 'x].MP.MP
 ('X ⇒ 'X)['X / ¬¬'x]
 distr['A / ¬¬'x]['B / ¬¬'x]['C / 'x].MP.MP['x / 'X]
 ⊦ ¬¬'X ⇒ 'X
@@ -152,7 +138,6 @@ this is also a comment
 plus_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
-    ⤷ 0
     ⤷ chain
     ⤷ commute_antecedents
     ⤷ peano3
@@ -164,7 +149,6 @@ plus_comm ≔ {
     p ≔ peano3[x].MP
 
     a ≔ {
-        ⤷ 0
         ⤷ peano3
         ⤷ peano4
         ⤷ commute_antecedents
@@ -194,7 +178,6 @@ plus_comm ≔ {
     b ≔ {
         goal ≔ (𝗦(x) + y) = 𝗦(x + y)
 
-        ⤷ 0
         ⤷ chain
         ⤷ commute_antecedents
         ⤷ equals_symmetric
@@ -271,7 +254,6 @@ plus_comm ≔ {
 plus_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
 
-    ⤷ 0
     ⤷ peano3
     ⤷ peano4
     ⤷ equals_symmetric
