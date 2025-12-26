@@ -31,12 +31,15 @@ impl Namespace {
 enum Thing {
     LogicPhrase(String, Phrase),
     NumericPhrase(String, Phrase),
+    List(String, Vec<Phrase>),
 }
 
 impl Thing {
     fn name(&self) -> &str {
         match self {
-            Self::LogicPhrase(name, _) | Self::NumericPhrase(name, _) => name,
+            Self::LogicPhrase(name, _)
+            | Self::NumericPhrase(name, _)
+            | Self::List(name, _) => name,
         }
     }
 }
@@ -802,6 +805,18 @@ impl Interpreter {
                 continue;
             }
             if let (
+                Some(Node::Identifier(ident)),
+                Some(Node::AssignTok),
+                Some(Node::List(list)),
+            ) = (back(stack, 3), back(stack, 2), back(stack, 1))
+            {
+                namespace.set(Thing::List(ident.clone(), list.clone()));
+                stack.pop();
+                stack.pop();
+                stack.pop();
+                continue;
+            }
+            if let (
                 Some(Node::Assertion),
                 Some(Node::LogicPhrase(logic_phrase)),
             ) = (back(stack, 2), back(stack, 1))
@@ -848,7 +863,8 @@ impl Interpreter {
                 stack.push(Node::OpenCurly);
                 continue;
             }
-            if token == Some("⤷".to_string()) || token == Some("‼".to_string()) {
+            if token == Some("⤷".to_string()) || token == Some("‼".to_string())
+            {
                 peek.take();
                 let Some(ident) = peek.peek() else {
                     Err("unexpected eof while importing")?
@@ -946,6 +962,7 @@ impl Interpreter {
                     Some(Thing::NumericPhrase(_, numeric_phrase)) => {
                         stack.push(Node::NumericPhrase(numeric_phrase))
                     }
+                    Some(Thing::List(_, list)) => stack.push(Node::List(list)),
                     None => stack.push(Node::Identifier(token)),
                 }
                 continue;
