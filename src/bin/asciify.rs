@@ -8,7 +8,7 @@ fn main() {
     let input_file = if args.len() == 2 {
         &args[1]
     } else {
-        panic!("Usage: formatter [input_file]");
+        panic!("Usage: asciify [input_file]");
     };
-    format::format_file(input_file, input_file, /*as_ascii=*/ false);
+    format::format_file(input_file, input_file, /*as_ascii=*/ true);
 }

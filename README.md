@@ -22,6 +22,8 @@ Comments can be added between `/* ... */`.
 
 To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Shift+B` in VSCode and select "Format Logic Language" when editing a program.
 
+To convert to the ASCII representation, run `cargo run --bin asciify filename.ll` or run the "ASCIIfy Logic Language" in VSCode.
+
 ## Expressions
 
 | Expression | Syntax | ASCII | Remarks |

@@ -7,6 +7,13 @@
             "command": "cargo run --bin formatter -- ${file}",
             "problemMatcher": [],
             "group": "build"
+        },
+        {
+            "label": "ASCIIfy Logic Language",
+            "type": "shell",
+            "command": "cargo run --bin asciify -- ${file}",
+            "problemMatcher": [],
+            "group": "build"
         }
     ]
 }
