@@ -36,7 +36,7 @@ commute_antecedents ≔ {
 ⊦ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
 commute_antecedents
-
+commute_ante⟪commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘]⟫
 
 chain ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ 'x ⇒ 'z
@@ -47,7 +47,7 @@ chain ≔ {
 
     ignore['A / 'y ⇒ 'z]['B / 'x]
     ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
-    commute_antecedents['X / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↙]['Y / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↘↙]['Z / (distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP)↘↘].MP
+    commute_ante⟦distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP⟧.MP
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
@@ -55,15 +55,15 @@ chain ≔ {
 ⊦ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
+deduce⟪chain['X / ●↙↙]['Y / ●↙↘]['Z / ●↘↙↘].MP.MP⟫
 
-
-chain['X / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↙↙]['Y / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↙↘]['Z / (chain['X / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↙]['Y / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↙↘]['Z / (ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; contrapose['A / ¬¬¬'x]['B / ¬'x])↘↙↘].MP.MP; contrapose['A / 'x]['B / ¬¬'x])↘↙↘].MP.MP
-
-
-
-
-
-
+deduce⟦
+    deduce⟦
+        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
+        contrapose['A / ¬¬¬'x]['B / ¬'x]
+    ⟧;
+    contrapose['A / 'x]['B / ¬¬'x]
+⟧
 ('X ⇒ 'X)['X / ¬¬'x]
 distr['A / ¬¬'x]['B / ¬¬'x]['C / 'x].MP.MP['x / 'X]
 ⊦ ¬¬'X ⇒ 'X
