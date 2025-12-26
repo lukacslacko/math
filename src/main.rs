@@ -1,18 +1,17 @@
-use std::error::Error;
-
-mod interpreter;
-mod lexer;
-mod logic;
-mod peano;
-mod phrase;
-
-type UnitResult = std::result::Result<(), Box<dyn Error>>;
+use math::*;
 
 fn main() -> UnitResult {
     logic::axioms()?;
     peano::axioms()?;
-    let input = std::fs::read_to_string("example.ll")?;
-    let tokens = lexer::tokenize(&input, "example.ll");
+    let args: Vec<String> = std::env::args().collect();
+    let input_file = if args.len() == 2 {
+        &args[1]
+    } else {
+        "example.ll"
+    };
+    let tokens = preprocessor::preprocess(input_file)?;
+    let tokens = preprocessor::strip_macro_definitions(tokens);
+    format::write_formatted_file(&tokens, "preprocessed.ll");
     interpreter::interpret(tokens.into_iter())?;
     println!("Hello, world!");
     Ok(())

@@ -474,6 +474,35 @@ fn interpret_inner(peek: &mut Peek<impl Iterator<Item = Token>>) -> UnitResult {
             stack.pop();
             continue;
         }
+        if let (Some(Node::List(list)), Some(Node::Left)) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            if list.is_empty() {
+                Err("cannot get head of empty list")?
+            }
+            let first = list[0].clone();
+            stack.pop();
+            stack.pop();
+            if first.is_proposition() {
+                stack.push(Node::LogicPhrase(first));
+            } else if first.is_numeric() {
+                stack.push(Node::NumericPhrase(first));
+            } else {
+                unreachable!("list element neither numeric nor logic {first}");
+            }
+            continue;
+        }
+        if let (Some(Node::List(list)), Some(Node::Right)) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            if list.is_empty() {
+                Err("cannot get tail of empty list")?
+            }
+            stack.push(Node::List(list[1..].to_vec()));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
         if let Some(Node::Dot) = back(&stack, 1) {
             if token == Some("MP".to_string()) {
                 peek.take();

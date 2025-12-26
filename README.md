@@ -14,6 +14,8 @@ There are also [axiom schemas](#axiom-schemas) which can be instantiated to add 
 
 Also, `0` is added as an identifier to the global namespace.
 
+[Macros](#macros) can be used to conveniently generate repeated text, without incurring the mental cost of a complicated type system.
+
 ### Formatting
 
 To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Shift+B` in VSCode and select "Format Logic Language" when editing a program.
@@ -30,8 +32,8 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
 | Namespaces | `{ ... }` | | Forget all identifiers within the namespace. The value of a namespace is its last phrase. |
-| Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x` |
-| Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A` |
+| Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x`. For lists, it returns the head of the list. |
+| Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A`. For lists, it returns the tail of the list. |
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
 | Equality | `x = y` | | `x` and `y` must be numeric phrases |
@@ -75,3 +77,17 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
 | Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
+
+## Macros
+
+Macros are stored in a global map from macro name to macro body. Macros are repeatedly expanded in a preprocessing step before interpreting the program, until the program text stabilizes.
+
+Macro arguments are taken literally and parenthesized in macro expansion. For multiple arguments, semicolon-separated lists can be used practically.
+
+### Definition
+
+To define a macro, say `macro_name⟪ macro_body ⟫`, or the ASCII alternative `macro_name<: macro_body :>`. To refer to the macro argument within the macro body, use `●` or `<arg>`.
+
+### Macro expansion
+
+To use a macro, say `macro_name⟦argument⟧` or `macro_name[:argument:]`. This gets replaced by the macro body, with `●` getting replaced by `(argument)`.
