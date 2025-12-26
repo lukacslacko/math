@@ -45,6 +45,7 @@ pub const PREFIXES: &[(&str, &str)] = &[
     ("𝗦", "𝗦"),
     ("{", "{"),
     ("}", "}"),
+    ("‼", "‼"),
     ("⤷", "⤷"),
     ("⤶", "⤶"),
     ("|", "|"),
@@ -58,6 +59,7 @@ pub const PREFIXES: &[(&str, &str)] = &[
 pub const KEYWORDS: &[(&str, &str)] = &[
     ("export", "⤶"),
     ("import", "⤷"),
+    ("ensure", "‼"),
     ("FAX", "℻"),
     ("succ", "𝗦"),
     ("<distribute>", "⇆"),

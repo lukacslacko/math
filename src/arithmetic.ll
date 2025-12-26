@@ -36,12 +36,14 @@ commute_antecedents ≔ {
 ⊦ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
 commute_antecedents
-commute_ante⟪commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘]⟫
+commute_ante⟪
+    ‼ commute_antecedents
+    commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘]
+⟫
 
 chain ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ 'x ⇒ 'z
 
-    ⤷ commute_antecedents
     ⤷ ignore
     ⤷ distr
 
@@ -55,13 +57,16 @@ chain ≔ {
 ⊦ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
-deduce⟪chain['X / ●↙↙]['Y / ●↙↘]['Z / ●↘↙↘].MP.MP⟫
+deduce⟪
+    ‼ chain
+    chain['X / ●↙↙]['Y / ●↙↘]['Z / ●↘↙↘].MP.MP
+⟫
 
 deduce⟦
     deduce⟦
-        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
+        ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; 
         contrapose['A / ¬¬¬'x]['B / ¬'x]
-    ⟧;
+    ⟧; 
     contrapose['A / 'x]['B / ¬¬'x]
 ⟧
 ('X ⇒ 'X)['X / ¬¬'x]
@@ -73,39 +78,30 @@ contrapose['A / ¬¬'x]['B / 'x].MP['x / 'X]
 ⊦ 'X ⇒ ¬¬'X
 
 recontrapose ≔ {
-    ⤷ contrapose
     ⤷ chain
-    ⤷ commute_antecedents
+    ⤷ contrapose
 
     goal ≔ ('x ⇒ 'y) ⇒ ¬'y ⇒ ¬'x
 
     s ≔ chain['X / ¬¬'x]['Y / 'x]['Z / 'y].MP
     ('X ⇒ ¬¬'X)['X / 'y]
-    a ≔ chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]
-    q ≔ commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
-    r ≔ chain['X / s↙]['Y / s↘]['Z / q↘].MP.MP
-    t ≔ contrapose['A / ¬'x]['B / ¬'y]
-    chain['X / r↙]['Y / r↘]['Z / t↘].MP.MP
+    q ≔ commute_ante⟦chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]⟧.MP.MP
+    deduce⟦
+        deduce⟦s; q⟧; 
+        contrapose['A / ¬'x]['B / ¬'y]
+    ⟧
 
     ⊦ goal
     goal['x / 'A]['y / 'B]
 }
 
-reflexivity ≔ X = X
+(X = X)[X / x]
+equals_symmetric ≔ commute_ante⟦x = z; x; y | ⪮[z / x]⟧.MP.MP[x / X][y / Y]
 
-equals_symmetric ≔ {
-    ⤷ commute_antecedents
-    ⤷ reflexivity
-
-    goal ≔ x = y ⇒ y = x
-
-    a ≔ x = z; x; y | ⪮[z / x]
-    reflexivity[X / x]
-    commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
-
-    ⊦ goal
-    goal[x / X][y / Y]
-}
+eq_flip⟪
+    ‼ equals_symmetric
+    equals_symmetric[X / ●↙][Y / ●↘].MP
+⟫
 
 equals_transitive ≔ {
     ⤷ chain
@@ -119,6 +115,11 @@ equals_transitive ≔ {
     ⊦ goal
     goal[x / X][y / Y][z / Z]
 }
+
+eq_trans⟪
+    ‼ equals_transitive
+    equals_transitive[X / ●↙↙][Y / ●↙↘][Z / ●↘↙↘].MP.MP
+⟫
 
 not_equals_symmetric ≔ {
     ⤷ equals_symmetric
@@ -147,12 +148,9 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-this is also a comment
-
 plus_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
-    ⤷ 0
     ⤷ chain
     ⤷ commute_antecedents
     ⤷ peano3
@@ -160,11 +158,8 @@ plus_comm ≔ {
     ⤷ equals_symmetric
     ⤷ equals_transitive
 
-    first prove that x + 0 = 0 + x which is the base case
-    p ≔ peano3[x].MP
 
     a ≔ {
-        ⤷ 0
         ⤷ peano3
         ⤷ peano4
         ⤷ commute_antecedents
@@ -175,26 +170,19 @@ plus_comm ≔ {
         peano4[0].MP[x].MP
         a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
 
-        TODO this should be commute_ante(a)
-        ∀x commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
+        ∀x commute_ante⟦a⟧.MP.MP
 
         goal; x | ↺.MP.MP[x].MP
         ⊦ goal
         goal
     }
-
-    TODO this should be eq_flip(a)
-    e ≔ equals_symmetric[X / a↙][Y / a↘].MP
-
-    TODO this should be eq_trans(p, e)
-    equals_transitive[X / p↙][Y / p↘][Z / e↘].MP.MP
+    eq_trans⟦peano3[x].MP; eq_flip⟦a⟧⟧
 
     peano4[x].MP[y].MP
 
     b ≔ {
         goal ≔ (𝗦(x) + y) = 𝗦(x + y)
 
-        ⤷ 0
         ⤷ chain
         ⤷ commute_antecedents
         ⤷ equals_symmetric
@@ -204,9 +192,7 @@ plus_comm ≔ {
 
         peano3[𝗦(x)].MP
 
-        TODO this should be eq_flip(peano3[x].MP)
-        p3x ≔ peano3[x].MP
-        equals_symmetric[X / p3x↙][Y / p3x↘].MP
+        eq_flip⟦peano3[x].MP⟧
 
         (X = X)[X / 𝗦(x)]
         𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP
@@ -271,7 +257,6 @@ plus_comm ≔ {
 plus_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
 
-    ⤷ 0
     ⤷ peano3
     ⤷ peano4
     ⤷ equals_symmetric

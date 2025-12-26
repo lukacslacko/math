@@ -16,6 +16,7 @@ pub fn write_formatted_file(tokens: &[Token], output_file: &str) {
         ("⊦", "⊦ "),
         ("≔", " ≔ "),
         ("⇒", " ⇒ "),
+        ("‼", "‼ "),
         ("⤷", "⤷ "),
         ("⤶", "⤶ "),
         ("℻", " ℻ "),

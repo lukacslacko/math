@@ -848,12 +848,17 @@ impl Interpreter {
                 stack.push(Node::OpenCurly);
                 continue;
             }
-            if token == Some("⤷".to_string()) {
+            if token == Some("⤷".to_string()) || token == Some("‼".to_string()) {
                 peek.take();
                 let Some(ident) = peek.peek() else {
                     Err("unexpected eof while importing")?
                 };
                 if namespace.find(&ident).is_some() {
+                    if token == Some("‼".to_string()) {
+                        // Ensure skips already present names.
+                        peek.take();
+                        continue;
+                    }
                     Err(format!(
                         "identifier {ident} already exists in namespace, cannot import it"
                     ))?
