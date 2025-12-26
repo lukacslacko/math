@@ -1,5 +1,13 @@
 use crate::lexer::{Token, tokenize};
 
+pub const ABBREVIATIONS: &[(&str, &[&str])] = &[
+    ("ⅰ", &["↙"]),
+    ("ⅱ", &["↘", "↙"]),
+    ("ⅲ", &["↘", "↘", "↙"]),
+    ("ⅳ", &["↘", "↘", "↘", "↙"]),
+    ("ⅴ", &["↘", "↘", "↘", "↘", "↙"]),
+];
+
 fn preprocess_tokens(
     tokens: Vec<Token>,
 ) -> Result<(bool, Vec<Token>), Box<dyn std::error::Error>> {
@@ -132,6 +140,23 @@ pub fn strip_macro_definitions(tokens: Vec<Token>) -> Vec<Token> {
         }
         new_tokens.push(token.clone());
         i += 1;
+    }
+    new_tokens
+}
+
+pub fn apply_abbreviations(tokens: Vec<Token>) -> Vec<Token> {
+    let mut new_tokens = Vec::new();
+    for token in tokens {
+        let new_texts =
+            match ABBREVIATIONS.iter().find(|(abbr, _)| *abbr == token.text) {
+                Some((_, expansion)) => expansion.to_vec(),
+                None => vec![token.text.as_str()],
+            };
+        for new_text in new_texts {
+            let mut new_token = token.clone();
+            new_token.text = new_text.to_string();
+            new_tokens.push(new_token);
+        }
     }
     new_tokens
 }

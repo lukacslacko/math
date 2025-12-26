@@ -59,7 +59,7 @@ chain ≔ {
 
 deduce⟪
     ‼ chain
-    chain['X / ●↙↙]['Y / ●↙↘]['Z / ●↘↙↘].MP.MP
+    chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 ⟫
 
 deduce⟦
@@ -118,7 +118,7 @@ equals_transitive ≔ {
 
 eq_trans⟪
     ‼ equals_transitive
-    equals_transitive[X / ●↙↙][Y / ●↙↘][Z / ●↘↙↘].MP.MP
+    equals_transitive[X / ●ⅰ↙][Y / ●ⅰ↘][Z / ●ⅱ↘].MP.MP
 ⟫
 
 not_equals_symmetric ≔ {
