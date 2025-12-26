@@ -29,6 +29,8 @@ pub fn write_formatted_file(tokens: &[Token], output_file: &str, as_ascii: bool)
         ("⇆", " ⇆"),
         ("⪮", "⪮"),
         ("↺", "↺"),
+        ("/*", "/* "),
+        ("*/", " */"),
     ];
 
     let mut ascii_versions = HashMap::new();

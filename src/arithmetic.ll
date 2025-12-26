@@ -149,10 +149,10 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano6
 
 replace⟪
-    /*
-    Arguments: expression, variable, left value, right value
+    /* 
+    Arguments: numeric expression, variable, left value, right value
     Result: left value = right value ⇒ expression[var / left] = expression[var / right]
-    */
+     */
     (X = X)[X / ●ⅰ[●ⅱ / ●ⅲ]]
     commute_ante⟦●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ]⟧.MP.MP
 ⟫
@@ -204,7 +204,6 @@ plus_comm ≔ {
 
         eq_trans⟦
             peano3[𝗦(x)].MP; 
-
             eq_flip⟦𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP⟧
         ⟧
 
@@ -232,7 +231,7 @@ plus_comm ≔ {
     equals_symmetric[X / 𝗦(y) + x][Y / 𝗦(y + x)].MP
     replace⟦𝗦(z); z; x + y; y + x⟧
 
-    d has the value(((x + y) = (y + x)) ⇒ (𝗦((x + y)) = 𝗦((y + x))))
+    /* d has the value(((x + y) = (y + x)) ⇒ (𝗦((x + y)) = 𝗦((y + x)))) */
     TODO split would be helpful here by replacing right left right in d by z
     f ≔ x + y = y + x ⇒ z = 𝗦(y + x); z; w | ⪮[z / 𝗦(x + y)][w / x + 𝗦(y)].MP.MP
 
@@ -248,52 +247,41 @@ plus_comm ≔ {
     goal
 }
 
-{
-    goal ≔ X = Y ⇒ 𝗦(X) = 𝗦(Y)
-
-    ⤷ commute_antecedents
-
-    a ≔ 𝗦(X) = 𝗦(Z); Z; Y | ⪮[Z / X]
-    (X = X)[X / 𝗦(X)]
-    commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
-
-    ⊦ goal
-}
+replace⟦𝗦(x); x; X; Y⟧
 
 plus_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
 
     ⤷ peano3
     ⤷ peano4
-    ⤷ equals_symmetric
-    ⤷ equals_transitive
 
-    peano3[x + y].MP
-    peano3[y].MP
-    equals_symmetric[X / y + 0][Y / y].MP
-    (X = X)[X / x + y]
-    x + y = x + z; z; w | ⪮[z / y][w / y + 0].MP.MP
-    equals_transitive[X / (x + y) + 0][Y / x + y][Z / x + (y + 0)].MP.MP
+    eq_flip⟦peano3[y].MP⟧
+    eq_trans⟦
+        peano3[x + y].MP; 
+        (replace⟦x + a; a; y; y + 0⟧.MP)
+    ⟧
 
-    a ≔ peano4[X].MP[Y].MP[X / x + y][Y / z]
-    equals_symmetric[X / a↙][Y / a↘].MP
-    peano4[X].MP[Y].MP[X / y][Y / z]
-    peano4[x].MP[y + z].MP
-    (X = Y ⇒ Y = X)[X / y + 𝗦(z)][Y / 𝗦(y + z)].MP
-    x + u = 𝗦(x + (y + z)); u; v | ⪮[v / y + 𝗦(z)][u / 𝗦(y + z)].MP.MP
-    (X = Y ⇒ Y = X)[X / x + (y + 𝗦(z))][Y / 𝗦(x + (y + z))].MP
+    step ≔ (replace⟦𝗦(a); a; (x + y) + z; x + (y + z)⟧)
 
-    b ≔ (X = Y ⇒ 𝗦(X) = 𝗦(Y))[X / (x + y) + z][Y / x + (y + z)]
-    (x + y) + z = x + (y + z) ⇒ u = 𝗦(x + (y + z)); u; v | ⪮
-    [u / 𝗦((x + y) + z)][v / (x + y) + 𝗦(z)].MP.MP
-    c ≔ (x + y) + z = x + (y + z) ⇒ (x + y) + 𝗦(z) = u; u; v | ⪮
-    [u / 𝗦(x + (y + z))][v / x + (y + 𝗦(z))].MP.MP
-    ∀y c
+    eq_flip⟦peano4[X].MP[Y].MP[X / x + y][Y / z]⟧
+
+    /* This would be a split of step */
+    step_split ≔ step↙ ⇒ a = step↘↘
+    step_removed ≔ step↘↙
+    step1 ≔ step_split; a; b | ⪮[a / step_removed][b / (x + y) + 𝗦(z)].MP.MP
+
+    eq_flip⟦peano4[X].MP[z].MP[X / y]⟧
+    eq_trans⟦
+        eq_flip⟦peano4[X].MP[Y].MP[X / x][Y / y + z]⟧; 
+        (replace⟦x + a; a; 𝗦(y + z); y + 𝗦(z)⟧.MP)
+    ⟧
+
+    /* This would again be a split of step1 */
+    step1_split ≔ step1↙ ⇒ step1↘↙ = a
+    step1_removed ≔ step1↘↘
+    ∀z(step1_split; a; b | ⪮[a / step1_removed][b / x + (y + 𝗦(z))].MP.MP)
 
     goal; z | ↺.MP.MP[z].MP
-
-    ⊦ goal
-    goal
 }
 
 plus_assoc ℻
