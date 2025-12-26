@@ -31,7 +31,7 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | Universal quantification | `∀x P` | `!x P` | Variable must be numeric. Note if `P` is a *proven phrase* then this is the "Universal generalization" inference rule below. |
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
-| Namespaces | `{ ... }` | | Forget all identifiers within the namespace. The value of a namespace is its last phrase. |
+| Namespaces | `{ ... }` | | Forget all identifiers (except `0`) within the namespace. The value of a namespace is its last phrase. |
 | Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x`. For lists, it returns the head of the list. |
 | Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A`. For lists, it returns the tail of the list. |
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
@@ -43,6 +43,7 @@ To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Sh
 | Print | `P ℻` | `P FAX` | Prints out the phrase `P` |
 | Stop | `⛔` | `<stop>` | Stops the program |
 | Import identifier | `⤷ name` | `import name` | Imports the name and value of `name` from the surrounding namespace into the current one |
+| Ensure identifier | `‼ name` | `ensure name` | If the name is not present in the namespace, imports it from the surrounding namespace |
 | Export identifier | `⤶ name` | `export name` | Exports the name and value of `name` into the surrounding namespace. For namespaces with a single result, `result ≔ { ... result }` is an alternative to this |
 | Successor | `𝗦(x)` | `succ(x)` | The successor of `x`. `x` must be a numeric phrase |
 | Addition | `x + y` | | The sum of `x` and `y`. `x` and `y` must be numeric phrases |
