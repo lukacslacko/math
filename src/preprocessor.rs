@@ -161,11 +161,44 @@ pub fn apply_abbreviations(tokens: Vec<Token>) -> Vec<Token> {
     new_tokens
 }
 
+pub fn remove_comments(
+    tokens: Vec<Token>,
+) -> Result<Vec<Token>, Box<dyn std::error::Error>> {
+    let mut new_tokens = Vec::new();
+    let mut i = 0;
+    while i < tokens.len() {
+        let token = &tokens[i];
+        if token.text == "/*" {
+            let mut depth = 1;
+            i += 1;
+            while i < tokens.len() && depth > 0 {
+                if tokens[i].text == "/*" {
+                    depth += 1;
+                } else if tokens[i].text == "*/" {
+                    depth -= 1;
+                }
+                i += 1;
+            }
+            if depth != 0 {
+                Err(format!(
+                    "Unterminated comment starting at {}",
+                    token.location
+                ))?;
+            }
+            continue;
+        }
+        new_tokens.push(token.clone());
+        i += 1;
+    }
+    Ok(new_tokens)
+}
+
 pub fn preprocess(
     input_file: &str,
 ) -> std::result::Result<Vec<Token>, Box<dyn std::error::Error>> {
     let input = std::fs::read_to_string(input_file)?;
     let tokens = tokenize(&input, input_file);
+    let tokens = remove_comments(tokens)?;
     let (mut changed, mut preprocessed_tokens) = preprocess_tokens(tokens)?;
     while changed {
         let (new_changed, new_tokens) = preprocess_tokens(preprocessed_tokens)?;

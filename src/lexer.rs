@@ -6,6 +6,8 @@ pub struct Token {
 }
 
 pub const PREFIXES: &[(&str, &str)] = &[
+    ("/*", "/*"),
+    ("*/", "*/"),
     (";", ";"),
     ("●", "●"),
     ("⟦", "⟦"),

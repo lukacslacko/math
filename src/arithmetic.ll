@@ -64,9 +64,9 @@ deduce⟪
 
 deduce⟦
     deduce⟦
-        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
+        ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; 
         contrapose['A / ¬¬¬'x]['B / ¬'x]
-    ⟧;
+    ⟧; 
     contrapose['A / 'x]['B / ¬¬'x]
 ⟧
 ('X ⇒ 'X)['X / ¬¬'x]
@@ -87,7 +87,7 @@ recontrapose ≔ {
     ('X ⇒ ¬¬'X)['X / 'y]
     q ≔ commute_ante⟦chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]⟧.MP.MP
     deduce⟦
-        deduce⟦s; q⟧;
+        deduce⟦s; q⟧; 
         contrapose['A / ¬'x]['B / ¬'y]
     ⟧
 
@@ -149,6 +149,10 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano6
 
 replace⟪
+    /*
+    Arguments: expression, variable, left value, right value
+    Result: left value = right value ⇒ expression[var / left] = expression[var / right]
+    */
     (X = X)[X / ●ⅰ[●ⅱ / ●ⅲ]]
     commute_ante⟦●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ]⟧.MP.MP
 ⟫
@@ -199,7 +203,7 @@ plus_comm ≔ {
         (X = X)[X / 𝗦(x)]
 
         eq_trans⟦
-            peano3[𝗦(x)].MP;
+            peano3[𝗦(x)].MP; 
 
             eq_flip⟦𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP⟧
         ⟧
@@ -226,7 +230,6 @@ plus_comm ≔ {
 
     b[x / X][y / Y][X / y][Y / x]
     equals_symmetric[X / 𝗦(y) + x][Y / 𝗦(y + x)].MP
-
     replace⟦𝗦(z); z; x + y; y + x⟧
 
     d has the value(((x + y) = (y + x)) ⇒ (𝗦((x + y)) = 𝗦((y + x))))

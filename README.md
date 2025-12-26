@@ -16,6 +16,8 @@ Also, `0` is added as an identifier to the global namespace.
 
 [Macros](#macros) can be used to conveniently generate repeated text, without incurring the mental cost of a complicated type system.
 
+Comments can be added between `/* ... */`.
+
 ### Formatting
 
 To format a file, run `cargo run --bin formatter filename.ll`, or press `Ctrl+Shift+B` in VSCode and select "Format Logic Language" when editing a program.
