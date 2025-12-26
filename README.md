@@ -50,7 +50,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Import identifier | `⤷ name` | `import name` | Imports the name and value of `name` from the surrounding namespace into the current one |
 | Ensure identifier | `‼ name` | `ensure name` | If the name is not present in the namespace, imports it from the surrounding namespace |
 | Export identifier | `⤶ name` | `export name` | Exports the name and value of `name` into the surrounding namespace. For namespaces with a single result, `result ≔ { ... result }` is an alternative to this |
-| Successor | `𝗦(x)` | `succ(x)` | The successor of `x`. `x` must be a numeric phrase |
+| Successor | `𝗦(x)` | `<S>(x)` | The successor of `x`. `x` must be a numeric phrase |
 | Addition | `x + y` | | The sum of `x` and `y`. `x` and `y` must be numeric phrases |
 | Multiplication | `x * y` | | The product of `x` and `y`. `x` and `y` must be numeric phrases |
 
