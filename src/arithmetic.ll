@@ -64,9 +64,9 @@ deduce⟪
 
 deduce⟦
     deduce⟦
-        ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; 
+        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
         contrapose['A / ¬¬¬'x]['B / ¬'x]
-    ⟧; 
+    ⟧;
     contrapose['A / 'x]['B / ¬¬'x]
 ⟧
 ('X ⇒ 'X)['X / ¬¬'x]
@@ -87,7 +87,7 @@ recontrapose ≔ {
     ('X ⇒ ¬¬'X)['X / 'y]
     q ≔ commute_ante⟦chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]⟧.MP.MP
     deduce⟦
-        deduce⟦s; q⟧; 
+        deduce⟦s; q⟧;
         contrapose['A / ¬'x]['B / ¬'y]
     ⟧
 
@@ -148,6 +148,11 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
+replace⟪
+    (X = X)[X / ●ⅰ[●ⅱ / ●ⅲ]]
+    commute_ante⟦●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ]⟧.MP.MP
+⟫
+
 plus_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
@@ -190,14 +195,14 @@ plus_comm ≔ {
         ⤷ peano3
         ⤷ peano4
 
-        peano3[𝗦(x)].MP
-
         eq_flip⟦peano3[x].MP⟧
-
         (X = X)[X / 𝗦(x)]
-        𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP
-        equals_symmetric[X / 𝗦(x + 0)][Y / 𝗦(x)].MP
-        equals_transitive[X / 𝗦(x) + 0][Y / 𝗦(x)][Z / 𝗦(x + 0)].MP.MP
+
+        eq_trans⟦
+            peano3[𝗦(x)].MP;
+
+            eq_flip⟦𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP⟧
+        ⟧
 
         i ≔ goal; y | ↺
 
@@ -211,7 +216,7 @@ plus_comm ≔ {
 
         c ≔ 𝗦(x) + 𝗦(y) = 𝗦(z); z; w | ⪮[z / 𝗦(x + y)][w / x + 𝗦(y)].MP
 
-        ∀y chain['X / b↙]['Y / b↘]['Z / c↘].MP.MP
+        ∀y deduce⟦b; c⟧
 
         i.MP.MP[y].MP
 
@@ -222,9 +227,7 @@ plus_comm ≔ {
     b[x / X][y / Y][X / y][Y / x]
     equals_symmetric[X / 𝗦(y) + x][Y / 𝗦(y + x)].MP
 
-    c ≔ 𝗦(x + y) = 𝗦(z); z; w | ⪮[z / x + y][w / y + x]
-    (X = X)[X / 𝗦(x + y)]
-    d ≔ commute_antecedents['X / c↙]['Y / c↘↙]['Z / c↘↘].MP.MP
+    replace⟦𝗦(z); z; x + y; y + x⟧
 
     d has the value(((x + y) = (y + x)) ⇒ (𝗦((x + y)) = 𝗦((y + x))))
     TODO split would be helpful here by replacing right left right in d by z

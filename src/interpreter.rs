@@ -589,6 +589,11 @@ impl Interpreter {
                 stack.push(Node::Child);
                 continue;
             }
+            if token == Some("[".to_string()) {
+                peek.take();
+                stack.push(Node::OpenSquare);
+                continue;
+            }
             if let (
                 Some(Node::Successor),
                 Some(Node::NumericPhrase(numeric_phrase)),
@@ -670,11 +675,6 @@ impl Interpreter {
             if token == Some("⇒".to_string()) {
                 peek.take();
                 stack.push(Node::ImplyTok);
-                continue;
-            }
-            if token == Some("[".to_string()) {
-                peek.take();
-                stack.push(Node::OpenSquare);
                 continue;
             }
             if token == Some("/".to_string()) {
