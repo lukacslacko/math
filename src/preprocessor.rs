@@ -111,9 +111,7 @@ fn preprocess_tokens(
     Ok((changed, new_tokens))
 }
 
-pub fn strip_macro_definitions(
-    tokens: Vec<Token>,
-) -> Vec<Token> {
+pub fn strip_macro_definitions(tokens: Vec<Token>) -> Vec<Token> {
     let mut new_tokens = Vec::new();
     let mut i = 0;
     while i < tokens.len() {
