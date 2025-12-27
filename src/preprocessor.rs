@@ -84,7 +84,7 @@ fn preprocess_tokens(
                         if body_token.text == "●" {
                             new_tokens.push(Token {
                                 text: "(".to_string(),
-                                location: "magic".to_string(),
+                                location: token.location.clone(),
                                 line_no: token.line_no,
                             });
                             for arg_token in &arg {
@@ -94,7 +94,7 @@ fn preprocess_tokens(
                             }
                             new_tokens.push(Token {
                                 text: ")".to_string(),
-                                location: "magic".to_string(),
+                                location: token.location.clone(),
                                 line_no: token.line_no,
                             });
                         } else {
