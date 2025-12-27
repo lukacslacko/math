@@ -17,6 +17,10 @@ fn preprocess_tokens(
     let mut macros = std::collections::HashMap::new();
     while i < tokens.len() {
         let token = &tokens[i];
+        if token.text == "⛔" {
+            new_tokens.push(token.clone());
+            break;
+        }
         if token.text == "⟪" {
             new_tokens.push(token.clone());
             if i == 0 {

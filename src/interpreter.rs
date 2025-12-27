@@ -4,6 +4,7 @@ use crate::logic;
 use crate::peano;
 use crate::phrase::*;
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::rc::Rc;
 
@@ -185,14 +186,27 @@ fn interpret_middle(
     namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
 ) -> UnitResult {
-    interpret_inner(peek, namespace, ret)
-        .map_err(|err| format!("{err} @ {}", peek.location()).into())
+    let mut new_identifiers = HashSet::new();
+    interpret_inner(peek, namespace, ret, &mut new_identifiers).map_err(|err| {
+        {
+            let hint = if new_identifiers.is_empty() {
+                "good luck!".to_string()
+            } else {
+                let mut new_ids = new_identifiers.iter().cloned().collect::<Vec<_>>();
+                new_ids.sort();
+                format!("implicitly created identifiers: {}, maybe you need to import some of these?", new_ids.join(", "))
+            };
+            format!("{err} @ {}, hint: {}", peek.location(), hint)
+        }
+        .into()
+    })
 }
 
 fn interpret_inner(
     peek: &mut Peek<impl Iterator<Item = Token>>,
     mut namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
+    new_identifiers: &mut HashSet<String>,
 ) -> UnitResult {
     let mut stack = vec![];
     loop {
@@ -221,6 +235,7 @@ fn interpret_inner(
             continue;
         }
         if let Some(Node::Identifier(ident)) = back(&stack, 1) {
+            new_identifiers.insert(ident.clone());
             stack.push(Node::NumericPhrase(make_numeric_variable(
                 ident.clone(),
             )?));
@@ -229,7 +244,12 @@ fn interpret_inner(
         }
         if let (
             Some(Node::OpenRound),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
+            Some(
+                Node::LogicPhrase(_)
+                | Node::NumericPhrase(_)
+                | Node::List(_)
+                | Node::Lambda(_, _),
+            ),
             Some(Node::CloseRound),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -246,7 +266,12 @@ fn interpret_inner(
         }
         if let (
             Some(Node::OpenCurly),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
+            Some(
+                Node::LogicPhrase(_)
+                | Node::NumericPhrase(_)
+                | Node::List(_)
+                | Node::Lambda(_, _),
+            ),
             Some(Node::CloseCurly),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
