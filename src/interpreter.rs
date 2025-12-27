@@ -408,12 +408,12 @@ fn interpret_inner(
             stack.pop();
             let arg = match stack.pop() {
                 Some(Node::NumericPhrase(numeric_phrase)) => {
-                    Thing::NumericPhrase("○".to_string(), numeric_phrase)
+                    Thing::NumericPhrase("●".to_string(), numeric_phrase)
                 }
                 Some(Node::LogicPhrase(logic_phrase)) => {
-                    Thing::LogicPhrase("○".to_string(), logic_phrase)
+                    Thing::LogicPhrase("●".to_string(), logic_phrase)
                 }
-                Some(Node::List(list)) => Thing::List("○".to_string(), list),
+                Some(Node::List(list)) => Thing::List("●".to_string(), list),
                 _ => unreachable!(),
             };
             new_namespace.set(arg);
@@ -973,7 +973,7 @@ fn interpret_inner(
         }
         if token == Some("{".to_string()) {
             peek.take();
-            let arg = namespace.find("○");
+            let arg = namespace.find("●");
             namespace = Namespace {
                 parent: Some(namespace.clone()),
                 stuff: vec![].into(),
@@ -989,18 +989,12 @@ fn interpret_inner(
             stack.push(Node::OpenCurly);
             continue;
         }
-        if token == Some("⤷".to_string()) || token == Some("‼".to_string())
-        {
+        if token == Some("⤷".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof while importing")?
             };
             if namespace.find(&ident).is_some() {
-                if token == Some("‼".to_string()) {
-                    // Ensure skips already present names.
-                    peek.take();
-                    continue;
-                }
                 Err(format!(
                     "identifier {ident} already exists in namespace, cannot import it"
                 ))?

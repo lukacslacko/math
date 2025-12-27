@@ -14,7 +14,7 @@ There are also [axiom schemas](#axiom-schemas) which can be instantiated to add 
 
 Also, `0` is added as an identifier to the global namespace.
 
-[Macros](#macros) can be used to conveniently generate repeated text, without incurring the mental cost of a complicated type system.
+[Functions](#functions) can be used to conveniently apply repeated steps.
 
 Comments can be added between `/* ... */`.
 
@@ -36,6 +36,10 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
 | Namespaces | `{ ... }` | | Forget all identifiers (except `0`) within the namespace. The value of a namespace is its last phrase. |
+| Function definition | `name ≔ λ{ ... }` | `name := lambda { ... }` | Assigns a function to a name. The current contents of the namespace are saved with the function |
+| Function argument | `●` | `<arg>` | The value of the argument of the function, can be a list or a phrase |
+| Function call | `argument.name` or `argument\|name` | | The function is called on the argument. `\|` binds weakly, `.` binds strongly |
+| Function return | `↵ result` | `return result` | If present, the function results with the given value, otherwise it does not return anything |
 | Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x`. For lists, it returns the head of the list. |
 | Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A`. For lists, it returns the tail of the list. |
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
@@ -49,7 +53,6 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Print | `P ℻` | `P FAX` | Prints out the phrase `P` |
 | Stop | `⛔` | `<stop>` | Stops the program |
 | Import identifier | `⤷ name` | `import name` | Imports the name and value of `name` from the surrounding namespace into the current one |
-| Ensure identifier | `‼ name` | `ensure name` | If the name is not present in the namespace, imports it from the surrounding namespace |
 | Export identifier | `⤶ name` | `export name` | Exports the name and value of `name` into the surrounding namespace. For namespaces with a single result, `result ≔ { ... result }` is an alternative to this |
 | Successor | `𝗦(x)` | `<S>(x)` | The successor of `x`. `x` must be a numeric phrase |
 | Addition | `x + y` | | The sum of `x` and `y`. `x` and `y` must be numeric phrases |
@@ -85,16 +88,10 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
 
-## Macros
+## Functions
 
-Macros are stored in a global map from macro name to macro body. Macros are repeatedly expanded in a preprocessing step before interpreting the program, until the program text stabilizes.
+Functions are stored in the current namespace as a token stream assigned to a name, along with a saved namespace, containing a snapshot of the current namespace. This means function bodies don't need to bother with importing identifiers.
 
-Macro arguments are taken literally and parenthesized in macro expansion. For multiple arguments, semicolon-separated lists can be used practically.
+Functions receive one argument, either a phrase or a list and may return zero or one results.
 
-### Definition
-
-To define a macro, say `macro_name⟪ macro_body ⟫`, or the ASCII alternative `macro_name<: macro_body :>`. To refer to the macro argument within the macro body, use `●` or `<arg>`.
-
-### Macro expansion
-
-To use a macro, say `macro_name⟦argument⟧` or `macro_name[:argument:]`. This gets replaced by the macro body, with `●` getting replaced by `(argument)`.
+Function calls are written as `argument.function` or `argument|function`. `.` binds strongly while `|` binds weakly.
