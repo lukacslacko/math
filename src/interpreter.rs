@@ -755,8 +755,8 @@ impl Interpreter {
                 back(stack, 1)
                 && token == Some("℻".to_string())
             {
+                println!("{}\t{:b}", peek.location(), **phrase);
                 peek.take();
-                println!("{:b}", **phrase);
                 continue;
             }
             if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
