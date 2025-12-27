@@ -39,6 +39,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Left part | `a↙` | `a.<` | The left part of a degree-two node in the syntax tree, eg `(A ⇒ B)↙` is `A` or `(∀x A)↙` is `x`. For lists, it returns the head of the list. |
 | Right part | `a↘` | `a.>` | The right part of a degree-two node in the syntax tree, eg `(A ⇒ B)↘` is `B` or `(∀x A)↘` is `A`. For lists, it returns the tail of the list. |
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
+| Cut | `phrase; var; path \| ✂` | `phrase; var; path \| <cut>` | The path must be a sequence of `↙`, `↘`, `↓`. The operation follows the `path` in the `phrase`'s syntax tree, removes the subtree there and replaces it with `var`. It returns a list with `new_phrase; removed_subtree` |
 | List element | `aⅰ`, `aⅱ`, `aⅲ`, ... | `a<1>`, `a<2>`, `a<3>`, ... | Abbreviation for `a↙`, `a↘↙`, `a↘↘↙`, ... for the *n*th element of a list |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
 | Equality | `x = y` | | `x` and `y` must be numeric phrases |

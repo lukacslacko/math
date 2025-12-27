@@ -60,6 +60,13 @@ pub enum Children {
     Two(Phrase, Phrase),
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Direction {
+    Left,
+    Right,
+    Child,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct PhraseData {
     kind: PhraseKind,
@@ -140,6 +147,11 @@ impl Children {
         };
         (left, right)
     }
+}
+
+pub struct CutResult {
+    pub new_phrase: Phrase,
+    pub removed: Phrase,
 }
 
 impl PhraseData {
@@ -260,6 +272,89 @@ impl PhraseData {
         }
         Ok(new)
     }
+
+    pub fn left(&self) -> Result {
+        match &self.children {
+            Children::Two(left, _) => Ok(left.clone()),
+            _ => Err(format!("left() called on non-binary phrase: {self}"))?,
+        }
+    }
+
+    pub fn right(&self) -> Result {
+        match &self.children {
+            Children::Two(_, right) => Ok(right.clone()),
+            _ => Err(format!("right() called on non-binary phrase: {self}"))?,
+        }
+    }
+
+    pub fn child(&self) -> Result {
+        match &self.children {
+            Children::One(child) => Ok(child.clone()),
+            _ => Err(format!("child() called on non-unary phrase: {self}"))?,
+        }
+    }
+
+    pub fn cut(
+        self: Phrase,
+        path: &[Direction],
+        var: Phrase,
+    ) -> std::result::Result<CutResult, Box<dyn Error>> {
+        /*
+        Follows the path in the phrase, removes the subtree at that position,
+        and replaces it with the provided variable.
+         */
+        if path.is_empty() {
+            return Ok(CutResult {
+                new_phrase: var,
+                removed: self,
+            });
+        }
+        let first_direction = &path[0];
+        let rest_path = &path[1..];
+        let (new_children, removed) = match &self.children {
+            Children::Zero() => Err(format!(
+                "cut() called on leaf phrase: {self} with path {path:?}"
+            ))?,
+            Children::One(child) => {
+                if first_direction != &Direction::Child {
+                    Err(format!(
+                        "cut() path direction mismatch at phrase {self}: expected Child, got {first_direction:?}"
+                    ))?
+                }
+                let cut_result = child.clone().cut(rest_path, var)?;
+                (Children::One(cut_result.new_phrase), cut_result.removed)
+            }
+            Children::Two(left, right) => match first_direction {
+                Direction::Left => {
+                    let cut_result = left.clone().cut(rest_path, var)?;
+                    (
+                        Children::Two(cut_result.new_phrase, right.clone()),
+                        cut_result.removed,
+                    )
+                }
+                Direction::Right => {
+                    let cut_result = right.clone().cut(rest_path, var)?;
+                    (
+                        Children::Two(left.clone(), cut_result.new_phrase),
+                        cut_result.removed,
+                    )
+                }
+                Direction::Child => Err(format!(
+                    "cut() path direction mismatch at phrase {self}: expected Left or Right, got Child"
+                ))?,
+            },
+        };
+        let new_phrase = Rc::new(PhraseData {
+            kind: self.kind,
+            children: new_children,
+            variable_name: self.variable_name.clone(),
+        });
+        Ok(CutResult {
+            new_phrase,
+            removed,
+        })
+    }
+
     pub fn modus_ponens(self: Phrase) -> Result {
         if self.kind != Imply {
             Err(format!("modus_ponens requires an implication, got {self}"))?

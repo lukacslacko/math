@@ -61,6 +61,7 @@ enum Node {
     NotTok,
     EqSubs,
     Induction,
+    Cut,
     AddTok,
     Multiply,
     EqualsTok,
@@ -104,6 +105,7 @@ impl Node {
             | Node::CloseRound
             | Node::EqSubs
             | Node::Induction
+            | Node::Cut
             | Node::CloseSquare
             | Node::CloseCurly
             | Node::Dot
@@ -418,6 +420,45 @@ impl Interpreter {
                 stack.push(Node::LogicPhrase(peano::induction(phrase, x)?));
                 continue;
             }
+            if let (Some(Node::Dot), Some(Node::Cut)) =
+                (back(stack, 2), back(stack, 1))
+            {
+                stack.pop();
+                stack.pop();
+                let mut path = Vec::new();
+                // Keep on popping while we get left, right or child.
+                while let Some(node) = stack.pop() {
+                    match node {
+                        Node::Left => path.push(Direction::Left),
+                        Node::Right => path.push(Direction::Right),
+                        Node::Child => path.push(Direction::Child),
+                        Node::Semicolon => break,
+                        _ => Err(format!(
+                            "cut path must consist of ↙, ↘, ↓ tokens after a ;, got {node:?}"
+                        ))?,
+                    }
+                }
+                let args = match stack.pop() {
+                    Some(Node::List(args)) => args,
+                    _ => Err(format!(
+                        "cut requires a phrase and a variable before the path"
+                    ))?,
+                };
+                if args.len() != 2 {
+                    Err(format!(
+                        "cut requires two arguments, a phrase and a variable, got {args:?}"
+                    ))?
+                }
+                let phrase = args[0].clone();
+                let variable = args[1].clone();
+                path.reverse();
+                let CutResult {
+                    new_phrase,
+                    removed,
+                } = phrase.cut(&path, variable)?;
+                stack.push(Node::List(vec![new_phrase, removed]));
+                continue;
+            }
             if let (
                 Some(Node::LogicPhrase(logic_phrase)),
                 Some(Node::DistributeQuantification),
@@ -466,12 +507,7 @@ impl Interpreter {
                 Some(Node::Left),
             ) = (back(stack, 2), back(stack, 1))
             {
-                let child = match phrase.get_children() {
-                    Children::Two(left, _) => left,
-                    _ => Err(format!(
-                        "left child requires a binary phrase, got '{phrase}'"
-                    ))?,
-                };
+                let child = phrase.left()?;
                 if child.is_proposition() {
                     stack.push(Node::LogicPhrase(child.clone()));
                 } else {
@@ -486,12 +522,7 @@ impl Interpreter {
                 Some(Node::Right),
             ) = (back(stack, 2), back(stack, 1))
             {
-                let child = match phrase.get_children() {
-                    Children::Two(_, right) => right,
-                    _ => Err(format!(
-                        "right child requires a binary phrase, got '{phrase}'"
-                    ))?,
-                };
+                let child = phrase.right()?;
                 if child.is_proposition() {
                     stack.push(Node::LogicPhrase(child.clone()));
                 } else {
@@ -506,12 +537,7 @@ impl Interpreter {
                 Some(Node::Child),
             ) = (back(stack, 2), back(stack, 1))
             {
-                let child = match phrase.get_children() {
-                    Children::One(child) => child,
-                    _ => Err(format!(
-                        "child requires a unary phrase, got '{phrase}'"
-                    ))?,
-                };
+                let child = phrase.child()?;
                 if child.is_proposition() {
                     stack.push(Node::LogicPhrase(child.clone()));
                 } else {
@@ -566,6 +592,11 @@ impl Interpreter {
                 if token == Some("↺".to_string()) {
                     peek.take();
                     stack.push(Node::Induction);
+                    continue;
+                }
+                if token == Some("✂".to_string()) {
+                    peek.take();
+                    stack.push(Node::Cut);
                     continue;
                 }
             }
