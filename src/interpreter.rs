@@ -87,6 +87,7 @@ enum Node {
     AddTok,
     Multiply,
     EqualsTok,
+    Match,
     OpenSquare,
     CloseSquare,
     OpenCurly,
@@ -116,6 +117,7 @@ impl Node {
             | Node::AddTok
             | Node::Multiply
             | Node::EqualsTok
+            | Node::Match
             | Node::OpenSquare
             | Node::OpenCurly
             | Node::Semicolon
@@ -499,6 +501,26 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
+        if let(
+            Some(Node::LogicPhrase(l)) | Some(Node::NumericPhrase(l)),
+            Some(Node::Match),
+            Some(Node::LogicPhrase(r)) | Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            if l.is_numeric() != r.is_numeric() {
+                Err("both phrases in a parallel match must be either numeric or logic")?
+            }
+            let result = r.parallel(l)?;
+            stack.push(if r.is_numeric() {
+                Node::NumericPhrase(result)
+            } else {
+                Node::LogicPhrase(result)
+            });
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
 
         if let (
             Some(Node::LogicPhrase(logic_phrase)),
@@ -741,6 +763,11 @@ fn interpret_inner(
             stack.swap_remove(stack.len() - 4);
             stack.pop();
             stack.pop();
+            continue;
+        }
+        if token == Some("⇅".to_string()) {
+            peek.take();
+            stack.push(Node::Match);
             continue;
         }
         if token == Some("=".to_string()) {

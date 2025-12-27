@@ -307,12 +307,14 @@ mul_comm ≔ {
         ⤷ peano4
 
         eq_flip⟦eq_trans⟦(X + Y = Y + X)[X / 0][Y / 1]; (peano3[1].MP)⟧⟧
-        (X + Y = Y + X)[X / x][Y / 1]
+
+        x + 1 = 1 + x ⇅(X + Y = Y + X)
+
         eq_trans⟦
             replace⟦𝗦(a); a; x + 1; 1 + x⟧.MP; 
             eq_trans⟦
                 eq_flip⟦peano4[1].MP[x].MP⟧; 
-                (X + Y = Y + X)[X / 1][Y / 𝗦(x)]
+                1 + 𝗦(x) = 𝗦(x) + 1 ⇅(X + Y = Y + X)
             ⟧
         ⟧
         b ≔ replace⟦𝗦(a); a; 𝗦(x); x + 1⟧

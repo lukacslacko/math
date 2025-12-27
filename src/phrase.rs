@@ -154,6 +154,11 @@ pub struct CutResult {
     pub removed: Phrase,
 }
 
+struct Substitution {
+    pub variable: Phrase,
+    pub term: Phrase,
+}
+
 impl PhraseData {
     pub fn get_children(&self) -> &Children {
         &self.children
@@ -353,6 +358,68 @@ impl PhraseData {
             new_phrase,
             removed,
         })
+    }
+
+    fn find_parallel_substitutions(
+        self: &Phrase,
+        other: &Phrase,
+    ) -> std::result::Result<Vec<Substitution>, Box<dyn Error>> {
+        match &self.children {
+            Children::Zero() => match self.kind {
+                LogicVariable | NumericVariable => Ok(vec![Substitution {
+                    variable: self.clone(),
+                    term: other.clone(),
+                }]),
+                _ => Ok(vec![]),
+            },
+            Children::One(child) => {
+                if self.kind != other.kind {
+                    Err(format!(
+                        "find_parallel_substitutions kind mismatch: {self} vs {other}"
+                    ))?
+                }
+                match &other.children {
+                    Children::One(other_child) => {
+                        child.find_parallel_substitutions(other_child)
+                    }
+                    _ => Err(format!(
+                        "find_parallel_substitutions number of children mismatch: {self} vs {other}"
+                    ))?,
+                }
+            },
+            Children::Two(left, right) => {
+                if self.kind != other.kind {
+                    Err(format!(
+                        "find_parallel_substitutions kind mismatch: {self} vs {other}"
+                    ))?
+                }
+                match &other.children {
+                    Children::Two(other_left, other_right) => {
+                        let mut subs_left =
+                            left.find_parallel_substitutions(other_left)?;
+                        let subs_right =
+                            right.find_parallel_substitutions(other_right)?;
+                        subs_left.extend(subs_right);
+                        Ok(subs_left)
+                    }
+                    _ => Err(format!(
+                        "find_parallel_substitutions number of children mismatch: {self} vs {other}"
+                    ))?,
+                }
+            }
+        }
+    }
+
+    pub fn parallel(self: &Phrase, other: &Phrase) -> Result {
+        let substitutions = self.find_parallel_substitutions(other)?;
+        let mut new_phrase = self.clone();
+        for substitution in substitutions {
+            new_phrase = new_phrase.substitute(
+                substitution.variable,
+                substitution.term,
+            )?;
+        }
+        Ok(new_phrase)
     }
 
     pub fn modus_ponens(self: Phrase) -> Result {
