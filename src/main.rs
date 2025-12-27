@@ -17,8 +17,7 @@ fn main() -> UnitResult {
         "preprocessed.ll",
         /*as_ascii=*/ false,
     );
-    let mut interpreter = interpreter::Interpreter::new();
-    interpreter.interpret(tokens.into_iter())?;
+    interpreter::interpret(tokens.into_iter())?;
     println!("Hello, world!");
     Ok(())
 }

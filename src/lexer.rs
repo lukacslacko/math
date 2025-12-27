@@ -11,6 +11,10 @@ pub const PREFIXES: &[(&str, &str)] = &[
     (";", ";"),
     ("●", "●"),
     ("<arg>", "●"),
+    ("○", "○"),
+    ("<farg>", "○"),
+    ("↵", "↵"),
+    ("λ", "λ"),
     ("⟦", "⟦"),
     ("[:", "⟦"),
     ("⟧", "⟧"),
@@ -82,6 +86,8 @@ pub const KEYWORDS: &[(&str, &str)] = &[
     ("import", "⤷"),
     ("ensure", "‼"),
     ("FAX", "℻"),
+    ("return", "↵"),
+    ("lambda", "λ"),
 ];
 
 fn tokenize_word(

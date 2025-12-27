@@ -1,4 +1,4 @@
-use crate::lexer::{PREFIXES, KEYWORDS, Token, tokenize};
+use crate::lexer::{KEYWORDS, PREFIXES, Token, tokenize};
 use std::collections::HashMap;
 use std::fmt::Write;
 
@@ -11,7 +11,11 @@ pub fn format_file(input_file: &str, output_file: &str, as_ascii: bool) {
     write_formatted_file(&tokens, output_file, as_ascii);
 }
 
-pub fn write_formatted_file(tokens: &[Token], output_file: &str, as_ascii: bool) {
+pub fn write_formatted_file(
+    tokens: &[Token],
+    output_file: &str,
+    as_ascii: bool,
+) {
     let nice_tokens = [
         ("/", " / "),
         ("⊦", "⊦ "),
@@ -38,7 +42,7 @@ pub fn write_formatted_file(tokens: &[Token], output_file: &str, as_ascii: bool)
         if ascii_versions.contains_key(*token) {
             continue;
         }
-        if alternative.chars().all(|c| c.is_ascii()) {
+        if alternative.is_ascii() {
             ascii_versions.insert(*token, *alternative);
         }
     }
@@ -79,7 +83,9 @@ pub fn write_formatted_file(tokens: &[Token], output_file: &str, as_ascii: bool)
                     // Replace with ASCII version character by character.
                     let mut ascii_text = String::new();
                     for ch in nice_text.chars() {
-                        if let Some(ascii_ch) = ascii_versions.get(&ch.to_string().as_str()) {
+                        if let Some(ascii_ch) =
+                            ascii_versions.get(&ch.to_string().as_str())
+                        {
                             ascii_text.push_str(ascii_ch);
                         } else {
                             ascii_text.push(ch);
@@ -98,7 +104,9 @@ pub fn write_formatted_file(tokens: &[Token], output_file: &str, as_ascii: bool)
                     // Replace with ASCII version character by character.
                     let mut ascii_text = String::new();
                     for ch in token_text.chars() {
-                        if let Some(ascii_ch) = ascii_versions.get(&ch.to_string().as_str()) {
+                        if let Some(ascii_ch) =
+                            ascii_versions.get(&ch.to_string().as_str())
+                        {
                             ascii_text.push_str(ascii_ch);
                         } else {
                             ascii_text.push(ch);
