@@ -64,9 +64,9 @@ deduce⟪
 
 deduce⟦
     deduce⟦
-        ignore['A / ¬¬'x]['B / ¬¬¬¬'x]; 
+        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
         contrapose['A / ¬¬¬'x]['B / ¬'x]
-    ⟧; 
+    ⟧;
     contrapose['A / 'x]['B / ¬¬'x]
 ⟧
 ('X ⇒ 'X)['X / ¬¬'x]
@@ -87,7 +87,7 @@ recontrapose ≔ {
     ('X ⇒ ¬¬'X)['X / 'y]
     q ≔ commute_ante⟦chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]⟧.MP.MP
     deduce⟦
-        deduce⟦s; q⟧; 
+        deduce⟦s; q⟧;
         contrapose['A / ¬'x]['B / ¬'y]
     ⟧
 
@@ -134,12 +134,18 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-peano1 ≔ ∀X¬0 = 𝗦(X)
-peano2 ≔ ∀X∀Y𝗦(X) = 𝗦(Y) ⇒ X = Y
-peano3 ≔ ∀X X + 0 = X
-peano4 ≔ ∀X∀Y X + 𝗦(Y) = 𝗦(X + Y)
-peano5 ≔ ∀X X * 0 = 0
-peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
+Peano1 := ¬0 = 𝗦(X)
+peano1 ≔ ∀X Peano1
+Peano2 := 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano2 ≔ ∀X∀Y Peano2
+Peano3 := X + 0 = X
+peano3 ≔ ∀X Peano3
+Peano4 := X + 𝗦(Y) = 𝗦(X + Y)
+peano4 ≔ ∀X∀Y Peano4
+Peano5 := X * 0 = 0
+peano5 ≔ ∀X Peano5
+Peano6 := X * 𝗦(Y) = (X * Y) + X
+peano6 ≔ ∀X∀Y Peano6
 
 ⊦ peano1
 ⊦ peano2
@@ -149,7 +155,7 @@ peano6 ≔ ∀X∀Y X * 𝗦(Y) = (X * Y) + X
 ⊦ peano6
 
 replace⟪
-    /* 
+    /*
     Arguments: numeric expression, variable, left value, right value
     Result: left value = right value ⇒ expression[var / left] = expression[var / right]
      */
@@ -206,7 +212,7 @@ plus_comm ≔ {
         (X = X)[X / 𝗦(x)]
 
         eq_trans⟦
-            peano3[𝗦(x)].MP; 
+            peano3[𝗦(x)].MP;
             eq_flip⟦𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP⟧
         ⟧
 
@@ -257,7 +263,7 @@ plus_assoc ≔ {
 
     eq_flip⟦peano3[y].MP⟧
     eq_trans⟦
-        peano3[x + y].MP; 
+        peano3[x + y].MP;
         replace⟦x + a; a; y; y + 0⟧.MP
     ⟧
 
@@ -270,7 +276,7 @@ plus_assoc ≔ {
 
     eq_flip⟦peano4[X].MP[z].MP[X / y]⟧
     eq_trans⟦
-        eq_flip⟦peano4[x].MP[y + z].MP⟧; 
+        eq_flip⟦peano4[x].MP[y + z].MP⟧;
         replace⟦x + a; a; 𝗦(y + z); y + 𝗦(z)⟧.MP
     ⟧
 
@@ -311,9 +317,9 @@ mul_comm ≔ {
         x + 1 = 1 + x ⇅(X + Y = Y + X)
 
         eq_trans⟦
-            replace⟦𝗦(a); a; x + 1; 1 + x⟧.MP; 
+            replace⟦𝗦(a); a; x + 1; 1 + x⟧.MP;
             eq_trans⟦
-                eq_flip⟦peano4[1].MP[x].MP⟧; 
+                eq_flip⟦peano4[1].MP[x].MP⟧;
                 1 + 𝗦(x) = 𝗦(x) + 1 ⇅(X + Y = Y + X)
             ⟧
         ⟧
@@ -332,40 +338,40 @@ mul_comm ≔ {
 
         peano5[y].MP
         eq_trans⟦
-            peano5[𝗦(y)].MP; 
+            peano5[𝗦(y)].MP;
             eq_flip⟦eq_trans⟦(x + 0 = x)[x / y * 0]; y * 0 = 0⟧⟧
         ⟧
 
         b ≔ peano6[X].MP[Y].MP[X / y][Y / x]
         c ≔ eq_trans⟦
-            replace⟦a + 𝗦(x); a; b↙; b↘⟧.MP; 
+            replace⟦a + 𝗦(x); a; b↙; b↘⟧.MP;
             replace⟦((y * x) + y) + a; a; 𝗦(x); x + 1⟧.MP
         ⟧
         d ≔ eq_trans⟦
-            c; 
+            c;
             ((X + Y) + Z = X + (Y + Z))[X / c↘↙↙][Y / c↘↙↘][Z / c↘↘]
         ⟧
         eq_flip⟦x + y = y + x⟧
         f ≔ eq_trans⟦
             eq_trans⟦
                 eq_flip⟦
-                    ((X + Y) + Z = 
+                    ((X + Y) + Z =
                     X + (Y + Z))[X / y][Y / x][Z / 1]
-                ⟧; 
+                ⟧;
                 replace⟦a + 1; a; y + x; x + y⟧.MP
-            ⟧; 
+            ⟧;
             ((x + y) + z = x + (y + z))[z / 1]
         ⟧
         g ≔ eq_trans⟦
-            replace⟦(y * x) + a; a; f↙; f↘⟧.MP; 
+            replace⟦(y * x) + a; a; f↙; f↘⟧.MP;
             eq_flip⟦((X + Y) + Z = X + (Y + Z))[X / y * x][Y / x][Z / y + 1]⟧
         ⟧
         eq_flip⟦(𝗦(x) = x + 1)[x / y]⟧
         m ≔ (eq_flip⟦
             eq_trans⟦
-                d; 
+                d;
                 eq_trans⟦
-                    g; 
+                    g;
                     replace⟦((y * x) + x) + a; a; y + 1; 𝗦(y)⟧.MP
                 ⟧
             ⟧
@@ -396,3 +402,26 @@ mul_comm ≔ {
 }
 
 mul_comm ℻
+
+mul_assoc ≔ {
+    goal ≔ (x * y) * z = x * (y * z)
+
+    import Peano5
+    import Peano6
+
+    peano5[X/x * y]
+    peano5[X/y]
+    eq_flip⟦
+        eq_trans⟦
+            eq_trans⟦replace⟦x * u; u; y * 0; 0⟧.MP; x * 0 = 0⟧;
+            eq_flip⟦peano5[x * y].MP⟧
+        ⟧
+    ⟧
+    (x * y) * 𝗦(z) = (x * y) * z + (x * y) ⇅ Peano6 FAX
+
+    goal; z | ↺.MP ℻
+
+    ⊦ goal
+}
+
+mul_assoc ℻
