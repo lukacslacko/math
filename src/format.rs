@@ -35,6 +35,7 @@ pub fn write_formatted_file(
         ("↺", "↺"),
         ("/*", "/* "),
         ("*/", " */"),
+        ("↵", "↵ "),
     ];
 
     let mut ascii_versions = HashMap::new();
@@ -128,6 +129,8 @@ pub fn write_formatted_file(
             }
             is_first_token = false;
         }
+        // Remove trailing space and add newline.
+        output = output.trim_end().to_string();
         writeln!(output).unwrap();
     }
     std::fs::write(output_file, output).expect("Failed to write to file");
