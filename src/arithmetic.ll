@@ -260,10 +260,10 @@ plus_assoc ≔ {
     eq_flip⟦peano3[y].MP⟧
     eq_trans⟦
         peano3[x + y].MP;
-        (replace⟦x + a; a; y; y + 0⟧.MP)
+        replace⟦x + a; a; y; y + 0⟧.MP
     ⟧
 
-    step ≔ (replace⟦𝗦(a); a; (x + y) + z; x + (y + z)⟧)
+    step ≔ replace⟦𝗦(a); a; (x + y) + z; x + (y + z)⟧
 
     eq_flip⟦peano4[X].MP[Y].MP[X / x + y][Y / z]⟧
 
@@ -275,7 +275,7 @@ plus_assoc ≔ {
     eq_flip⟦peano4[X].MP[z].MP[X / y]⟧
     eq_trans⟦
         eq_flip⟦peano4[x].MP[y + z].MP⟧;
-        (replace⟦x + a; a; 𝗦(y + z); y + 𝗦(z)⟧.MP)
+        replace⟦x + a; a; 𝗦(y + z); y + 𝗦(z)⟧.MP
     ⟧
 
     /* TODO This would again be a split of step1 */
@@ -321,7 +321,7 @@ mul_comm ≔ {
                 (X + Y = Y + X)[X / 1][Y / 𝗦(x)]
             ⟧
         ⟧
-        b ≔ (replace⟦𝗦(a); a; 𝗦(x); x + 1⟧)
+        b ≔ replace⟦𝗦(a); a; 𝗦(x); x + 1⟧
         /* TODO use split */
         ∀x(b↙ ⇒ b↘↙ = a; a; c | ⪮[a / b↘↘][c / 𝗦(x) + 1].MP.MP)
 
@@ -343,7 +343,7 @@ mul_comm ≔ {
         b ≔ peano6[X].MP[Y].MP[X / y][Y / x]
         c ≔ eq_trans⟦
             replace⟦a + 𝗦(x); a; b↙; b↘⟧.MP;
-            (replace⟦((y * x) + y) + a; a; 𝗦(x); x + 1⟧.MP)
+            replace⟦((y * x) + y) + a; a; 𝗦(x); x + 1⟧.MP
         ⟧
         d ≔ eq_trans⟦
             c;
@@ -356,7 +356,7 @@ mul_comm ≔ {
                     ((X + Y) + Z =
                     X + (Y + Z))[X / y][Y / x][Z / 1]
                 ⟧;
-                (replace⟦a + 1; a; y + x; x + y⟧.MP)
+                replace⟦a + 1; a; y + x; x + y⟧.MP
             ⟧;
             ((x + y) + z = x + (y + z))[z / 1]
         ⟧
@@ -370,11 +370,11 @@ mul_comm ≔ {
                 d;
                 eq_trans⟦
                     g;
-                    (replace⟦((y * x) + x) + a; a; y + 1; 𝗦(y)⟧.MP)
+                    replace⟦((y * x) + x) + a; a; y + 1; 𝗦(y)⟧.MP
                 ⟧
             ⟧
         ⟧)
-        h ≔ (replace⟦a + 𝗦(y); a; 𝗦(y) * x; (y * x) + x⟧)
+        h ≔ replace⟦a + 𝗦(y); a; 𝗦(y) * x; (y * x) + x⟧
         j ≔ eq_flip⟦peano6[X].MP[Y].MP[X / 𝗦(y)][Y / x]⟧
         /* TODO use split */
         /* TODO make macro for substituting equal things in a logic expression at a path */
@@ -388,7 +388,7 @@ mul_comm ≔ {
 
     eq_flip⟦a⟧
     eq_flip⟦peano6[x].MP[y].MP⟧
-    n ≔ (replace⟦u + x; u; x * y; y * x⟧)
+    n ≔ replace⟦u + x; u; x * y; y * x⟧
     n2 ≔ n↙ ⇒ u = n↘↘; u; v | ⪮[u / n↘↙][v / x * 𝗦(y)].MP.MP
     ∀x(n2↙ ⇒ n2↘↙ = u; u; v | ⪮[u / n2↘↘][v / 𝗦(y) * x].MP.MP)
 

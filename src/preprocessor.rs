@@ -75,6 +75,11 @@ fn preprocess_tokens(
                     }
                     let arg = tokens[i + 1..end - 1].to_vec();
                     i = end;
+                    new_tokens.push(Token {
+                        text: "(".to_string(),
+                        location: token.location.clone(),
+                        line_no: token.line_no,
+                    });
                     for body_token in macro_body {
                         if body_token.text == "●" {
                             new_tokens.push(Token {
@@ -98,6 +103,11 @@ fn preprocess_tokens(
                             new_tokens.push(new_token);
                         }
                     }
+                    new_tokens.push(Token {
+                        text: ")".to_string(),
+                        location: token.location.clone(),
+                        line_no: token.line_no,
+                    });
                     changed = true;
                     continue;
                 } else {
