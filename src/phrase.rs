@@ -233,9 +233,10 @@ impl PhraseData {
             ))?,
         }
         if self == variable {
-            return Ok(term.clone());
-        } else if matches!(self.children, Children::Zero()) {
-            return Ok(self.clone());
+            return Ok(term);
+        }
+        if !self.is_free(&variable)? {
+            return Ok(self);
         }
         let new = {
             if self.kind == Quantify {
