@@ -13,6 +13,21 @@ pub fn instantiate(quantification: Phrase, term: Phrase) -> Result {
     new.assert_axiom(Name("instantiate"))
 }
 
+pub fn vacuous_generalization(formula: Phrase, variable: Phrase) -> Result {
+    if variable.get_kind() != NumericVariable {
+        Err(format!(
+            "vacuous generalization requires a numeric variable, got {variable}"
+        ))?
+    }
+    if formula.is_free(&variable)? {
+        Err(format!(
+            "vacuous generalization requires the variable to not be free in the formula, got {formula} and {variable}"
+        ))?
+    }
+    make_imply(formula.clone(), make_quantify(variable, formula)?)?
+        .assert_axiom(Name("vacuous_generalization"))
+}
+
 pub fn distribute(quantification: Phrase) -> Result {
     if quantification.get_kind() != Quantify {
         Err(format!(

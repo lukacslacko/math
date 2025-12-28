@@ -883,6 +883,21 @@ fn interpret_inner(
             continue;
         }
         if let (
+            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::Dot),
+            Some(Node::QuantifyVar(variable)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(logic::vacuous_generalization(
+                logic_phrase.clone(),
+                variable.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if let (
             Some(Node::QuantifyVar(variable)),
             Some(Node::LogicPhrase(logic_phrase)),
         ) = (back(&stack, 2), back(&stack, 1))

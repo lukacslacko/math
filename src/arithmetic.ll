@@ -68,6 +68,19 @@ deduce ≔ λ{
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
+false_implies_anything ≔ (
+    ignore['A / 'X]['B / 'Y]['X / ¬'B]['Y / ¬'A];
+    contrapose | deduce
+)
+
+from_false ≔ λ{
+    /*
+    Argument: P ⇒ Q
+    Assumption:¬P is proven
+    Result: P ⇒ Q now proven
+     */
+    ↵ false_implies_anything['B / ●↙]['A / ●↘].MP
+}
 
 ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
 contrapose['A / ¬¬¬'x]['B / ¬'x] | deduce;
@@ -120,6 +133,29 @@ recontra ≔ {
          */
         ↵ recontrapose['A / ●↙]['B / ●↘]
     }
+}
+
+preneg_flip ≔ (
+    chain['X / ¬'x]['Y / 'y]['Z / ¬¬'y] | commute_ante.MP;
+    contrapose['A / 'x]['B / ¬'y] | deduce['x / 'X]['y / 'Y]
+)
+flip_preneg ≔ λ{
+    /*
+    Argument:¬P ⇒ Q
+    Returns:(¬P ⇒ Q) ⇒ (¬Q ⇒ P)
+     */
+    ↵ preneg_flip['X / ●↙↓]['Y / ●↘]
+}
+postneg_flip ≔ (
+    recontrapose['A / 'x]['B / ¬'y];
+    chain['X / 'y]['Y / ¬¬'y]['Z / ¬'x].MP | deduce['x / 'X]['y / 'Y]
+)
+flip_postneg ≔ λ{
+    /*
+    Argument: P ⇒ ¬Q
+    Returns:(P ⇒ ¬Q) ⇒ (Q ⇒ ¬P)
+     */
+    ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
 }
 
 (X = X)[X / x]
@@ -624,3 +660,41 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 2 * x = y + y; y; x | exists_by_example
 ⊦ 2 * x | is_even
+
+/* X < Y if there is no Z such that X = Y + Z */
+less ≔ ∀Z(¬X = Y + Z)
+X = X + Z; Z; 0 | exists_by_example
+⊦ ¬less[Y / X]
+
+X = 0 + Z; Z; X | exists_by_example
+⊦ ¬less[Y / 0]
+
+{
+    ⤷ less
+    /* x < y ⇒ x < y + 1 */
+    goal ≔ less[X / x][Y / y] ⇒ less[X / x][Y / 𝗦(y)]
+
+    ⤷ contrapose
+    ⤷ deduce
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ exists_by_example
+    ⤷ flip_postneg
+    ⤷ recontra
+    ⤷ replace_cut
+
+    1 + X = X + 1; X + 1 = 𝗦(X) | eq_trans | eq_flip
+
+    a ≔ x = u + Z; u; v | ⪮[u / 𝗦(y)][v / y + 1].MP; u; ↘↘ | ✂;
+    y + (1 + Z) | replace_cut.MP; u; ↘↘↘ | ✂;
+    𝗦(Z) | replace_cut.MP;
+    ((∀Z(¬x = y + Z))[𝗦(z)] | flip_postneg.MP) | deduce | flip_postneg.MP
+
+    b ≔ (∀Z a) ⇆.MP
+    b↙↘.∀Z; b | deduce | recontra.MP
+
+    contrapose['B / goal↙]['A / goal↘].MP
+
+    ⊦ goal
+    goal[x/X][y/Y]
+}
