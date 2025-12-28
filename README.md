@@ -45,6 +45,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
 | Cut | `phrase; var; path \| ✂` | `phrase; var; path \| <cut>` | The path must be a sequence of `↙`, `↘`, `↓`. The operation follows the `path` in the `phrase`'s syntax tree, removes the subtree there and replaces it with `var`. It returns a list with `new_phrase; removed_subtree` |
 | Parallel substitution | `phrase ⇅(template)` | `phrase <match>(template)` | If phrase has the same structure as template, substitute variables in template so that it results in phrase |
+| Auto-prove | `phrase⁇` | `phrase<prove>` | Try parallel substitute the phrase against all *proven phrases* in order to try to prove it |
 | List element | `aⅰ`, `aⅱ`, `aⅲ`, ... | `a<1>`, `a<2>`, `a<3>`, ... | Abbreviation for `a↙`, `a↘↙`, `a↘↘↙`, ... for the *n*th element of a list |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
 | Equality | `x = y` | | `x` and `y` must be numeric phrases |
@@ -63,7 +64,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Rule | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
 | Substitution | `phrase[var / term]` | | `phrase` must be a *proven phrase*, `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
-| Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B` |
+| Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B`. If `A` is not proven, it will try to match it with `⇅` against all *proven phrases* to try to prove it  |
 | Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note: if `P` is not proven, this is still a valid expression |
 
 ## Axioms

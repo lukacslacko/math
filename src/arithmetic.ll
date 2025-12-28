@@ -151,6 +151,14 @@ peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
+/* TODO flip peano1 */
+peano3[X / x].eq_flip[x / X]
+peano4[X / x][Y / y].eq_flip[x / X][y / Y]
+peano5[X / x].eq_flip[x / X]
+peano6[X / x][Y / y].eq_flip[x / X][y / Y]
+
+0 = y * 0⁇
+
 replace ≔ λ{
     /*
     Arguments: numeric expression, variable, left value, right value
@@ -284,6 +292,7 @@ add_assoc ≔ {
     ∀z(step1_cutⅰ; a; b | ⪮[a / step1_cutⅱ][b / x + (y + 𝗦(z))].MP.MP)
 
     goal; z | ↺.MP.MP[z].MP
+    goal.eq_flip[x / X][y / Y][z / Z]
     goal[x / X][y / Y][z / Z]
 }
 
@@ -431,11 +440,6 @@ add_XY_ZW_eq_XZ_YW ≔ {
     ⤷ eq_flip
     ⤷ replace_cut
 
-    add_assoc[X / y][Y / z][Z / w].eq_flip
-    y + z = z + y ⇅add_comm
-    add_assoc[X / z][Y / y][Z / w]
-    add_assoc[X / x][Y / z][Z / y + w].eq_flip
-
     add_assoc[X / x][Y / y][Z / z + w]; u; ↘↘ | ✂;
     u; (y + z) + w | replace_cut.MP; u; ↘↘↙ | ✂;
     u; z + y | replace_cut.MP; u; ↘↘ | ✂;
@@ -458,9 +462,6 @@ mul_add_distr ≔ {
     ⤷ replace
     ⤷ replace_cut
     ⤷ add_XY_ZW_eq_XZ_YW
-
-    peano5[X / x].eq_flip
-    peano5[X / y].eq_flip
 
     peano3[X / 0].eq_flip;
     (a + 0; a; 0; x * 0 | replace.MP) | eq_trans;

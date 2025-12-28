@@ -410,6 +410,9 @@ impl PhraseData {
         }
     }
 
+    /// Try to substitute `self` to get `other`.
+    ///
+    /// Returns the substituted phrase if successful.
     pub fn parallel(self: &Phrase, other: &Phrase) -> Result {
         let substitutions = self.find_parallel_substitutions(other)?;
         let mut new_phrase = self.clone();
@@ -419,7 +422,26 @@ impl PhraseData {
                 substitution.term,
             )?;
         }
-        Ok(new_phrase)
+        if new_phrase == *other {
+            Ok(new_phrase)
+        } else {
+            Err(format!("Structure matches but phrases differ after substitution, self: {self}, other: {other}, new_phrase: {new_phrase}"))?
+        }
+    }
+
+    pub fn try_prove(self: Phrase) -> Result {
+        if self.get_is_proven() {
+            return Ok(self);
+        }
+        let known_true_phrases = KNOWN_TRUTHS.with_borrow(|known_truths| {
+            known_truths.keys().cloned().collect::<Vec<Phrase>>()
+        });
+        for known_true in known_true_phrases {
+            if let Ok(matched_phrase) = known_true.parallel(&self) {
+                return Ok(matched_phrase);
+            }
+        }
+        Err(format!("Cannot prove phrase: {self}"))?
     }
 
     pub fn modus_ponens(self: Phrase) -> Result {

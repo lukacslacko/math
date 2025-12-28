@@ -93,6 +93,7 @@ enum Node {
     CloseSquare,
     OpenCurly,
     CloseCurly,
+    TryProve,
     Semicolon,
     Slash,
     Dot,
@@ -136,6 +137,7 @@ impl Node {
             | Node::Cut
             | Node::CloseSquare
             | Node::CloseCurly
+            | Node::TryProve
             | Node::ModusPonens
             | Node::DistributeQuantification
             | Node::Right
@@ -524,14 +526,16 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if let(
+        if let (
             Some(Node::LogicPhrase(l)) | Some(Node::NumericPhrase(l)),
             Some(Node::Match),
             Some(Node::LogicPhrase(r)) | Some(Node::NumericPhrase(r)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
             if l.is_numeric() != r.is_numeric() {
-                Err("both phrases in a parallel match must be either numeric or logic")?
+                Err(
+                    "both phrases in a parallel match must be either numeric or logic",
+                )?
             }
             let result = r.parallel(l)?;
             stack.push(if r.is_numeric() {
@@ -563,9 +567,12 @@ fn interpret_inner(
             }
             let antecedent = logic_phrase.get_children().unwrap_two().0;
             if !antecedent.clone().get_is_proven() {
-                Err(format!(
-                    "modus ponens antecedent not proven: {antecedent}"
-                ))?
+                match antecedent.clone().try_prove() {
+                    Ok(_) => {}
+                    Err(err) => Err(format!(
+                        "modus ponens requires the antecedent to be proven, got {antecedent} which couldn't be proven: {err}"
+                    ))?,
+                }
             }
             stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
             stack.swap_remove(stack.len() - 4);
@@ -614,6 +621,15 @@ fn interpret_inner(
             } else {
                 stack.push(Node::NumericPhrase(child.clone()));
             }
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (Some(Node::LogicPhrase(phrase)), Some(Node::TryProve)) =
+            (back(&stack, 2), back(&stack, 1))
+        {
+            let proved_phrase = phrase.clone().try_prove()?;
+            stack.push(Node::LogicPhrase(proved_phrase));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;
@@ -791,6 +807,11 @@ fn interpret_inner(
         if token == Some("⇅".to_string()) {
             peek.take();
             stack.push(Node::Match);
+            continue;
+        }
+        if token == Some("⁇".to_string()) {
+            peek.take();
+            stack.push(Node::TryProve);
             continue;
         }
         if token == Some("=".to_string()) {
