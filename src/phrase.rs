@@ -71,7 +71,7 @@ pub enum Direction {
 pub struct PhraseData {
     kind: PhraseKind,
     children: Children,
-    pub variable_name: Option<Rc<str>>,
+    variable_name: Option<Rc<str>>,
 }
 
 impl fmt::Display for PhraseData {
