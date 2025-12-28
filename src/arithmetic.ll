@@ -409,6 +409,7 @@ mul_comm ≔ {
     goal; y | ↺.MP.MP[y].MP
 
     ⊦ goal
+    goal[x / X][y / Y]
     goal
 }
 
@@ -480,7 +481,37 @@ mul_add_distr ≔ {
 
     goal; z | ↺.MP.MP[z].MP
     ⊦ goal
+
+    z * (x + y) = (x + y) * z; goal | eq_trans; u; ↘↙ | ✂;
+    u; z * x | replace_cut.MP; u; ↘↘ | ✂;
+    u; z * y | replace_cut.MP[x / X][y / Y][z / Z]
+    ⊦ Z * (X + Y) = Z * X + Z * Y
+
     goal[x / X][y / Y][z / Z]
 }
 
-mul_add_distr ℻
+mul_add_distr
+
+mul_assoc ≔ {
+    goal ≔ (x * y) * z = x * (y * z)
+
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
+    ⤷ replace_cut
+
+    (x * y) * 0 = 0;
+    0 = x * 0 | eq_trans;
+    (x * a; a; 0; y * 0 | replace.MP) | eq_trans
+
+    x * a; a; y * 𝗦(z); y * z + y | replace.MP; u; ↘ | ✂;
+    u; x * (y * z) + x * y | replace_cut.MP | eq_flip
+    a + x * y; a; (x * y) * z; x * (y * z) | replace; u; ↘↙ | ✂;
+    u; (x * y) * 𝗦(z) | replace_cut.MP; u; ↘↘ | ✂;
+    u; x * (y * 𝗦(z)) | replace_cut.MP
+
+    goal; z | ↺.MP.MP[z].MP
+    ⊦ goal
+    goal.eq_flip[x / X][y / Y][z / Z]
+    goal[x / X][y / Y][z / Z]
+}
