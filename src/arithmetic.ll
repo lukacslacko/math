@@ -100,11 +100,52 @@ recontrapose ≔ {
     goal['x / 'A]['y / 'B]
 }
 
+contra ≔ {
+    ⤷ contrapose
+    λ{
+        /*
+        Argument:¬P ⇒ ¬Q
+        Returns:(¬P ⇒ ¬Q) ⇒ (Q ⇒ P)
+         */
+        ↵ contrapose['A / ●↙↓]['B / ●↘↓]
+    }
+}
+
+recontra ≔ {
+    ⤷ recontrapose
+    λ{
+        /*
+        Argument: P ⇒ Q
+        Returns:(P ⇒ Q) ⇒ (¬Q ⇒ ¬P)
+         */
+        ↵ recontrapose['A / ●↙]['B / ●↘]
+    }
+}
+
 (X = X)[X / x]
 equals_symmetric ≔ x = z; x; y | ⪮[z / x] | commute_ante.MP[x / X][y / Y]
 
-eq_flip ≔ λ{
-    ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
+eq_flip ≔ {
+    /*
+    Argument: a = b
+    Returns: b = a
+     */
+    ⤷ equals_symmetric
+    λ{
+        ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
+    }
+}
+
+neq_flip ≔ {
+    /*
+    Argument:¬a = b
+    Returns:¬b = a
+     */
+    ⤷ equals_symmetric
+    ⤷ recontra
+    λ{
+        ↵ equals_symmetric.recontra.MP[X / ●↓↘][Y / ●↓↙].MP
+    }
 }
 
 equals_transitive ≔ {
@@ -540,3 +581,52 @@ is_even ≔ λ{↵ ¬●.is_odd}
 ⊦ 0.is_even
 2 = y + y; y; 1 | exists_by_example
 ⊦ 2.is_even
+
+{
+    ⤷ 1
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace_cut
+
+    goal ≔ 1 * x = x
+    1 * x = x * 1;
+    x * 1 = x * 0 + x | eq_trans; u; ↘↙ | ✂;
+    u; 0 | replace_cut.MP;
+    0 + x = x | eq_trans ℻
+    ⊦ goal
+    goal[x / X]
+    goal.eq_flip[x / X]
+}
+
+{
+    ⤷ 1
+    goal ≔ x * 1 = x
+    ⤷ eq_flip
+    ⤷ eq_trans
+    x * 1 = 1 * x;
+    1 * x = x | eq_trans
+    ⊦ goal
+    goal[x / X]
+    goal.eq_flip[x / X]
+}
+
+{
+    ⤷ 1
+    ⤷ 2
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
+    ⤷ replace_cut
+    goal ≔ 2 * x = x + x
+
+    a * x; a; 2; 1 + 1 | replace.MP;
+    (1 + 1) * x = 1 * x + 1 * x | eq_trans; u; ↘↙ | ✂;
+    u; x | replace_cut.MP; u; ↘↘ | ✂;
+    u; x | replace_cut.MP
+    ⊦ goal
+    goal[x / X]
+    goal.eq_flip[x / X]
+}
+
+2 * x = y + y; y; x | exists_by_example
+⊦ 2 * x | is_even
