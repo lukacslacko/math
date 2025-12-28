@@ -432,7 +432,7 @@ add_XY_ZW_eq_XZ_YW ≔ {
     ⤷ replace_cut
 
     add_assoc[X / y][Y / z][Z / w].eq_flip
-    add_comm[X / y][Y / z]
+    y + z = z + y ⇅add_comm
     add_assoc[X / z][Y / y][Z / w]
     add_assoc[X / x][Y / z][Z / y + w].eq_flip
 
@@ -479,5 +479,7 @@ mul_add_distr ≔ {
 
     goal; z | ↺.MP.MP[z].MP
     ⊦ goal
-    goal[x/X][y/Y][z/Z]
+    goal[x / X][y / Y][z / Z]
 }
+
+mul_add_distr ℻
