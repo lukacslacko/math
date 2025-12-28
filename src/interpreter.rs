@@ -257,11 +257,16 @@ fn interpret_inner(
             stack.push(Node::AssignTok);
             continue;
         }
-        if let (Some(Node::Quantify), Some(Node::Identifier(ident))) =
+        if let (Some(Node::Quantify), Some(Node::NumericPhrase(numeric_variable))) =
             (back(&stack, 2), back(&stack, 1))
         {
+            if numeric_variable.get_kind() != NumericVariable {
+                Err(format!(
+                    "quantification requires a numeric variable, got '{numeric_variable:?}'"
+                ))?
+            }
             stack
-                .push(Node::QuantifyVar(make_numeric_variable(ident.clone())?));
+                .push(Node::QuantifyVar(numeric_variable.clone()));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;

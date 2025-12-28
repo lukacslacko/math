@@ -490,8 +490,6 @@ mul_add_distr ≔ {
     goal[x / X][y / Y][z / Z]
 }
 
-mul_add_distr
-
 mul_assoc ≔ {
     goal ≔ (x * y) * z = x * (y * z)
 
@@ -515,3 +513,30 @@ mul_assoc ≔ {
     goal.eq_flip[x / X][y / Y][z / Z]
     goal[x / X][y / Y][z / Z]
 }
+
+exists_by_example ≔ {
+    ⤷ recontrapose
+
+    λ{
+        /*
+        Arguments: phrase, variable, example_value
+        Assumes: phrase[variable / example_value]is proven
+        Returns:¬∀variable¬phrase
+         */
+        phrase ≔ ●ⅰ
+        var ≔ ●ⅱ
+        example ≔ ●ⅲ
+        proof ≔ phrase[var / example]
+        ('X ⇒ ¬¬'X)['X / proof].MP
+        u ≔ (∀var¬phrase)[example]
+        ↵ recontrapose['A / u↙]['B / u↘].MP.MP
+    }
+}
+
+is_odd ≔ λ{↵ ∀y¬● = y + y}
+is_even ≔ λ{↵ ¬●.is_odd}
+
+0 = y + y; y; 0 | exists_by_example
+⊦ 0.is_even
+2 = y + y; y; 1 | exists_by_example
+⊦ 2.is_even
