@@ -456,7 +456,7 @@ mul_comm ≔ {
 
 replace_cut ≔ λ{
     /*
-    Arguments: cut result; cut variable; new value
+    Arguments: cut result; new value
 
     Assumes that the original phrase which got cut is proven.
     Replaces new value in the cut.
@@ -471,7 +471,7 @@ add_equals ≔ λ{
     Arguments: a = b; c = d
     Result: a + c = b + d
      */
-    ↵ ●ⅰ↙ + Y; Y; ●ⅱ↙; ●ⅱ↘ | replace.MP; X; ↘↙ | ✂; X; ●ⅰ↘ | replace_cut.MP
+    ↵ ●ⅰ↙ + Y; Y; ●ⅱ↙; ●ⅱ↘ | replace.MP; X; ↘↙ | ✂; ●ⅰ↘ | replace_cut.MP
 }
 
 add_XY_ZW_eq_XZ_YW ≔ {
@@ -483,10 +483,10 @@ add_XY_ZW_eq_XZ_YW ≔ {
     ⤷ replace_cut
 
     add_assoc[X / x][Y / y][Z / z + w]; u; ↘↘ | ✂;
-    u; (y + z) + w | replace_cut.MP; u; ↘↘↙ | ✂;
-    u; z + y | replace_cut.MP; u; ↘↘ | ✂;
-    u; z + (y + w) | replace_cut.MP; u; ↘ | ✂;
-    u; (x + z) + (y + w) | replace_cut.MP[x / X][y / Y][z / Z][w / W]
+    (y + z) + w | replace_cut.MP; u; ↘↘↙ | ✂;
+    z + y | replace_cut.MP; u; ↘↘ | ✂;
+    z + (y + w) | replace_cut.MP; u; ↘ | ✂;
+    (x + z) + (y + w) | replace_cut.MP[x / X][y / Y][z / Z][w / W]
 
     ⊦ goal
     goal
@@ -512,20 +512,20 @@ mul_add_distr ≔ {
 
     peano6[X / x + y][Y / z].eq_flip
     a ≔ u + (x + y); u; (x + y) * z; (x * z) + (y * z) | replace
-    b ≔ a; u; ↘↙ | ✂; u; (x + y) * 𝗦(z) | replace_cut.MP
+    b ≔ a; u; ↘↙ | ✂; (x + y) * 𝗦(z) | replace_cut.MP
 
     peano6[X / x][Y / z];
     peano6[X / y][Y / z] | add_equals;
     add_XY_ZW_eq_XZ_YW[X / x * z][Y / x][Z / y * z][W / y] | eq_trans | eq_flip
 
-    ∀z(b; u; ↘↘ | ✂; u; (x * 𝗦(z)) + (y * 𝗦(z)) | replace_cut.MP)
+    ∀z(b; u; ↘↘ | ✂; (x * 𝗦(z)) + (y * 𝗦(z)) | replace_cut.MP)
 
     goal; z | ↺.MP.MP[z].MP
     ⊦ goal
 
     z * (x + y) = (x + y) * z; goal | eq_trans; u; ↘↙ | ✂;
-    u; z * x | replace_cut.MP; u; ↘↘ | ✂;
-    u; z * y | replace_cut.MP[x / X][y / Y][z / Z]
+    z * x | replace_cut.MP; u; ↘↘ | ✂;
+    z * y | replace_cut.MP[x / X][y / Y][z / Z]
     ⊦ Z * (X + Y) = Z * X + Z * Y
 
     goal[x / X][y / Y][z / Z]
@@ -544,10 +544,10 @@ mul_assoc ≔ {
     (x * a; a; 0; y * 0 | replace.MP) | eq_trans
 
     x * a; a; y * 𝗦(z); y * z + y | replace.MP; u; ↘ | ✂;
-    u; x * (y * z) + x * y | replace_cut.MP | eq_flip
+    x * (y * z) + x * y | replace_cut.MP | eq_flip
     a + x * y; a; (x * y) * z; x * (y * z) | replace; u; ↘↙ | ✂;
-    u; (x * y) * 𝗦(z) | replace_cut.MP; u; ↘↘ | ✂;
-    u; x * (y * 𝗦(z)) | replace_cut.MP
+    (x * y) * 𝗦(z) | replace_cut.MP; u; ↘↘ | ✂;
+    x * (y * 𝗦(z)) | replace_cut.MP
 
     goal; z | ↺.MP.MP[z].MP
     ⊦ goal
@@ -591,7 +591,7 @@ is_even ≔ λ{↵ ¬●.is_odd}
     goal ≔ 1 * x = x
     1 * x = x * 1;
     x * 1 = x * 0 + x | eq_trans; u; ↘↙ | ✂;
-    u; 0 | replace_cut.MP;
+    0 | replace_cut.MP;
     0 + x = x | eq_trans
     ⊦ goal
     goal[x / X]
@@ -621,8 +621,8 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
     a * x; a; 2; 1 + 1 | replace.MP;
     (1 + 1) * x = 1 * x + 1 * x | eq_trans; u; ↘↙ | ✂;
-    u; x | replace_cut.MP; u; ↘↘ | ✂;
-    u; x | replace_cut.MP
+    x | replace_cut.MP; u; ↘↘ | ✂;
+    x | replace_cut.MP
     ⊦ goal
     goal[x / X]
     goal.eq_flip[x / X]

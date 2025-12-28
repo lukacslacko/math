@@ -551,8 +551,8 @@ fn interpret_inner(
             let CutResult {
                 new_phrase,
                 removed,
-            } = phrase.cut(&path, variable)?;
-            stack.push(Node::List(vec![new_phrase, removed]));
+            } = phrase.cut(&path, variable.clone())?;
+            stack.push(Node::List(vec![new_phrase, removed, variable]));
             continue;
         }
         if let (
