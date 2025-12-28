@@ -5,6 +5,7 @@ use crate::peano;
 use crate::phrase::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::fmt;
 use std::fmt::Write;
 use std::rc::Rc;
 
@@ -46,10 +47,16 @@ impl Namespace {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct SavedNamespace {
     namespace: Rc<Namespace>,
     i: usize,
+}
+
+impl fmt::Debug for SavedNamespace {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SavedNamespace").finish_non_exhaustive()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -257,16 +264,17 @@ fn interpret_inner(
             stack.push(Node::AssignTok);
             continue;
         }
-        if let (Some(Node::Quantify), Some(Node::NumericPhrase(numeric_variable))) =
-            (back(&stack, 2), back(&stack, 1))
+        if let (
+            Some(Node::Quantify),
+            Some(Node::NumericPhrase(numeric_variable)),
+        ) = (back(&stack, 2), back(&stack, 1))
         {
             if numeric_variable.get_kind() != NumericVariable {
                 Err(format!(
                     "quantification requires a numeric variable, got '{numeric_variable:?}'"
                 ))?
             }
-            stack
-                .push(Node::QuantifyVar(numeric_variable.clone()));
+            stack.push(Node::QuantifyVar(numeric_variable.clone()));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;
