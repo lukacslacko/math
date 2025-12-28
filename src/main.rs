@@ -10,7 +10,6 @@ fn main() -> UnitResult {
         "example.ll"
     };
     let tokens = preprocessor::preprocess(input_file)?;
-    let tokens = preprocessor::strip_macro_definitions(tokens);
     let tokens = preprocessor::apply_abbreviations(tokens);
     format::write_formatted_file(
         &tokens,

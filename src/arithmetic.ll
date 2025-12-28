@@ -36,20 +36,27 @@ commute_antecedents ≔ {
 ⊦ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
 commute_antecedents
-commute_ante⟪
-    ‼ commute_antecedents
-    commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘]
-⟫
+commute_ante ≔ λ{
+    /*
+    Argument: A ⇒ B ⇒ c
+
+    Swaps A and B, assumes the argument is proven.
+
+    Result: B ⇒ A ⇒ C
+     */
+    ↵ commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘].MP
+}
 
 chain ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ 'x ⇒ 'z
 
     ⤷ ignore
     ⤷ distr
+    ⤷ commute_ante
 
     ignore['A / 'y ⇒ 'z]['B / 'x]
     ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
-    commute_ante⟦distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP⟧.MP
+    distr['A / 'y ⇒ 'z]['B / 'x ⇒ ('y ⇒ 'z)]['C / ('x ⇒ 'y) ⇒ ('x ⇒ 'z)].MP.MP | commute_ante
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
@@ -57,18 +64,15 @@ chain ≔ {
 ⊦ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
-deduce⟪
-    ‼ chain
-    chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
-⟫
+deduce ≔ λ{
+    ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
+}
 
-deduce⟦
-    deduce⟦
-        ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
-        contrapose['A / ¬¬¬'x]['B / ¬'x]
-    ⟧;
-    contrapose['A / 'x]['B / ¬¬'x]
-⟧
+
+ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
+contrapose['A / ¬¬¬'x]['B / ¬'x] | deduce;
+contrapose['A / 'x]['B / ¬¬'x] | deduce
+
 ('X ⇒ 'X)['X / ¬¬'x]
 distr['A / ¬¬'x]['B / ¬¬'x]['C / 'x].MP.MP['x / 'X]
 ⊦ ¬¬'X ⇒ 'X
@@ -79,29 +83,29 @@ contrapose['A / ¬¬'x]['B / 'x].MP['x / 'X]
 
 recontrapose ≔ {
     ⤷ chain
+    ⤷ commute_ante
     ⤷ contrapose
+    ⤷ deduce
 
     goal ≔ ('x ⇒ 'y) ⇒ ¬'y ⇒ ¬'x
 
     s ≔ chain['X / ¬¬'x]['Y / 'x]['Z / 'y].MP
     ('X ⇒ ¬¬'X)['X / 'y]
-    q ≔ commute_ante⟦chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y]⟧.MP.MP
-    deduce⟦
-        deduce⟦s; q⟧;
-        contrapose['A / ¬'x]['B / ¬'y]
-    ⟧
+    q ≔ chain['X / ¬¬'x]['Y / 'y]['Z / ¬¬'y] | commute_ante.MP
+
+    s; q | deduce;
+    contrapose['A / ¬'x]['B / ¬'y] | deduce
 
     ⊦ goal
     goal['x / 'A]['y / 'B]
 }
 
 (X = X)[X / x]
-equals_symmetric ≔ commute_ante⟦x = z; x; y | ⪮[z / x]⟧.MP.MP[x / X][y / Y]
+equals_symmetric ≔ x = z; x; y | ⪮[z / x] | commute_ante.MP[x / X][y / Y]
 
-eq_flip⟪
-    ‼ equals_symmetric
-    equals_symmetric[X / ●↙][Y / ●↘].MP
-⟫
+eq_flip ≔ λ{
+    ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
+}
 
 equals_transitive ≔ {
     ⤷ chain
@@ -116,10 +120,9 @@ equals_transitive ≔ {
     goal[x / X][y / Y][z / Z]
 }
 
-eq_trans⟪
-    ‼ equals_transitive
-    equals_transitive[X / ●ⅰ↙][Y / ●ⅰ↘][Z / ●ⅱ↘].MP.MP
-⟫
+eq_trans ≔ λ{
+    ↵ equals_transitive[X / ●ⅰ↙][Y / ●ⅰ↘][Z / ●ⅱ↘].MP.MP
+}
 
 not_equals_symmetric ≔ {
     ⤷ equals_symmetric
@@ -134,18 +137,12 @@ not_equals_symmetric ≔ {
     goal[x / X][y / Y]
 }
 
-Peano1 := ¬0 = 𝗦(X)
-peano1 ≔ ∀X Peano1
-Peano2 := 𝗦(X) = 𝗦(Y) ⇒ X = Y
-peano2 ≔ ∀X∀Y Peano2
-Peano3 := X + 0 = X
-peano3 ≔ ∀X Peano3
-Peano4 := X + 𝗦(Y) = 𝗦(X + Y)
-peano4 ≔ ∀X∀Y Peano4
-Peano5 := X * 0 = 0
-peano5 ≔ ∀X Peano5
-Peano6 := X * 𝗦(Y) = (X * Y) + X
-peano6 ≔ ∀X∀Y Peano6
+peano1 ≔ ¬0 = 𝗦(X)
+peano2 ≔ 𝗦(X) = 𝗦(Y) ⇒ X = Y
+peano3 ≔ X + 0 = X
+peano4 ≔ X + 𝗦(Y) = 𝗦(X + Y)
+peano5 ≔ X * 0 = 0
+peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 
 ⊦ peano1
 ⊦ peano2
@@ -154,71 +151,75 @@ peano6 ≔ ∀X∀Y Peano6
 ⊦ peano5
 ⊦ peano6
 
-replace⟪
+replace ≔ λ{
     /*
     Arguments: numeric expression, variable, left value, right value
     Result: left value = right value ⇒ expression[var / left] = expression[var / right]
      */
     (X = X)[X / ●ⅰ[●ⅱ / ●ⅲ]]
-    commute_ante⟦●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ]⟧.MP.MP
-⟫
+    ↵ ●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ] | commute_ante.MP
+}
 
-replace⟦𝗦(x); x; X; Y⟧
+𝗦(x); x; X; Y | replace
 
-/* TODO rewrite plus_comm to use the macros */
-plus_comm ≔ {
+add_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
     ⤷ chain
+    ⤷ commute_ante
     ⤷ commute_antecedents
+    ⤷ equals_transitive
+    ⤷ deduce
     ⤷ peano3
     ⤷ peano4
     ⤷ equals_symmetric
-    ⤷ equals_transitive
-
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
 
     a ≔ {
         ⤷ peano3
         ⤷ peano4
-        ⤷ commute_antecedents
+        ⤷ commute_ante
 
         goal ≔ 0 + x = x
 
-        peano3[0]
-        peano4[0].MP[x].MP
+        peano3[X / 0]
+        peano4[X / 0][Y / x]
         a ≔ (0 + 𝗦(x) = 𝗦(y)); y; z | ⪮[y / 0 + x][z / x]
 
-        ∀x commute_ante⟦a⟧.MP.MP
+        ∀x a.commute_ante.MP
 
         goal; x | ↺.MP.MP[x].MP
         ⊦ goal
         goal
     }
-    eq_trans⟦peano3[x].MP; eq_flip⟦a⟧⟧
+    peano3[X / x]; a.eq_flip | eq_trans
 
-    peano4[x].MP[y].MP
+    peano4[X / x][Y / y]
 
     b ≔ {
         goal ≔ (𝗦(x) + y) = 𝗦(x + y)
 
         ⤷ chain
         ⤷ commute_antecedents
+        ⤷ deduce
         ⤷ equals_symmetric
         ⤷ equals_transitive
+        ⤷ eq_flip
+        ⤷ eq_trans
         ⤷ peano3
         ⤷ peano4
 
-        eq_flip⟦peano3[x].MP⟧
+        peano3[X / x].eq_flip
         (X = X)[X / 𝗦(x)]
 
-        eq_trans⟦
-            peano3[𝗦(x)].MP;
-            eq_flip⟦𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP⟧
-        ⟧
+        peano3[X / 𝗦(x)];
+        (𝗦(y) = 𝗦(x); y; z | ⪮[y / x][z / x + 0].MP.MP | eq_flip) | eq_trans
 
         i ≔ goal; y | ↺
 
-        peano4[𝗦(x)].MP[y].MP
+        peano4[X / 𝗦(x)][Y / y]
         a ≔ 𝗦(x) + 𝗦(y) = 𝗦(z); z; w | ⪮[z / 𝗦(x) + y][w / 𝗦(x + y)]
         b ≔ commute_antecedents['X / a↙]['Y / a↘↙]['Z / a↘↘].MP.MP
 
@@ -228,7 +229,7 @@ plus_comm ≔ {
 
         c ≔ 𝗦(x) + 𝗦(y) = 𝗦(z); z; w | ⪮[z / 𝗦(x + y)][w / x + 𝗦(y)].MP
 
-        ∀y deduce⟦b; c⟧
+        ∀y(b; c | deduce)
 
         i.MP.MP[y].MP
 
@@ -238,55 +239,53 @@ plus_comm ≔ {
 
     b[x / X][y / Y][X / y][Y / x]
     equals_symmetric[X / 𝗦(y) + x][Y / 𝗦(y + x)].MP
-    d ≔ replace⟦𝗦(z); z; x + y; y + x⟧
+    d ≔ 𝗦(z); z; x + y; y + x | replace
     d_cut ≔ d; z; ↘↙ | ✂
     f ≔ d_cutⅰ; z; w | ⪮[z / d_cutⅱ][w / x + 𝗦(y)].MP.MP
 
     g ≔ x + 𝗦(y) = z; z; w | ⪮[z / 𝗦(y + x)][w / 𝗦(y) + x].MP
 
-    TODO this would also be better as a macro deduct(f, g)
     h ≔ chain['X / f↙]['Y / f↘]['Z / g↘].MP.MP
     ∀y h
 
     goal; y | ↺.MP.MP[y].MP
 
     ⊦ goal
-    goal
+    goal[x / X][y / Y]
 }
-plus_comm[x / X][y / Y]
 
-plus_assoc ≔ {
+add_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
 
     ⤷ peano3
     ⤷ peano4
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
 
-    eq_flip⟦peano3[y].MP⟧
-    eq_trans⟦
-        peano3[x + y].MP;
-        replace⟦x + a; a; y; y + 0⟧.MP
-    ⟧
+    peano3[X / y] | eq_flip
+    peano3[X / x + y];
+    (x + a; a; y; y + 0 | replace.MP)
+     | eq_trans
 
-    step ≔ replace⟦𝗦(a); a; (x + y) + z; x + (y + z)⟧
+    step ≔ 𝗦(a); a; (x + y) + z; x + (y + z) | replace
 
-    eq_flip⟦peano4[X].MP[Y].MP[X / x + y][Y / z]⟧
+    peano4[X / x + y][Y / z] | eq_flip
 
     step_cut ≔ step; a; ↘↙ | ✂
     step1 ≔ step_cutⅰ; a; b | ⪮[a / step_cutⅱ][b / (x + y) + 𝗦(z)].MP.MP
 
-    eq_flip⟦peano4[X].MP[z].MP[X / y]⟧
-    eq_trans⟦
-        eq_flip⟦peano4[x].MP[y + z].MP⟧;
-        replace⟦x + a; a; 𝗦(y + z); y + 𝗦(z)⟧.MP
-    ⟧
+    peano4[X / y][Y / z] | eq_flip
+    peano4[X / x][Y / y + z] | eq_flip;
+    (x + a; a; 𝗦(y + z); y + 𝗦(z) | replace.MP)
+     | eq_trans
 
     step1_cut ≔ step1; a; ↘↘ | ✂
     ∀z(step1_cutⅰ; a; b | ⪮[a / step1_cutⅱ][b / x + (y + 𝗦(z))].MP.MP)
 
     goal; z | ↺.MP.MP[z].MP
+    goal[x / X][y / Y][z / Z]
 }
-
-plus_assoc[x / X][y / Y][z / Z]
 
 mul_comm ≔ {
     goal ≔ x * y = y * x
@@ -296,14 +295,18 @@ mul_comm ≔ {
     ⤷ peano4
     ⤷ peano5
     ⤷ peano6
+    ⤷ commute_ante
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
 
-    peano5[0].MP
-    eq_trans⟦peano6[0].MP[x].MP; (peano3[0 * x].MP)⟧
-    ∀x commute_ante⟦0 * 𝗦(x) = a; a; b | ⪮[a / 0 * x][b / 0]⟧.MP.MP
+    peano5[X / 0]
+    peano6[X / 0][Y / x]; peano3[X / 0 * x] | eq_trans
+    ∀x(0 * 𝗦(x) = a; a; b | ⪮[a / 0 * x][b / 0] | commute_ante.MP)
     0 * x = 0; x | ↺.MP.MP[x].MP
 
-    peano5[x].MP
-    eq_trans⟦x * 0 = 0; eq_flip⟦0 * x = 0⟧⟧
+    peano5[X / x]
+    x * 0 = 0; (0 * x = 0 | eq_flip) | eq_trans
 
     {
         ⤷ 1
@@ -311,19 +314,19 @@ mul_comm ≔ {
 
         ⤷ peano3
         ⤷ peano4
+        ⤷ eq_flip
+        ⤷ eq_trans
+        ⤷ replace
 
-        eq_flip⟦eq_trans⟦(X + Y = Y + X)[X / 0][Y / 1]; (peano3[1].MP)⟧⟧
-
-        x + 1 = 1 + x ⇅(X + Y = Y + X)
-
-        eq_trans⟦
-            replace⟦𝗦(a); a; x + 1; 1 + x⟧.MP;
-            eq_trans⟦
-                eq_flip⟦peano4[1].MP[x].MP⟧;
-                1 + 𝗦(x) = 𝗦(x) + 1 ⇅(X + Y = Y + X)
-            ⟧
-        ⟧
-        b ≔ replace⟦𝗦(a); a; 𝗦(x); x + 1⟧
+        (X + Y = Y + X)[X / 0][Y / 1]; peano3[X / 1] | eq_trans | eq_flip
+        (X + Y = Y + X)[X / x][Y / 1]
+        𝗦(a); a; x + 1; 1 + x | replace.MP;
+        (
+            peano4[X / 1][Y / x] | eq_flip;
+            (X + Y = Y + X)[X / 1][Y / 𝗦(x)]
+             | eq_trans)
+         | eq_trans
+        b ≔ 𝗦(a); a; 𝗦(x); x + 1 | replace
         b_cut ≔ b; a; ↘↘ | ✂
         ∀x(b_cutⅰ; a; c | ⪮[a / b_cutⅱ][c / 𝗦(x) + 1].MP.MP)
 
@@ -335,49 +338,48 @@ mul_comm ≔ {
         ⤷ 1
         ⤷ peano5
         ⤷ peano6
+        ⤷ eq_flip
+        ⤷ eq_trans
+        ⤷ replace
 
-        peano5[y].MP
-        eq_trans⟦
-            peano5[𝗦(y)].MP;
-            eq_flip⟦eq_trans⟦(x + 0 = x)[x / y * 0]; y * 0 = 0⟧⟧
-        ⟧
+        peano5[X / y]
 
-        b ≔ peano6[X].MP[Y].MP[X / y][Y / x]
-        c ≔ eq_trans⟦
-            replace⟦a + 𝗦(x); a; b↙; b↘⟧.MP;
-            replace⟦((y * x) + y) + a; a; 𝗦(x); x + 1⟧.MP
-        ⟧
-        d ≔ eq_trans⟦
+        peano5[X / 𝗦(y)];
+        ((x + 0 = x)[x / y * 0]; y * 0 = 0 | eq_trans | eq_flip)
+         | eq_trans
+
+        b ≔ peano6[X / y][Y / x]
+        c ≔
+        a + 𝗦(x); a; b↙; b↘ | replace.MP;
+        (((y * x) + y) + a; a; 𝗦(x); x + 1 | replace.MP) | eq_trans
+        d ≔ (
             c;
-            ((X + Y) + Z = X + (Y + Z))[X / c↘↙↙][Y / c↘↙↘][Z / c↘↘]
-        ⟧
-        eq_flip⟦x + y = y + x⟧
-        f ≔ eq_trans⟦
-            eq_trans⟦
-                eq_flip⟦
-                    ((X + Y) + Z =
-                    X + (Y + Z))[X / y][Y / x][Z / 1]
-                ⟧;
-                replace⟦a + 1; a; y + x; x + y⟧.MP
-            ⟧;
+            ((X + Y) + Z = X + (Y + Z))
+            [X / c↘↙↙][Y / c↘↙↘][Z / c↘↘]
+        ) | eq_trans
+
+        x + y = y + x | eq_flip
+        f ≔ (
+            ((X + Y) + Z =
+                X + (Y + Z))[X / y][Y / x][Z / 1] | eq_flip;
+            (a + 1; a; y + x; x + y | replace.MP) | eq_trans;
             ((x + y) + z = x + (y + z))[z / 1]
-        ⟧
-        g ≔ eq_trans⟦
-            replace⟦(y * x) + a; a; f↙; f↘⟧.MP;
-            eq_flip⟦((X + Y) + Z = X + (Y + Z))[X / y * x][Y / x][Z / y + 1]⟧
-        ⟧
-        eq_flip⟦(𝗦(x) = x + 1)[x / y]⟧
-        m ≔ (eq_flip⟦
-            eq_trans⟦
-                d;
-                eq_trans⟦
-                    g;
-                    replace⟦((y * x) + x) + a; a; y + 1; 𝗦(y)⟧.MP
-                ⟧
-            ⟧
-        ⟧)
-        h ≔ replace⟦a + 𝗦(y); a; 𝗦(y) * x; (y * x) + x⟧
-        j ≔ eq_flip⟦peano6[X].MP[Y].MP[X / 𝗦(y)][Y / x]⟧
+        ) | eq_trans
+        g ≔ (
+            (y * x) + a; a; f↙; f↘ | replace.MP;
+            (((X + Y) + Z = X + (Y + Z))
+                [X / y * x][Y / x][Z / y + 1] | eq_flip)
+        ) | eq_trans
+        (𝗦(x) = x + 1)[x / y].eq_flip
+        m ≔ (
+            d;
+            (g;
+                (((y * x) + x) + a; a; y + 1; 𝗦(y) |
+                    replace.MP)
+            ) | eq_trans
+        ) | eq_trans | eq_flip
+        h ≔ a + 𝗦(y); a; 𝗦(y) * x; (y * x) + x | replace
+        j ≔ peano6[X / 𝗦(y)][Y / x] | eq_flip
         h_cut ≔ h; u; ↘↙ | ✂
         /* TODO make macro for substituting equal things in a logic expression at a path */
         k ≔ h_cutⅰ; u; v | ⪮[u / h_cutⅱ][v / j↘].MP.MP
@@ -389,9 +391,9 @@ mul_comm ≔ {
         goal
     }
 
-    eq_flip⟦a⟧
-    eq_flip⟦peano6[x].MP[y].MP⟧
-    n ≔ replace⟦u + x; u; x * y; y * x⟧
+    a | eq_flip
+    peano6[X / x][Y / y] | eq_flip
+    n ≔ u + x; u; x * y; y * x | replace
     n2 ≔ n↙ ⇒ u = n↘↘; u; v | ⪮[u / n↘↙][v / x * 𝗦(y)].MP.MP
     ∀x(n2↙ ⇒ n2↘↙ = u; u; v | ⪮[u / n2↘↘][v / 𝗦(y) * x].MP.MP)
 
@@ -401,27 +403,81 @@ mul_comm ≔ {
     goal
 }
 
-mul_comm ℻
+replace_cut ≔ λ{
+    /*
+    Arguments: cut result; cut variable; new value
 
-mul_assoc ≔ {
-    goal ≔ (x * y) * z = x * (y * z)
+    Assumes that the original phrase which got cut is proven.
+    Replaces new value in the cut.
 
-    import Peano5
-    import Peano6
-
-    peano5[X/x * y]
-    peano5[X/y]
-    eq_flip⟦
-        eq_trans⟦
-            eq_trans⟦replace⟦x * u; u; y * 0; 0⟧.MP; x * 0 = 0⟧;
-            eq_flip⟦peano5[x * y].MP⟧
-        ⟧
-    ⟧
-    (x * y) * 𝗦(z) = (x * y) * z + (x * y) ⇅ Peano6 FAX
-
-    goal; z | ↺.MP ℻
-
-    ⊦ goal
+    Result: old value = new value ⇒ new phrase
+     */
+    ↵ ●ⅰ; ●ⅲ; _new_var | ⪮[●ⅲ / ●ⅱ][_new_var / ●ⅳ] | commute_ante.MP
 }
 
-mul_assoc ℻
+add_equals ≔ λ{
+    /*
+    Arguments: a = b; c = d
+    Result: a + c = b + d
+     */
+    ↵ ●ⅰ↙ + Y; Y; ●ⅱ↙; ●ⅱ↘ | replace.MP; X; ↘↙ | ✂; X; ●ⅰ↘ | replace_cut.MP
+}
+
+add_XY_ZW_eq_XZ_YW ≔ {
+    goal ≔ (X + Y) + (Z + W) = (X + Z) + (Y + W)
+
+    ⤷ add_assoc
+    ⤷ add_comm
+    ⤷ eq_flip
+    ⤷ replace_cut
+
+    add_assoc[X / y][Y / z][Z / w].eq_flip
+    add_comm[X / y][Y / z]
+    add_assoc[X / z][Y / y][Z / w]
+    add_assoc[X / x][Y / z][Z / y + w].eq_flip
+
+    add_assoc[X / x][Y / y][Z / z + w]; u; ↘↘ | ✂;
+    u; (y + z) + w | replace_cut.MP; u; ↘↘↙ | ✂;
+    u; z + y | replace_cut.MP; u; ↘↘ | ✂;
+    u; z + (y + w) | replace_cut.MP; u; ↘ | ✂;
+    u; (x + z) + (y + w) | replace_cut.MP[x / X][y / Y][z / Z][w / W]
+
+    ⊦ goal
+    goal
+}
+
+mul_add_distr ≔ {
+    goal ≔ (x + y) * z = (x * z) + (y * z)
+
+    ⤷ peano3
+    ⤷ peano5
+    ⤷ peano6
+    ⤷ add_equals
+    ⤷ eq_flip
+    ⤷ eq_trans
+    ⤷ replace
+    ⤷ replace_cut
+    ⤷ add_XY_ZW_eq_XZ_YW
+
+    peano5[X / x].eq_flip
+    peano5[X / y].eq_flip
+
+    peano3[X / 0].eq_flip;
+    (a + 0; a; 0; x * 0 | replace.MP) | eq_trans;
+    (x * 0 + a; a; 0; y * 0 | replace.MP) | eq_trans | eq_flip;
+    peano5[X / x + y].eq_flip | eq_trans | eq_flip
+
+    peano6[X / x + y][Y / z].eq_flip
+    a ≔ u + (x + y); u; (x + y) * z; (x * z) + (y * z) | replace
+    b ≔ a; u; ↘↙ | ✂; u; (x + y) * 𝗦(z) | replace_cut.MP
+
+    peano6[X / x][Y / z];
+    peano6[X / y][Y / z] | add_equals;
+    add_XY_ZW_eq_XZ_YW[X / x * z][Y / x][Z / y * z][W / y] | eq_trans | eq_flip
+
+    ∀z(b; u; ↘↘ | ✂; u; (x * 𝗦(z)) + (y * 𝗦(z)) | replace_cut.MP)
+
+    goal; z | ↺.MP.MP[z].MP
+    ⊦ goal
+    goal[x/X][y/Y][z/Z]
+}

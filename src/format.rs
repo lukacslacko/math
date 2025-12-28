@@ -36,6 +36,7 @@ pub fn write_formatted_file(
         ("/*", "/* "),
         ("*/", " */"),
         ("⇅", " ⇅"),
+        ("↵", "↵ "),
     ];
 
     let mut ascii_versions = HashMap::new();
@@ -64,6 +65,7 @@ pub fn write_formatted_file(
         if first_token.text == "}"
             || first_token.text == "⟫"
             || first_token.text == "⟧"
+            || first_token.text == ")"
         {
             depth -= 1;
         }
@@ -119,16 +121,25 @@ pub fn write_formatted_file(
                 }
                 previous_token_was_special = false;
             }
-            if token.text == "{" || token.text == "⟪" || token.text == "⟦" {
+            if token.text == "{"
+                || token.text == "⟪"
+                || token.text == "⟦"
+                || token.text == "("
+            {
                 depth += 1;
             }
-            if (token.text == "}" || token.text == "⟫" || token.text == "⟧")
+            if (token.text == "}"
+                || token.text == "⟫"
+                || token.text == "⟧"
+                || token.text == ")")
                 && !is_first_token
             {
                 depth -= 1;
             }
             is_first_token = false;
         }
+        // Remove trailing space and add newline.
+        output = output.trim_end().to_string();
         writeln!(output).unwrap();
     }
     std::fs::write(output_file, output).expect("Failed to write to file");

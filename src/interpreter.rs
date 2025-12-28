@@ -4,6 +4,7 @@ use crate::logic;
 use crate::peano;
 use crate::phrase::*;
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::rc::Rc;
 
@@ -121,7 +122,8 @@ impl Node {
             | Node::OpenSquare
             | Node::OpenCurly
             | Node::Semicolon
-            | Node::Slash => true,
+            | Node::Slash
+            | Node::Dot => true,
 
             Node::Identifier(_)
             | Node::LogicPhrase(_)
@@ -134,7 +136,6 @@ impl Node {
             | Node::Cut
             | Node::CloseSquare
             | Node::CloseCurly
-            | Node::Dot
             | Node::ModusPonens
             | Node::DistributeQuantification
             | Node::Right
@@ -145,7 +146,7 @@ impl Node {
 }
 
 #[derive(Debug)]
-struct Peek<I: Iterator<Item = Token>>(Option<Token>, I, String);
+struct Peek<I: Iterator<Item = Token>>(Option<Token>, I);
 
 impl<I: Iterator<Item = Token>> Peek<I> {
     fn peek(&mut self) -> Option<String> {
@@ -155,6 +156,9 @@ impl<I: Iterator<Item = Token>> Peek<I> {
         self.0.clone().map(|token| token.text)
     }
     fn take(&mut self) -> Option<Token> {
+        if self.0.is_none() {
+            self.0 = self.1.next();
+        }
         self.0.take()
     }
     fn location(&self) -> String {
@@ -162,7 +166,6 @@ impl<I: Iterator<Item = Token>> Peek<I> {
             .clone()
             .map(|token| token.location)
             .unwrap_or("eof".to_string())
-            + &self.2
     }
 }
 
@@ -171,7 +174,7 @@ fn back(stack: &[Node], index: usize) -> Option<&Node> {
 }
 
 pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
-    let mut peek = Peek(None, tokens, "".to_string());
+    let mut peek = Peek(None, tokens);
     let namespace: Rc<Namespace> = Rc::default();
     namespace.set(Thing::NumericPhrase(
         "0".to_string(),
@@ -185,14 +188,27 @@ fn interpret_middle(
     namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
 ) -> UnitResult {
-    interpret_inner(peek, namespace, ret)
-        .map_err(|err| format!("{err} @ {}", peek.location()).into())
+    let mut new_identifiers = HashSet::new();
+    interpret_inner(peek, namespace, ret, &mut new_identifiers).map_err(|err| {
+        {
+            let hint = if new_identifiers.is_empty() {
+                "good luck!".to_string()
+            } else {
+                let mut new_ids = new_identifiers.iter().cloned().collect::<Vec<_>>();
+                new_ids.sort();
+                format!("implicitly created identifiers: {}, maybe you need to import some of these?", new_ids.join(", "))
+            };
+            format!("{err} @ {}, hint: {}", peek.location(), hint)
+        }
+        .into()
+    })
 }
 
 fn interpret_inner(
     peek: &mut Peek<impl Iterator<Item = Token>>,
     mut namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
+    new_identifiers: &mut HashSet<String>,
 ) -> UnitResult {
     let mut stack = vec![];
     loop {
@@ -221,6 +237,7 @@ fn interpret_inner(
             continue;
         }
         if let Some(Node::Identifier(ident)) = back(&stack, 1) {
+            new_identifiers.insert(ident.clone());
             stack.push(Node::NumericPhrase(make_numeric_variable(
                 ident.clone(),
             )?));
@@ -229,7 +246,12 @@ fn interpret_inner(
         }
         if let (
             Some(Node::OpenRound),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
+            Some(
+                Node::LogicPhrase(_)
+                | Node::NumericPhrase(_)
+                | Node::List(_)
+                | Node::Lambda(_, _),
+            ),
             Some(Node::CloseRound),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -246,7 +268,12 @@ fn interpret_inner(
         }
         if let (
             Some(Node::OpenCurly),
-            Some(Node::LogicPhrase(_) | Node::NumericPhrase(_) | Node::List(_)),
+            Some(
+                Node::LogicPhrase(_)
+                | Node::NumericPhrase(_)
+                | Node::List(_)
+                | Node::Lambda(_, _),
+            ),
             Some(Node::CloseCurly),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
@@ -383,20 +410,16 @@ fn interpret_inner(
             stack.pop();
             let arg = match stack.pop() {
                 Some(Node::NumericPhrase(numeric_phrase)) => {
-                    Thing::NumericPhrase("○".to_string(), numeric_phrase)
+                    Thing::NumericPhrase("●".to_string(), numeric_phrase)
                 }
                 Some(Node::LogicPhrase(logic_phrase)) => {
-                    Thing::LogicPhrase("○".to_string(), logic_phrase)
+                    Thing::LogicPhrase("●".to_string(), logic_phrase)
                 }
-                Some(Node::List(list)) => Thing::List("○".to_string(), list),
+                Some(Node::List(list)) => Thing::List("●".to_string(), list),
                 _ => unreachable!(),
             };
             new_namespace.set(arg);
-            let mut peek = Peek(
-                None,
-                tokens.into_iter(),
-                format!(" @ {}", peek.location()),
-            );
+            let mut peek = Peek(None, tokens.into_iter());
             let mut ret = None;
             interpret_middle(&mut peek, new_namespace, Some(&mut ret))?;
             if let Some(ret) = ret {
@@ -977,7 +1000,7 @@ fn interpret_inner(
         }
         if token == Some("{".to_string()) {
             peek.take();
-            let arg = namespace.find("○");
+            let arg = namespace.find("●");
             namespace = Namespace {
                 parent: Some(namespace.clone()),
                 stuff: vec![].into(),
@@ -993,18 +1016,12 @@ fn interpret_inner(
             stack.push(Node::OpenCurly);
             continue;
         }
-        if token == Some("⤷".to_string()) || token == Some("‼".to_string())
-        {
+        if token == Some("⤷".to_string()) {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof while importing")?
             };
             if namespace.find(&ident).is_some() {
-                if token == Some("‼".to_string()) {
-                    // Ensure skips already present names.
-                    peek.take();
-                    continue;
-                }
                 Err(format!(
                     "identifier {ident} already exists in namespace, cannot import it"
                 ))?
