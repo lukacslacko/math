@@ -35,7 +35,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Universal quantification | `∀x P` | `!x P` | Variable must be numeric. Note if `P` is a *proven phrase* then this is the "Universal generalization" inference rule below. |
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
-| Namespaces | `{ ... }` | | Forget all identifiers (except `0`) within the namespace. The value of a namespace is its last phrase. |
+| Namespaces | `{ ... }` | | Forget all identifiers (except ids with only digits and `●`) within the namespace. The value of a namespace is its last phrase. |
 | Function definition | `name ≔ λ{ ... }` | `name := lambda { ... }` | Assigns a function to a name. The current contents of the namespace are saved with the function |
 | Function argument | `●` | `<arg>` | The value of the argument of the function, can be a list or a phrase |
 | Function call | `argument.name` or `argument\|name` | | The function is called on the argument. `\|` binds weakly, `.` binds strongly |

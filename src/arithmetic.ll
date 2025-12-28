@@ -340,7 +340,6 @@ add_assoc ≔ {
 mul_comm ≔ {
     goal ≔ x * y = y * x
 
-    ⤷ 1
     ⤷ peano3
     ⤷ peano4
     ⤷ peano5
@@ -359,7 +358,6 @@ mul_comm ≔ {
     x * 0 = 0; (0 * x = 0 | eq_flip) | eq_trans
 
     {
-        ⤷ 1
         goal ≔ 𝗦(x) = x + 1
 
         ⤷ peano3
@@ -385,7 +383,7 @@ mul_comm ≔ {
     }
     a ≔ {
         goal ≔ 𝗦(y) * x = (y * x) + x
-        ⤷ 1
+
         ⤷ peano5
         ⤷ peano6
         ⤷ eq_flip
@@ -583,7 +581,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 ⊦ 2.is_even
 
 {
-    ⤷ 1
     ⤷ eq_flip
     ⤷ eq_trans
     ⤷ replace_cut
@@ -599,7 +596,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 
 {
-    ⤷ 1
     goal ≔ x * 1 = x
     ⤷ eq_flip
     ⤷ eq_trans
@@ -611,8 +607,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 
 {
-    ⤷ 1
-    ⤷ 2
     ⤷ eq_flip
     ⤷ eq_trans
     ⤷ replace

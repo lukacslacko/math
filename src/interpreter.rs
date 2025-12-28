@@ -1063,15 +1063,18 @@ fn interpret_inner(
         if token == Some("{") {
             peek.take();
             let arg = namespace.find("●");
+            let old_namespace = namespace.clone();
             namespace = Namespace {
                 parent: Some(namespace.clone()),
                 stuff: vec![].into(),
             }
             .into();
-            namespace.set(Thing::NumericPhrase(
-                make_str("0"),
-                make_numeric_constant_zero(),
-            ));
+            // Find all identifiers in the current namespace which only have digits and import them.
+            for thing in old_namespace.stuff.borrow().iter() {
+                if thing.name().chars().all(|c| c.is_ascii_digit()) {
+                    namespace.set(thing.clone());
+                }
+            }
             if let Some(arg) = arg {
                 namespace.set(arg);
             }
