@@ -16,7 +16,7 @@ pub type Result = std::result::Result<Phrase, Box<dyn Error>>;
 pub enum Proof {
     Name(&'static str),
     NamePhrase(&'static str, Phrase),
-    NameVariablePhrase(&'static str, String, Phrase),
+    NameVariablePhrase(&'static str, Rc<str>, Phrase),
     NamePhrasePhrase(&'static str, Phrase, Phrase),
 }
 
@@ -71,7 +71,7 @@ pub enum Direction {
 pub struct PhraseData {
     kind: PhraseKind,
     children: Children,
-    variable_name: Option<String>,
+    variable_name: Option<Rc<str>>,
 }
 
 impl fmt::Display for PhraseData {
@@ -386,7 +386,7 @@ impl PhraseData {
                         "find_parallel_substitutions number of children mismatch: {self} vs {other}"
                     ))?,
                 }
-            },
+            }
             Children::Two(left, right) => {
                 if self.kind != other.kind {
                     Err(format!(
@@ -417,15 +417,15 @@ impl PhraseData {
         let substitutions = self.find_parallel_substitutions(other)?;
         let mut new_phrase = self.clone();
         for substitution in substitutions {
-            new_phrase = new_phrase.substitute(
-                substitution.variable,
-                substitution.term,
-            )?;
+            new_phrase = new_phrase
+                .substitute(substitution.variable, substitution.term)?;
         }
         if new_phrase == *other {
             Ok(new_phrase)
         } else {
-            Err(format!("Structure matches but phrases differ after substitution, self: {self}, other: {other}, new_phrase: {new_phrase}"))?
+            Err(format!(
+                "Structure matches but phrases differ after substitution, self: {self}, other: {other}, new_phrase: {new_phrase}"
+            ))?
         }
     }
 
@@ -518,7 +518,7 @@ impl PhraseData {
     }
 }
 
-pub fn make_logic_variable(name: String) -> Result {
+pub fn make_logic_variable(name: Rc<str>) -> Result {
     if !name.starts_with('\'') {
         Err(format!(
             "logic variable must start with an apostrophe, got {name}"
@@ -531,7 +531,7 @@ pub fn make_logic_variable(name: String) -> Result {
     }))
 }
 
-pub fn make_numeric_variable(name: String) -> Result {
+pub fn make_numeric_variable(name: Rc<str>) -> Result {
     if name.starts_with('\'') {
         Err(format!(
             "numeric variable must not start with an apostrophe, got {name}"

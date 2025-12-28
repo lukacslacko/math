@@ -2,8 +2,8 @@ use crate::UnitResult;
 use crate::phrase::*;
 
 pub fn axioms() -> UnitResult {
-    let var_x = make_numeric_variable("X".to_string())?;
-    let var_y = make_numeric_variable("Y".to_string())?;
+    let var_x = make_numeric_variable("X".into())?;
+    let var_y = make_numeric_variable("Y".into())?;
     let zero = make_numeric_constant_zero();
 
     make_not(make_equals(zero.clone(), make_successor(var_x.clone())?)?)?

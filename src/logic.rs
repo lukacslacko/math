@@ -40,9 +40,9 @@ pub fn distribute(quantification: Phrase) -> Result {
 }
 
 pub fn axioms() -> UnitResult {
-    let var_a = make_logic_variable("'A".to_string())?;
-    let var_b = make_logic_variable("'B".to_string())?;
-    let var_c = make_logic_variable("'C".to_string())?;
+    let var_a = make_logic_variable("'A".into())?;
+    let var_b = make_logic_variable("'B".into())?;
+    let var_c = make_logic_variable("'C".into())?;
 
     make_imply(var_a.clone(), make_imply(var_b.clone(), var_a.clone())?)?
         .assert_axiom(Name("ignore"))?;

@@ -1,5 +1,5 @@
 use crate::UnitResult;
-use crate::lexer::Token;
+use crate::lexer::Token as LToken;
 use crate::logic;
 use crate::peano;
 use crate::phrase::*;
@@ -7,6 +7,12 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::fmt::Write;
 use std::rc::Rc;
+
+#[derive(Debug, Clone)]
+struct Token {
+    text: Rc<str>,
+    location: Rc<str>,
+}
 
 #[derive(Debug, Default)]
 struct Namespace {
@@ -48,10 +54,10 @@ struct SavedNamespace {
 
 #[derive(Debug, Clone)]
 enum Thing {
-    LogicPhrase(String, Phrase),
-    NumericPhrase(String, Phrase),
-    List(String, Vec<Phrase>),
-    Lambda(String, SavedNamespace, Vec<Token>),
+    LogicPhrase(Rc<str>, Phrase),
+    NumericPhrase(Rc<str>, Phrase),
+    List(Rc<str>, Vec<Phrase>),
+    Lambda(Rc<str>, SavedNamespace, Rc<[Token]>),
 }
 
 impl Thing {
@@ -67,11 +73,11 @@ impl Thing {
 
 #[derive(Debug)]
 enum Node {
-    Identifier(String),
+    Identifier(Rc<str>),
     LogicPhrase(Phrase),
     NumericPhrase(Phrase),
     List(Vec<Phrase>),
-    Lambda(SavedNamespace, Vec<Token>),
+    Lambda(SavedNamespace, Rc<[Token]>),
     QuantifyVar(Phrase),
     Quantify,
     Successor,
@@ -147,15 +153,30 @@ impl Node {
     }
 }
 
+thread_local! {
+    static STRINGS: RefCell<HashSet<Rc<str>>> = RefCell::default();
+}
+
+fn make_str(string: &str) -> Rc<str> {
+    STRINGS.with_borrow_mut(|strings| {
+        if let Some(rc) = strings.get(string) {
+            return rc.clone();
+        }
+        let rc: Rc<str> = string.into();
+        strings.insert(rc.clone());
+        rc
+    })
+}
+
 #[derive(Debug)]
 struct Peek<I: Iterator<Item = Token>>(Option<Token>, I);
 
 impl<I: Iterator<Item = Token>> Peek<I> {
-    fn peek(&mut self) -> Option<String> {
+    fn peek(&mut self) -> Option<Rc<str>> {
         if self.0.is_none() {
             self.0 = self.1.next();
         }
-        self.0.clone().map(|token| token.text)
+        self.0.as_ref().map(|token| token.text.clone())
     }
     fn take(&mut self) -> Option<Token> {
         if self.0.is_none() {
@@ -163,11 +184,11 @@ impl<I: Iterator<Item = Token>> Peek<I> {
         }
         self.0.take()
     }
-    fn location(&self) -> String {
+    fn location(&self) -> Rc<str> {
         self.0
-            .clone()
-            .map(|token| token.location)
-            .unwrap_or("eof".to_string())
+            .as_ref()
+            .map(|token| token.location.clone())
+            .unwrap_or_else(|| make_str("eof"))
     }
 }
 
@@ -175,11 +196,17 @@ fn back(stack: &[Node], index: usize) -> Option<&Node> {
     stack.iter().nth_back(index - 1)
 }
 
-pub fn interpret(tokens: impl Iterator<Item = Token>) -> UnitResult {
-    let mut peek = Peek(None, tokens);
+pub fn interpret<'a>(tokens: impl Iterator<Item = &'a LToken>) -> UnitResult {
+    let mut peek = Peek(
+        None,
+        tokens.map(|token| Token {
+            text: make_str(&token.text),
+            location: make_str(&token.location),
+        }),
+    );
     let namespace: Rc<Namespace> = Rc::default();
     namespace.set(Thing::NumericPhrase(
-        "0".to_string(),
+        make_str("0"),
         make_numeric_constant_zero(),
     ));
     interpret_middle(&mut peek, namespace, None)
@@ -210,7 +237,7 @@ fn interpret_inner(
     peek: &mut Peek<impl Iterator<Item = Token>>,
     mut namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
-    new_identifiers: &mut HashSet<String>,
+    new_identifiers: &mut HashSet<Rc<str>>,
 ) -> UnitResult {
     let mut stack = vec![];
     loop {
@@ -218,10 +245,11 @@ fn interpret_inner(
         // let mut line = String::new();
         // std::io::stdin().read_line(&mut line)?;
         let token = peek.peek();
-        if token == Some("⛔".to_string()) {
+        let token = token.as_deref();
+        if token == Some("⛔") {
             Err("stopping the program as requested")?;
         }
-        if token == Some("≔".to_string()) {
+        if token == Some("≔") {
             let Some(Node::Identifier(_)) = back(&stack, 1) else {
                 Err("missing identifier to assign to")?
             };
@@ -412,16 +440,16 @@ fn interpret_inner(
             stack.pop();
             let arg = match stack.pop() {
                 Some(Node::NumericPhrase(numeric_phrase)) => {
-                    Thing::NumericPhrase("●".to_string(), numeric_phrase)
+                    Thing::NumericPhrase(make_str("●"), numeric_phrase)
                 }
                 Some(Node::LogicPhrase(logic_phrase)) => {
-                    Thing::LogicPhrase("●".to_string(), logic_phrase)
+                    Thing::LogicPhrase(make_str("●"), logic_phrase)
                 }
-                Some(Node::List(list)) => Thing::List("●".to_string(), list),
+                Some(Node::List(list)) => Thing::List(make_str("●"), list),
                 _ => unreachable!(),
             };
             new_namespace.set(arg);
-            let mut peek = Peek(None, tokens.into_iter());
+            let mut peek = Peek(None, tokens.iter().cloned());
             let mut ret = None;
             interpret_middle(&mut peek, new_namespace, Some(&mut ret))?;
             if let Some(ret) = ret {
@@ -664,40 +692,40 @@ fn interpret_inner(
             continue;
         }
         if let Some(Node::Dot) = back(&stack, 1) {
-            if token == Some("MP".to_string()) {
+            if token == Some("MP") {
                 peek.take();
                 stack.push(Node::ModusPonens);
                 continue;
             }
-            if token == Some("⪮".to_string()) {
+            if token == Some("⪮") {
                 peek.take();
                 stack.push(Node::EqSubs);
                 continue;
             }
-            if token == Some("↺".to_string()) {
+            if token == Some("↺") {
                 peek.take();
                 stack.push(Node::Induction);
                 continue;
             }
-            if token == Some("✂".to_string()) {
+            if token == Some("✂") {
                 peek.take();
                 stack.push(Node::Cut);
                 continue;
             }
         }
-        if token == Some("λ".to_string()) {
+        if token == Some("λ") {
             peek.take();
             let saved = namespace.save();
             let mut depth = 0;
             let mut tokens = vec![];
             while let Some(token) = peek.take() {
-                if token.text == "}" {
+                if &*token.text == "}" {
                     depth -= 1;
                 }
                 if depth > 0 {
                     tokens.push(token.clone());
                 }
-                if token.text == "{" {
+                if &*token.text == "{" {
                     depth += 1;
                 }
                 if depth <= 0 {
@@ -707,30 +735,30 @@ fn interpret_inner(
             if depth != 0 {
                 Err("unexpected eof in lambda")?
             }
-            stack.push(Node::Lambda(saved, tokens));
+            stack.push(Node::Lambda(saved, tokens.into()));
             continue;
         }
-        if token == Some(".".to_string()) {
+        if token == Some(".") {
             peek.take();
             stack.push(Node::Dot);
             continue;
         }
-        if token == Some("↙".to_string()) {
+        if token == Some("↙") {
             peek.take();
             stack.push(Node::Left);
             continue;
         }
-        if token == Some("↘".to_string()) {
+        if token == Some("↘") {
             peek.take();
             stack.push(Node::Right);
             continue;
         }
-        if token == Some("↓".to_string()) {
+        if token == Some("↓") {
             peek.take();
             stack.push(Node::Child);
             continue;
         }
-        if token == Some("[".to_string()) {
+        if token == Some("[") {
             peek.take();
             stack.push(Node::OpenSquare);
             continue;
@@ -770,7 +798,7 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("*".to_string()) {
+        if token == Some("*") {
             peek.take();
             stack.push(Node::Multiply);
             continue;
@@ -787,7 +815,7 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("+".to_string()) {
+        if token == Some("+") {
             peek.take();
             stack.push(Node::AddTok);
             continue;
@@ -804,27 +832,27 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("⇅".to_string()) {
+        if token == Some("⇅") {
             peek.take();
             stack.push(Node::Match);
             continue;
         }
-        if token == Some("⁇".to_string()) {
+        if token == Some("⁇") {
             peek.take();
             stack.push(Node::TryProve);
             continue;
         }
-        if token == Some("=".to_string()) {
+        if token == Some("=") {
             peek.take();
             stack.push(Node::EqualsTok);
             continue;
         }
-        if token == Some("⇒".to_string()) {
+        if token == Some("⇒") {
             peek.take();
             stack.push(Node::ImplyTok);
             continue;
         }
-        if token == Some("/".to_string()) {
+        if token == Some("/") {
             peek.take();
             stack.push(Node::Slash);
             continue;
@@ -882,24 +910,24 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some(";".to_string()) {
+        if token == Some(";") {
             peek.take();
             stack.push(Node::Semicolon);
             continue;
         }
-        if token == Some("⇆".to_string()) {
+        if token == Some("⇆") {
             peek.take();
             stack.push(Node::DistributeQuantification);
             continue;
         }
-        if token == Some("|".to_string()) {
+        if token == Some("|") {
             peek.take();
             stack.push(Node::Dot);
             continue;
         }
         if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
             back(&stack, 1)
-            && token == Some("℻".to_string())
+            && token == Some("℻")
         {
             println!("{}\t{:b}", peek.location(), **phrase);
             peek.take();
@@ -907,7 +935,7 @@ fn interpret_inner(
         }
         if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
             back(&stack, 1)
-            && token == Some("📜".to_string())
+            && token == Some("📜")
         {
             peek.take();
             let proof = phrase.show_proof().unwrap_or_default();
@@ -998,17 +1026,17 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("]".to_string()) {
+        if token == Some("]") {
             peek.take();
             stack.push(Node::CloseSquare);
             continue;
         }
-        if token == Some(")".to_string()) {
+        if token == Some(")") {
             peek.take();
             stack.push(Node::CloseRound);
             continue;
         }
-        if token == Some("}".to_string()) {
+        if token == Some("}") {
             peek.take();
             stack.push(Node::CloseCurly);
             continue;
@@ -1019,7 +1047,7 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
-        if token == Some("{".to_string()) {
+        if token == Some("{") {
             peek.take();
             let arg = namespace.find("●");
             namespace = Namespace {
@@ -1028,7 +1056,7 @@ fn interpret_inner(
             }
             .into();
             namespace.set(Thing::NumericPhrase(
-                "0".to_string(),
+                make_str("0"),
                 make_numeric_constant_zero(),
             ));
             if let Some(arg) = arg {
@@ -1037,7 +1065,7 @@ fn interpret_inner(
             stack.push(Node::OpenCurly);
             continue;
         }
-        if token == Some("⤷".to_string()) {
+        if token == Some("⤷") {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof while importing")?
@@ -1059,7 +1087,7 @@ fn interpret_inner(
             peek.take();
             continue;
         }
-        if token == Some("⤶".to_string()) {
+        if token == Some("⤶") {
             peek.take();
             let Some(ident) = peek.peek() else {
                 Err("unexpected eof while exporting")?
@@ -1080,32 +1108,32 @@ fn interpret_inner(
             parent.set(thing);
             continue;
         }
-        if token == Some("∀".to_string()) {
+        if token == Some("∀") {
             peek.take();
             stack.push(Node::Quantify);
             continue;
         }
-        if token == Some("↵".to_string()) {
+        if token == Some("↵") {
             peek.take();
             stack.push(Node::Return);
             continue;
         }
-        if token == Some("⊦".to_string()) {
+        if token == Some("⊦") {
             peek.take();
             stack.push(Node::Assertion);
             continue;
         }
-        if token == Some("(".to_string()) {
+        if token == Some("(") {
             peek.take();
             stack.push(Node::OpenRound);
             continue;
         }
-        if token == Some("𝗦".to_string()) {
+        if token == Some("𝗦") {
             peek.take();
             stack.push(Node::Successor);
             continue;
         }
-        if token == Some("¬".to_string()) {
+        if token == Some("¬") {
             peek.take();
             stack.push(Node::NotTok);
             continue;
@@ -1120,13 +1148,15 @@ fn interpret_inner(
             Err(format!("syntax error, top of stack is {top:?}"))?
         }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
-            peek.take();
-            stack.push(Node::LogicPhrase(make_logic_variable(token.unwrap())?));
+            let token = peek.take();
+            stack.push(Node::LogicPhrase(make_logic_variable(
+                token.unwrap().text,
+            )?));
             continue;
         }
-        if let Some(token) = token {
-            peek.take();
-            match namespace.find(&token) {
+        if token.is_some() {
+            let token = peek.take().unwrap();
+            match namespace.find(&token.text) {
                 Some(Thing::LogicPhrase(_, logic_phrase)) => {
                     stack.push(Node::LogicPhrase(logic_phrase))
                 }
@@ -1137,7 +1167,7 @@ fn interpret_inner(
                 Some(Thing::Lambda(_, saved, tokens)) => {
                     stack.push(Node::Lambda(saved, tokens))
                 }
-                None => stack.push(Node::Identifier(token)),
+                None => stack.push(Node::Identifier(token.text)),
             }
             continue;
         }
