@@ -592,7 +592,7 @@ is_even ≔ λ{↵ ¬●.is_odd}
     1 * x = x * 1;
     x * 1 = x * 0 + x | eq_trans; u; ↘↙ | ✂;
     u; 0 | replace_cut.MP;
-    0 + x = x | eq_trans ℻
+    0 + x = x | eq_trans
     ⊦ goal
     goal[x / X]
     goal.eq_flip[x / X]
