@@ -696,5 +696,39 @@ X = 0 + Z; Z; X | exists_by_example
     contrapose['B / goal↙]['A / goal↘].MP
 
     ⊦ goal
-    goal[x/X][y/Y]
+    goal[x / X][y / Y]
 }
+
+{
+    ⤷ peano1
+    ⤷ peano2
+    ⤷ peano4
+    ⤷ is_odd
+    ⤷ neq_flip
+    ⤷ equals_transitive
+    ⤷ commute_ante
+    ⤷ deduce
+    ⤷ recontra
+    ⤷ chain
+    ⤷ ignore
+
+    goal ≔ 1.is_odd
+
+    peano1[X / 0].neq_flip
+    ¬1 = x; x; y | ⪮[x / 0][y / 0 + 0].MP.MP
+    peano4[X / 𝗦y][Y / y]
+
+    a ≔ equals_transitive[X / 1][Y / 𝗦y + 𝗦y][Z / 𝗦(𝗦y + y)].commute_ante.MP;
+    peano2[X / 0][Y / 𝗦y + y] | deduce
+
+    b ≔ equals_transitive[X / a↘↙][Y / a↘↘][Z / (𝗦x + y = 𝗦(x + y))[x / y]↘].commute_ante.MP
+
+    peano1[X / y + y]
+    ∀y ignore['A / chain['X / a↙]['Y / a↘]['Z / b↘].MP.MP.recontra.MP.MP]['B / ¬1 = y + y].MP
+
+    goal↘; y | ↺.MP.MP
+
+    ⊦ goal
+}
+
+⊦ 1.is_odd
