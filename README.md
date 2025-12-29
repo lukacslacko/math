@@ -65,7 +65,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | -- | -- | -- | -- |
 | Substitution | `phrase[var / term]` | | `phrase` must be a *proven phrase*, `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
 | Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B`. If `A` is not proven, it will try to match it with `⇅` against all *proven phrases* to try to prove it  |
-| Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note: if `P` is not proven, this is still a valid expression |
+| Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note 1: if `P` is not proven, this is still a valid expression. Note 2: consider the vacuous generalization [axiom schema](#axiom-schemas) for adding quantification to any phrase |
 
 ## Axioms
 
@@ -87,6 +87,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | -- | -- | -- | -- |
 | Indiscernibility of identicals | `P; x; y \| ⪮` | `P; x; y \| <eq_subs>` |  `x = y ⇒ P ⇒ P[x / y]` |
 | Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
+| Vacuous generalization | `P.∀x` or `P\|∀x` | `P.!x` or `P\|.x` | If `x` is not free in `P`, produces `P ⇒ ∀x P` as an axiom. Note that this differs from the universal generalization inference rule in that it doesn't require that `P` is a *proven phrase*, at the cost of requiring that `x` is not free in `P` |
 | Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
 
