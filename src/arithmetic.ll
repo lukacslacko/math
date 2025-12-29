@@ -732,3 +732,16 @@ X = 0 + Z; Z; X | exists_by_example
 }
 
 ⊦ 1.is_odd
+
+{
+    ⤷ peano1
+    ⤷ peano2
+    ⤷ recontra
+
+    goal ≔ ¬x = 𝗦x
+    ∀x peano2[X / x][Y / 𝗦x].recontra.MP
+    goal; x | ↺.MP.MP[x].MP
+    ⊦ goal
+}
+
+⊦ ¬x = 𝗦x
