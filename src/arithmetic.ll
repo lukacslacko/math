@@ -73,6 +73,8 @@ false_implies_anything ≔ (
     contrapose | deduce
 )
 
+false_implies_anything.commute_ante
+
 from_false ≔ λ{
     /*
     Argument: P ⇒ Q
@@ -156,6 +158,37 @@ flip_postneg ≔ λ{
     Returns:(P ⇒ ¬Q) ⇒ (Q ⇒ ¬P)
      */
     ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
+}
+
+and_to_impl := {
+    goal := ((~'x => 'y) => 'z) => 'x => 'y => 'z
+
+    import chain
+    import deduce
+    import distr
+    import ignore
+
+    ignore['A/ignore['A/'z]['B/'y]]['B/~'x=>'y].MP
+    distr['A/~'x=>'y]['B/'z]['C/'y=>'z].MP;
+    chain['X/'x]['Y/~'x=>'y]['Z/'y=>'z].MP | deduce
+
+    |- goal
+    goal['x/'X]['y/'Y]['z/'Z]
+}
+
+impl_to_and := {
+    goal := (('x=>'y)=>'z)=>~'x=>'y=>'z
+
+    import and_to_impl
+    import chain
+    import deduce
+
+    chain['X/'x]['Y/~~'x]['Z/'y].MP
+    chain['X/~~'x=>'y]['Y/'x=>'y]['Z/'z].MP;
+    and_to_impl['X/~'x]['Y/'y]['Z/'z] | deduce
+
+    |- goal
+    goal['x/'X]['y/'Y]['z/'Z]
 }
 
 (X = X)[X / x]
