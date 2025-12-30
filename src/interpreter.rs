@@ -1,5 +1,6 @@
 use crate::UnitResult;
 use crate::lexer::Token as LToken;
+use crate::logger::Logger;
 use crate::logic;
 use crate::peano;
 use crate::phrase::*;
@@ -203,7 +204,10 @@ fn back(stack: &[Node], index: usize) -> Option<&Node> {
     stack.iter().nth_back(index - 1)
 }
 
-pub fn interpret<'a>(tokens: impl Iterator<Item = &'a LToken>) -> UnitResult {
+pub fn interpret<'a>(
+    tokens: impl Iterator<Item = &'a LToken>,
+    logger: Rc<RefCell<Logger>>,
+) -> UnitResult {
     let mut peek = Peek(
         None,
         tokens.map(|token| Token {
@@ -216,16 +220,17 @@ pub fn interpret<'a>(tokens: impl Iterator<Item = &'a LToken>) -> UnitResult {
         make_str("0"),
         make_numeric_constant_zero(),
     ));
-    interpret_middle(&mut peek, namespace, None)
+    interpret_middle(&mut peek, namespace, None, logger)
 }
 
 fn interpret_middle(
     peek: &mut Peek<impl Iterator<Item = Token>>,
     namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
+    logger: Rc<RefCell<Logger>>,
 ) -> UnitResult {
     let mut new_identifiers = HashSet::new();
-    interpret_inner(peek, namespace, ret, &mut new_identifiers).map_err(|err| {
+    interpret_inner(peek, namespace, ret, &mut new_identifiers, logger).map_err(|err| {
         {
             let hint = if new_identifiers.is_empty() {
                 "good luck!".to_string()
@@ -245,8 +250,10 @@ fn interpret_inner(
     mut namespace: Rc<Namespace>,
     ret: Option<&mut Option<Node>>,
     new_identifiers: &mut HashSet<Rc<str>>,
+    mut logger: Rc<RefCell<Logger>>,
 ) -> UnitResult {
     let mut stack = vec![];
+    let mut logger_stack = vec![];
     loop {
         // eprintln!("{stack:#?}");
         // let mut line = String::new();
@@ -320,6 +327,9 @@ fn interpret_inner(
             Some(Node::CloseCurly),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
+            if let Some(parent_logger) = logger_stack.pop() {
+                logger = parent_logger;
+            }
             let len = stack.len();
             stack.swap(len - 3, len - 2);
             continue;
@@ -367,11 +377,15 @@ fn interpret_inner(
                     "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
-            stack.push(Node::LogicPhrase(
-                logic_phrase
-                    .clone()
-                    .substitute(variable.clone(), term.clone())?,
-            ));
+            let result = logic_phrase
+                .clone()
+                .substitute(variable.clone(), term.clone())?;
+            logger.borrow_mut()
+                .sublog("Substitution".to_string(), result.to_string()).borrow_mut()
+                .log("Original phrase".to_string(), logic_phrase.to_string())
+                .log("Variable".to_string(), variable.to_string())
+                .log("Term".to_string(), term.to_string());
+            stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
@@ -462,10 +476,26 @@ fn interpret_inner(
                 _ => unreachable!(),
             };
             new_namespace.set(arg);
+            let mut mut_logger = logger.borrow_mut();
+            let entry = mut_logger.new_entry(
+                "Function call".to_ascii_lowercase(),
+                "".to_string(),
+            );
             let mut peek = Peek(None, tokens.iter().cloned());
             let mut ret = None;
-            interpret_middle(&mut peek, new_namespace, Some(&mut ret))?;
+            interpret_middle(
+                &mut peek,
+                new_namespace,
+                Some(&mut ret),
+                entry.details.clone(),
+            )?;
             if let Some(ret) = ret {
+                entry.phrase = match &ret {
+                    Node::LogicPhrase(phrase) => phrase.to_string(),
+                    Node::NumericPhrase(phrase) => phrase.to_string(),
+                    _ => "function did not return a logic or numeric phrase"
+                        .to_string(),
+                };
                 stack.push(ret);
             }
             continue;
@@ -1094,6 +1124,9 @@ fn interpret_inner(
                 namespace.set(arg);
             }
             stack.push(Node::OpenCurly);
+            logger_stack.push(logger.clone());
+            let sublogger = logger.borrow_mut().sublog("scope".to_string(), "".to_string());
+            logger = sublogger;
             continue;
         }
         if token == Some("⤷") {

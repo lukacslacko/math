@@ -16,7 +16,9 @@ fn main() -> UnitResult {
         "preprocessed.ll",
         /*as_ascii=*/ false,
     );
-    interpreter::interpret(tokens.iter())?;
+    let logger = logger::Logger::new();
+    interpreter::interpret(tokens.iter(), logger.clone())?;
+    std::fs::write("log.html", html::render_html(&logger.borrow()))?;
     println!("Hello, world!");
     Ok(())
 }
