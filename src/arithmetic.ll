@@ -74,6 +74,11 @@ chain ≔ {
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
 deduce ≔ λ{
+    /*
+    Argument: P ⇒ Q; Q ⇒ R
+    Assumption: both implications are proven
+    Returns: P ⇒ R
+     */
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
@@ -90,6 +95,7 @@ false_implies_anything ≔ {
 
     ⊦ goal
     goal.commute_ante
+    goal
 }
 
 from_false ≔ λ{
@@ -209,6 +215,86 @@ flip_postneg ≔ λ{
      */
     ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
 }
+
+
+or ≔ λ{
+    ↵ ¬●ⅰ ⇒ ●ⅱ
+}
+
+and ≔ λ{
+    ↵ ¬(●ⅰ ⇒ ¬●ⅱ)
+}
+
+y_impl_or ≔ {
+    ⤷ or
+    ⤷ ignore
+
+    goal ≔ 'y ⇒ ('x; 'y | or)
+
+    ignore['A / 'y]['B / ¬'x]
+    /* goal⁇ */
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+
+x_impl_or ≔ {
+    ⤷ or
+
+    goal ≔ 'x ⇒ ('x; 'y | or)
+    goal⁇
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+
+and_impl_x ≔ {
+    ⤷ and
+    ⤷ false_implies_anything
+    ⤷ recontra
+    ⤷ deduce
+    import commute_ante
+
+    goal ≔ ('x; 'y | and) ⇒ 'x
+
+    false_implies_anything['A / ¬'y]['B / 'x] | recontra.MP;
+    ¬¬'x ⇒ 'x | deduce
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+
+and_impl_y ≔ {
+    ⤷ and
+    ⤷ ignore
+    ⤷ recontra
+    ⤷ deduce
+
+    goal ≔ ('x; 'y | and) ⇒ 'y
+
+    ignore['A / ¬'y]['B / 'x] | recontra.MP;
+    ¬¬'y ⇒ 'y | deduce
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+
+x_impl_y_impl_and ≔ {
+    ⤷ and
+    ⤷ commute_ante
+    ⤷ flip_postneg
+    ⤷ deduce
+
+    goal ≔ 'x ⇒ 'y ⇒ ('x; 'y | and)
+
+    a ≔ ('X ⇒ 'X)['X / 'x ⇒ ¬'y] | commute_ante
+    b ≔ ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
+    a; b | deduce
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
