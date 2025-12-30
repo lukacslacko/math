@@ -66,10 +66,10 @@ chain ≔ {
 
 deduce ≔ λ{
     /*
-    Argument: P=>Q; Q=>R
+    Argument: P ⇒ Q; Q ⇒ R
     Assumption: both implications are proven
-    Returns: P=>R
-    */
+    Returns: P ⇒ R
+     */
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
@@ -168,84 +168,82 @@ flip_postneg ≔ λ{
 }
 
 
-or := lambda {
-    return ~<arg><1> => <arg><2>
+or ≔ λ{
+    ↵ ¬●ⅰ ⇒ ●ⅱ
 }
 
-and := lambda {
-    return ~(<arg><1> => ~<arg><2>)
+and ≔ λ{
+    ↵ ¬(●ⅰ ⇒ ¬●ⅱ)
 }
 
+y_impl_or ≔ {
+    ⤷ or
+    ⤷ ignore
 
-{
-    import or
-    import ignore
-    
-    goal := 'y => ('x; 'y | or)
+    goal ≔ 'y ⇒ ('x; 'y | or)
 
-    ignore['A / 'y]['B / ~'x]
-    /* goal<prove> */
+    ignore['A / 'y]['B / ¬'x]
+    /* goal⁇ */
 
-    |- goal
+    ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
 
-{
-    import or
+x_impl_or ≔ {
+    ⤷ or
 
-    goal := 'x => ('x; 'y | or)
-    goal<prove>
+    goal ≔ 'x ⇒ ('x; 'y | or)
+    goal⁇
 
-    |- goal
+    ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
 
-{
-    import and
-    import false_implies_anything
-    import recontra
-    import deduce
+and_impl_x ≔ {
+    ⤷ and
+    ⤷ false_implies_anything
+    ⤷ recontra
+    ⤷ deduce
 
-    goal := ('x; 'y | and) => 'x
+    goal ≔ ('x; 'y | and) ⇒ 'x
 
-    false_implies_anything['A / ~'y]['B / 'x] | recontra.MP;
-    ~~'x => 'x | deduce
+    false_implies_anything['A / ¬'y]['B / 'x] | recontra.MP;
+    ¬¬'x ⇒ 'x | deduce
 
-    |- goal
+    ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
 
-{
-    import and
-    import ignore
-    import recontra
-    import deduce
+and_impl_y ≔ {
+    ⤷ and
+    ⤷ ignore
+    ⤷ recontra
+    ⤷ deduce
 
-    goal := ('x; 'y | and) => 'y
+    goal ≔ ('x; 'y | and) ⇒ 'y
 
-    ignore['A / ~'y]['B / 'x] | recontra.MP;
-    ~~'y => 'y | deduce
+    ignore['A / ¬'y]['B / 'x] | recontra.MP;
+    ¬¬'y ⇒ 'y | deduce
 
-    |- goal
+    ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
 
-{
-    import and
-    import commute_ante
-    import flip_postneg
-    import deduce
+x_impl_y_impl_and ≔ {
+    ⤷ and
+    ⤷ commute_ante
+    ⤷ flip_postneg
+    ⤷ deduce
 
-    goal := 'x => 'y => ('x; 'y | and)
+    goal ≔ 'x ⇒ 'y ⇒ ('x; 'y | and)
 
-    a := ('X ⇒ 'X)['X / 'x => ~'y] | commute_ante
-    b := ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
+    a ≔ ('X ⇒ 'X)['X / 'x ⇒ ¬'y] | commute_ante
+    b ≔ ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
     a; b | deduce
 
-    |- goal
+    ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
-
 
 
 (X = X)[X / x]
