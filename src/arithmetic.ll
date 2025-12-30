@@ -4,15 +4,23 @@ distr ≔ ('A ⇒ 'B ⇒ 'C) ⇒ ('A ⇒ 'B) ⇒ 'A ⇒ 'C
 ⊦ distr
 contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
 ⊦ contrapose
-ignore['A / 'x]['B / 'x ⇒ 'x]
-ignore['A / 'x]['B / 'x]
-distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
-('x ⇒ 'x)['x / 'X]
-⊦ 'X ⇒ 'X
+{
+    goal ≔ 'x ⇒ 'x
+
+    ⤷ ignore
+    ⤷ distr
+
+    ignore['A / 'x]['B / 'x ⇒ 'x]
+    ignore['A / 'x]['B / 'x]
+    distr['A / 'x]['B / 'x ⇒ 'x]['C / 'x].MP.MP
+
+    ⊦ goal
+    goal['x / 'X]
+}
+
 1 ≔ 𝗦(0)
 2 ≔ 𝗦(1)
 
-distr['A / 'x]['B / 'y]['C / 'z]
 commute_antecedents ≔ {
     ⤷ ignore
     ⤷ distr
@@ -22,6 +30,7 @@ commute_antecedents ≔ {
     p ≔ 'x ⇒ 'y
     q ≔ 'x ⇒ 'z
 
+    distr['A / 'x]['B / 'y]['C / 'z]
     ignore['A / ignore['A / p ⇒ q]['B / 'y]]['B / goal↙].MP
     distr['A / goal↙]['B / p ⇒ q]['C / 'y ⇒ p ⇒ q].MP.MP
     ignore['A / distr['A / 'y]['B / p]['C / q]]['B / goal↙].MP
@@ -35,7 +44,7 @@ commute_antecedents ≔ {
 
 ⊦ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
-commute_antecedents
+
 commute_ante ≔ λ{
     /*
     Argument: A ⇒ B ⇒ c
@@ -73,14 +82,21 @@ deduce ≔ λ{
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
-false_implies_anything ≔ (
+false_implies_anything ≔ {
+    goal ≔ ¬'B ⇒ 'B ⇒ 'A
+
+    ⤷ ignore
+    ⤷ deduce
+    ⤷ contrapose
+    ⤷ commute_ante
+
     ignore['A / 'X]['B / 'Y]['X / ¬'B]['Y / ¬'A];
     contrapose | deduce
-)
 
-false_implies_anything
-
-false_implies_anything.commute_ante
+    ⊦ goal
+    goal.commute_ante
+    goal
+}
 
 from_false ≔ λ{
     /*
@@ -91,17 +107,35 @@ from_false ≔ λ{
     ↵ false_implies_anything['B / ●↙]['A / ●↘].MP
 }
 
-ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
-contrapose['A / ¬¬¬'x]['B / ¬'x] | deduce;
-contrapose['A / 'x]['B / ¬¬'x] | deduce
+{
+    goal ≔ ¬¬'x ⇒ 'x
 
-('X ⇒ 'X)['X / ¬¬'x]
-distr['A / ¬¬'x]['B / ¬¬'x]['C / 'x].MP.MP['x / 'X]
-⊦ ¬¬'X ⇒ 'X
+    ⤷ ignore
+    ⤷ contrapose
+    ⤷ deduce
+    ⤷ distr
 
-(¬¬'X ⇒ 'X)['X / ¬'x]
-contrapose['A / ¬¬'x]['B / 'x].MP['x / 'X]
-⊦ 'X ⇒ ¬¬'X
+    ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
+    contrapose['A / ¬¬¬'x]['B / ¬'x] | deduce;
+    contrapose['A / 'x]['B / ¬¬'x] | deduce
+
+    ('X ⇒ 'X)['X / ¬¬'x]
+    distr['A / ¬¬'x]['B / ¬¬'x]['C / 'x].MP.MP
+    ⊦ goal
+    goal
+    goal['x / 'X]
+}
+
+{
+    goal ≔ 'x ⇒ ¬¬'x
+
+    ⤷ contrapose
+
+    (¬¬'X ⇒ 'X)['X / ¬'x]
+    contrapose['A / ¬¬'x]['B / 'x].MP
+    ⊦ goal
+    goal['x / 'X]
+}
 
 recontrapose ≔ {
     ⤷ chain
@@ -122,32 +156,38 @@ recontrapose ≔ {
     goal['x / 'A]['y / 'B]
 }
 
-contra ≔ {
+contra ≔ λ{
+    /*
+    Argument:¬P ⇒ ¬Q
+    Returns:(¬P ⇒ ¬Q) ⇒ (Q ⇒ P)
+     */
+    ↵ contrapose['A / ●↙↓]['B / ●↘↓]
+}
+
+
+recontra ≔ λ{
+    /*
+    Argument: P ⇒ Q
+    Returns:(P ⇒ Q) ⇒ (¬Q ⇒ ¬P)
+     */
+    ↵ recontrapose['A / ●↙]['B / ●↘]
+}
+
+
+preneg_flip ≔ {
+    goal ≔ (¬'x ⇒ 'y) ⇒ (¬'y ⇒ 'x)
+
+    ⤷ chain
+    ⤷ commute_ante
     ⤷ contrapose
-    λ{
-        /*
-        Argument:¬P ⇒ ¬Q
-        Returns:(¬P ⇒ ¬Q) ⇒ (Q ⇒ P)
-         */
-        ↵ contrapose['A / ●↙↓]['B / ●↘↓]
-    }
-}
+    ⤷ deduce
 
-recontra ≔ {
-    ⤷ recontrapose
-    λ{
-        /*
-        Argument: P ⇒ Q
-        Returns:(P ⇒ Q) ⇒ (¬Q ⇒ ¬P)
-         */
-        ↵ recontrapose['A / ●↙]['B / ●↘]
-    }
-}
-
-preneg_flip ≔ (
     chain['X / ¬'x]['Y / 'y]['Z / ¬¬'y] | commute_ante.MP;
-    contrapose['A / 'x]['B / ¬'y] | deduce['x / 'X]['y / 'Y]
-)
+    contrapose['A / 'x]['B / ¬'y] | deduce
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
 flip_preneg ≔ λ{
     /*
     Argument:¬P ⇒ Q
@@ -155,10 +195,19 @@ flip_preneg ≔ λ{
      */
     ↵ preneg_flip['X / ●↙↓]['Y / ●↘]
 }
-postneg_flip ≔ (
+postneg_flip ≔ {
+    goal ≔ ('x ⇒ ¬'y) ⇒ 'y ⇒ ¬'x
+
+    ⤷ chain
+    ⤷ recontrapose
+    ⤷ deduce
+
     recontrapose['A / 'x]['B / ¬'y];
-    chain['X / 'y]['Y / ¬¬'y]['Z / ¬'x].MP | deduce['x / 'X]['y / 'Y]
-)
+    chain['X / 'y]['Y / ¬¬'y]['Z / ¬'x].MP | deduce
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
 flip_postneg ≔ λ{
     /*
     Argument: P ⇒ ¬Q
@@ -204,6 +253,7 @@ and_impl_x ≔ {
     ⤷ false_implies_anything
     ⤷ recontra
     ⤷ deduce
+    import commute_ante
 
     goal ≔ ('x; 'y | and) ⇒ 'x
 
@@ -246,30 +296,31 @@ x_impl_y_impl_and ≔ {
 }
 
 
-(X = X)[X / x]
-equals_symmetric ≔ x = z; x; y | ⪮[z / x] | commute_ante.MP[x / X][y / Y]
+equals_symmetric ≔ {
+    goal ≔ x = y ⇒ y = x
 
-eq_flip ≔ {
+    ⤷ commute_ante
+
+    (X = X)[X / x]
+    x = z; x; y | ⪮[z / x] | commute_ante.MP
+    ⊦ goal
+    goal[x / X][y / Y]
+}
+
+eq_flip ≔ λ{
     /*
     Argument: a = b
     Returns: b = a
      */
-    ⤷ equals_symmetric
-    λ{
-        ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
-    }
+    ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
 }
 
-neq_flip ≔ {
+neq_flip ≔ λ{
     /*
     Argument:¬a = b
     Returns:¬b = a
      */
-    ⤷ equals_symmetric
-    ⤷ recontra
-    λ{
-        ↵ equals_symmetric.recontra.MP[X / ●↓↘][Y / ●↓↙].MP
-    }
+    ↵ equals_symmetric.recontra.MP[X / ●↓↘][Y / ●↓↙].MP
 }
 
 equals_transitive ≔ {
@@ -316,12 +367,21 @@ peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-/* TODO flip peano1 */
-peano3[X / x].eq_flip[x / X]
-peano4[X / x][Y / y].eq_flip[x / X][y / Y]
-peano5[X / x].eq_flip[x / X]
-peano6[X / x][Y / y].eq_flip[x / X][y / Y]
+{
+    ⤷ peano1
+    ⤷ peano3
+    ⤷ peano4
+    ⤷ peano5
+    ⤷ peano6
 
+    ⤷ eq_flip
+    ⤷ neq_flip
+    peano1[X / x].neq_flip[x / X]
+    peano3[X / x].eq_flip[x / X]
+    peano4[X / x][Y / y].eq_flip[x / X][y / Y]
+    peano5[X / x].eq_flip[x / X]
+    peano6[X / x][Y / y].eq_flip[x / X][y / Y]
+}
 0 = y * 0⁇
 
 replace ≔ λ{
