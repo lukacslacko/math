@@ -65,6 +65,11 @@ chain ≔ {
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
 deduce ≔ λ{
+    /*
+    Argument: P=>Q; Q=>R
+    Assumption: both implications are proven
+    Returns: P=>R
+    */
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
@@ -73,7 +78,9 @@ false_implies_anything ≔ (
     contrapose | deduce
 )
 
-false_implies_anything.commute_ante
+false_implies_anything FAX
+
+false_implies_anything.commute_ante FAX
 
 from_false ≔ λ{
     /*
@@ -160,6 +167,7 @@ flip_postneg ≔ λ{
     ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
 }
 
+/*
 and_to_impl := {
     goal := ((~'x => 'y) => 'z) => 'x => 'y => 'z
 
@@ -176,6 +184,7 @@ and_to_impl := {
     goal['x/'X]['y/'Y]['z/'Z]
 }
 
+
 impl_to_and := {
     goal := (('x=>'y)=>'z)=>~'x=>'y=>'z
 
@@ -190,6 +199,82 @@ impl_to_and := {
     |- goal
     goal['x/'X]['y/'Y]['z/'Z]
 }
+*/
+
+or := lambda {
+    return ~<arg><1> => <arg><2>
+}
+
+and := lambda {
+    return ~(<arg><1> => ~<arg><2>)
+}
+
+
+{
+    import or
+    import ignore
+    
+    goal := 'y => ('x; 'y | or)
+
+    ignore['A / 'y]['B / ~'x]
+    /* goal<prove> */
+
+    |- goal FAX
+}
+
+{
+    import or
+
+    goal := 'x => ('x; 'y | or)
+    goal<prove>
+
+    |- goal FAX
+}
+
+{
+    import and
+    import false_implies_anything
+    import recontra
+    import deduce
+
+    goal := ('x; 'y | and) => 'x
+
+    false_implies_anything['A / ~'y]['B / 'x] FAX | recontra.MP FAX;
+    ~~'x => 'x | deduce FAX
+
+    |- goal FAX
+}
+
+{
+    import and
+    import ignore
+    import recontra
+    import deduce
+
+    goal := ('x; 'y | and) => 'y
+
+    ignore['A / ~'y]['B / 'x] FAX | recontra.MP FAX;
+    ~~'y => 'y | deduce FAX
+
+    |- goal
+}
+
+{
+    import and
+    import commute_ante
+    import flip_postneg
+    import deduce
+
+    goal := 'x => 'y => ('x; 'y | and)
+
+    a := ('X ⇒ 'X)['X / 'x => ~'y] FAX | commute_ante FAX
+    b := ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg FAX
+    a; b | deduce
+
+    |- goal FAX
+}
+
+
 
 (X = X)[X / x]
 equals_symmetric ≔ x = z; x; y | ⪮[z / x] | commute_ante.MP[x / X][y / Y]
