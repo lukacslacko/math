@@ -78,9 +78,9 @@ false_implies_anything ≔ (
     contrapose | deduce
 )
 
-false_implies_anything FAX
+false_implies_anything
 
-false_implies_anything.commute_ante FAX
+false_implies_anything.commute_ante
 
 from_false ≔ λ{
     /*
@@ -167,39 +167,6 @@ flip_postneg ≔ λ{
     ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
 }
 
-/*
-and_to_impl := {
-    goal := ((~'x => 'y) => 'z) => 'x => 'y => 'z
-
-    import chain
-    import deduce
-    import distr
-    import ignore
-
-    ignore['A/ignore['A/'z]['B/'y]]['B/~'x=>'y].MP
-    distr['A/~'x=>'y]['B/'z]['C/'y=>'z].MP;
-    chain['X/'x]['Y/~'x=>'y]['Z/'y=>'z].MP | deduce
-
-    |- goal
-    goal['x/'X]['y/'Y]['z/'Z]
-}
-
-
-impl_to_and := {
-    goal := (('x=>'y)=>'z)=>~'x=>'y=>'z
-
-    import and_to_impl
-    import chain
-    import deduce
-
-    chain['X/'x]['Y/~~'x]['Z/'y].MP
-    chain['X/~~'x=>'y]['Y/'x=>'y]['Z/'z].MP;
-    and_to_impl['X/~'x]['Y/'y]['Z/'z] | deduce
-
-    |- goal
-    goal['x/'X]['y/'Y]['z/'Z]
-}
-*/
 
 or := lambda {
     return ~<arg><1> => <arg><2>
@@ -219,7 +186,8 @@ and := lambda {
     ignore['A / 'y]['B / ~'x]
     /* goal<prove> */
 
-    |- goal FAX
+    |- goal
+    goal['x / 'X]['y / 'Y]
 }
 
 {
@@ -228,7 +196,8 @@ and := lambda {
     goal := 'x => ('x; 'y | or)
     goal<prove>
 
-    |- goal FAX
+    |- goal
+    goal['x / 'X]['y / 'Y]
 }
 
 {
@@ -239,10 +208,11 @@ and := lambda {
 
     goal := ('x; 'y | and) => 'x
 
-    false_implies_anything['A / ~'y]['B / 'x] FAX | recontra.MP FAX;
-    ~~'x => 'x | deduce FAX
+    false_implies_anything['A / ~'y]['B / 'x] | recontra.MP;
+    ~~'x => 'x | deduce
 
-    |- goal FAX
+    |- goal
+    goal['x / 'X]['y / 'Y]
 }
 
 {
@@ -253,10 +223,11 @@ and := lambda {
 
     goal := ('x; 'y | and) => 'y
 
-    ignore['A / ~'y]['B / 'x] FAX | recontra.MP FAX;
-    ~~'y => 'y | deduce FAX
+    ignore['A / ~'y]['B / 'x] | recontra.MP;
+    ~~'y => 'y | deduce
 
     |- goal
+    goal['x / 'X]['y / 'Y]
 }
 
 {
@@ -267,11 +238,12 @@ and := lambda {
 
     goal := 'x => 'y => ('x; 'y | and)
 
-    a := ('X ⇒ 'X)['X / 'x => ~'y] FAX | commute_ante FAX
-    b := ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg FAX
+    a := ('X ⇒ 'X)['X / 'x => ~'y] | commute_ante
+    b := ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
     a; b | deduce
 
-    |- goal FAX
+    |- goal
+    goal['x / 'X]['y / 'Y]
 }
 
 
