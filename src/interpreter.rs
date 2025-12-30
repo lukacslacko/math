@@ -327,9 +327,6 @@ fn interpret_inner(
             Some(Node::CloseCurly),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
-            if let Some(parent_logger) = logger_stack.pop() {
-                logger = parent_logger;
-            }
             let len = stack.len();
             stack.swap(len - 3, len - 2);
             continue;
@@ -343,6 +340,11 @@ fn interpret_inner(
                 )?
             };
             namespace = parent;
+            if let Some(parent_logger) = logger_stack.pop() {
+                logger = parent_logger;
+            } else {
+                unreachable!("logger stack underflow");
+            }
             stack.pop();
             stack.pop();
             continue;
@@ -380,11 +382,13 @@ fn interpret_inner(
             let result = logic_phrase
                 .clone()
                 .substitute(variable.clone(), term.clone())?;
-            logger.borrow_mut()
-                .sublog("Substitution".to_string(), result.to_string()).borrow_mut()
-                .log("Original phrase".to_string(), logic_phrase.to_string())
-                .log("Variable".to_string(), variable.to_string())
-                .log("Term".to_string(), term.to_string());
+            logger
+                .borrow_mut()
+                .sublog("Substitution".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Original phrase".to_string(), logic_phrase.to_html())
+                .log("Variable".to_string(), variable.to_html())
+                .log("Term".to_string(), term.to_html());
             stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 7);
             stack.pop();
@@ -405,10 +409,15 @@ fn interpret_inner(
             back(&stack, 2),
             back(&stack, 1),
         ) {
-            stack.push(Node::LogicPhrase(logic::instantiate(
-                logic_phrase.clone(),
-                numeric_term.clone(),
-            )?));
+            let result =
+                logic::instantiate(logic_phrase.clone(), numeric_term.clone())?;
+            logger
+                .borrow_mut()
+                .sublog("Instantiation".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Quantification".to_string(), logic_phrase.to_html())
+                .log("Term".to_string(), numeric_term.to_html());
+            stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 5);
             stack.pop();
             stack.pop();
@@ -442,11 +451,17 @@ fn interpret_inner(
                     "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
-            stack.push(Node::NumericPhrase(
-                numeric_phrase
-                    .clone()
-                    .substitute(variable.clone(), term.clone())?,
-            ));
+            let result = numeric_phrase
+                .clone()
+                .substitute(variable.clone(), term.clone())?;
+            logger
+                .borrow_mut()
+                .sublog("Substitution".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Original phrase".to_string(), numeric_phrase.to_html())
+                .log("Variable".to_string(), variable.to_html())
+                .log("Term".to_string(), term.to_html());
+            stack.push(Node::NumericPhrase(result));
             stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
@@ -475,12 +490,24 @@ fn interpret_inner(
                 Some(Node::List(list)) => Thing::List(make_str("●"), list),
                 _ => unreachable!(),
             };
+            let arg_as_string = match &arg {
+                Thing::LogicPhrase(_, phrase) => phrase.to_html(),
+                Thing::NumericPhrase(_, phrase) => phrase.to_html(),
+                Thing::List(_, list) => list
+                    .iter()
+                    .map(|phrase| phrase.to_html())
+                    .collect::<Vec<_>>()
+                    .join("; "),
+                _ => unreachable!(),
+            };
             new_namespace.set(arg);
             let mut mut_logger = logger.borrow_mut();
-            let entry = mut_logger.new_entry(
-                "Function call".to_ascii_lowercase(),
-                "".to_string(),
-            );
+            let entry = mut_logger
+                .new_entry("Function call".to_string(), "".to_string());
+            entry
+                .details
+                .borrow_mut()
+                .log("Argument".to_string(), arg_as_string);
             let mut peek = Peek(None, tokens.iter().cloned());
             let mut ret = None;
             interpret_middle(
@@ -491,8 +518,8 @@ fn interpret_inner(
             )?;
             if let Some(ret) = ret {
                 entry.phrase = match &ret {
-                    Node::LogicPhrase(phrase) => phrase.to_string(),
-                    Node::NumericPhrase(phrase) => phrase.to_string(),
+                    Node::LogicPhrase(phrase) => phrase.to_html(),
+                    Node::NumericPhrase(phrase) => phrase.to_html(),
                     _ => "function did not return a logic or numeric phrase"
                         .to_string(),
                 };
@@ -516,10 +543,21 @@ fn interpret_inner(
                     "⪮ requires a proposition as the first element in its argument list, got {phrase}"
                 ))?
             }
+            let result = peano::eq_subs(phrase.clone(), x.clone(), y.clone())?;
+            logger
+                .borrow_mut()
+                .sublog(
+                    "Indiscernibility of identicals".to_string(),
+                    result.to_html(),
+                )
+                .borrow_mut()
+                .log("Original phrase".to_string(), phrase.to_html())
+                .log("Variable x".to_string(), x.to_html())
+                .log("Variable y".to_string(), y.to_html());
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.push(Node::LogicPhrase(peano::eq_subs(phrase, x, y)?));
+            stack.push(Node::LogicPhrase(result));
             continue;
         }
         if let (
@@ -540,10 +578,17 @@ fn interpret_inner(
                     "↺ requires a proposition as the first element in its argument list, got {phrase}"
                 ))?
             }
+            let result = peano::induction(phrase.clone(), x.clone())?;
+            logger
+                .borrow_mut()
+                .sublog("Induction".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Original phrase".to_string(), phrase.to_html())
+                .log("Variable".to_string(), x.to_html());
             stack.pop();
             stack.pop();
             stack.pop();
-            stack.push(Node::LogicPhrase(peano::induction(phrase, x)?));
+            stack.push(Node::LogicPhrase(result));
             continue;
         }
         if let (Some(Node::Dot), Some(Node::Cut)) =
@@ -581,7 +626,14 @@ fn interpret_inner(
             let CutResult {
                 new_phrase,
                 removed,
-            } = phrase.cut(&path, variable.clone())?;
+            } = phrase.clone().cut(&path, variable.clone())?;
+            logger
+                .borrow_mut()
+                .sublog("Cut".to_string(), new_phrase.to_html())
+                .borrow_mut()
+                .log("Original phrase".to_string(), phrase.to_html())
+                .log("Variable".to_string(), variable.to_html())
+                .log("Removed part".to_string(), removed.to_html());
             stack.push(Node::List(vec![new_phrase, removed, variable]));
             continue;
         }
@@ -590,9 +642,16 @@ fn interpret_inner(
             Some(Node::DistributeQuantification),
         ) = (back(&stack, 2), back(&stack, 1))
         {
-            stack.push(Node::LogicPhrase(logic::distribute(
-                logic_phrase.clone(),
-            )?));
+            let result = logic::distribute(logic_phrase.clone())?;
+            logger
+                .borrow_mut()
+                .sublog(
+                    "Distribute Quantification".to_string(),
+                    result.to_html(),
+                )
+                .borrow_mut()
+                .log("Original phrase".to_string(), logic_phrase.to_html());
+            stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;
@@ -609,6 +668,12 @@ fn interpret_inner(
                 )?
             }
             let result = r.parallel(l)?;
+            logger
+                .borrow_mut()
+                .sublog("Parallel Match".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Left phrase".to_string(), l.to_html())
+                .log("Right phrase".to_string(), r.to_html());
             stack.push(if r.is_numeric() {
                 Node::NumericPhrase(result)
             } else {
@@ -645,7 +710,14 @@ fn interpret_inner(
                     ))?,
                 }
             }
-            stack.push(Node::LogicPhrase(logic_phrase.clone().modus_ponens()?));
+            let result = logic_phrase.clone().modus_ponens()?;
+            logger
+                .borrow_mut()
+                .sublog("Modus Ponens".to_string(), result.to_html())
+                .borrow_mut()
+                .log("Implication".to_string(), logic_phrase.to_html())
+                .log("Antecedent".to_string(), antecedent.to_html());
+            stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 4);
             stack.pop();
             stack.pop();
@@ -700,6 +772,9 @@ fn interpret_inner(
             (back(&stack, 2), back(&stack, 1))
         {
             let proved_phrase = phrase.clone().try_prove()?;
+            logger
+                .borrow_mut()
+                .log("Auto-prove".to_string(), proved_phrase.to_html());
             stack.push(Node::LogicPhrase(proved_phrase));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
@@ -1012,6 +1087,10 @@ fn interpret_inner(
             Some(Node::NumericPhrase(numeric_phrase)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
+            logger.borrow_mut().log(
+                "".to_string(),
+                format!("{} := {}", ident, numeric_phrase.to_html()),
+            );
             namespace.set(Thing::NumericPhrase(
                 ident.clone(),
                 numeric_phrase.clone(),
@@ -1027,6 +1106,10 @@ fn interpret_inner(
             Some(Node::LogicPhrase(logic_phrase)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
+            logger.borrow_mut().log(
+                "".to_string(),
+                format!("{} := {}", ident, logic_phrase.to_html()),
+            );
             namespace
                 .set(Thing::LogicPhrase(ident.clone(), logic_phrase.clone()));
             stack.pop();
@@ -1040,6 +1123,17 @@ fn interpret_inner(
             Some(Node::List(list)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
+            logger.borrow_mut().log(
+                "".to_string(),
+                format!(
+                    "{} := {}",
+                    ident,
+                    list.iter()
+                        .map(|p| p.to_html())
+                        .collect::<Vec<_>>()
+                        .join("; ")
+                ),
+            );
             namespace.set(Thing::List(ident.clone(), list.clone()));
             stack.pop();
             stack.pop();
@@ -1106,6 +1200,7 @@ fn interpret_inner(
             continue;
         }
         if token == Some("{") {
+            let location = peek.location();
             peek.take();
             let arg = namespace.find("●");
             let old_namespace = namespace.clone();
@@ -1125,7 +1220,9 @@ fn interpret_inner(
             }
             stack.push(Node::OpenCurly);
             logger_stack.push(logger.clone());
-            let sublogger = logger.borrow_mut().sublog("scope".to_string(), "".to_string());
+            let sublogger = logger
+                .borrow_mut()
+                .sublog(format!("scope at {}", location), "".to_string());
             logger = sublogger;
             continue;
         }

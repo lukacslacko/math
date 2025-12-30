@@ -108,6 +108,7 @@ summary > div {{
 </head>").unwrap();
     writeln!(html, "<body>").unwrap();
     writeln!(html, "{}", render_logger(logger)).unwrap();
+    writeln!(html, "<br>Execution succeeded.</br>").unwrap();
     writeln!(html, "</body>").unwrap();
     writeln!(html, "</html>").unwrap();
     html

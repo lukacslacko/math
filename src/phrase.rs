@@ -517,6 +517,14 @@ impl PhraseData {
             }
         })
     }
+
+    pub fn to_html(&self) -> String {
+        format!("{}{}", self, if self.get_is_proven() {
+            " ✅"
+        } else {
+            ""
+        })
+    }
 }
 
 pub fn make_logic_variable(name: Rc<str>) -> Result {
