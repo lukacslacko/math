@@ -31,7 +31,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Logical variable | `'name` | | Identifiers starting with `'` are logical variables |
 | Numeric variable | `name` | | Must not start with `'` |
 | Assignment | `identifier ≔ value` | `:=` | Anything can be an identifier |
-| Substitution | `P[x / term]` | | Substitutes `x` with `term` in `P`. **TODO** condition on free variables of `term`. Note: if `P` is proven, this is the "Substitution" inference rule below. |
+| Substitution | `P[x / term]` | | Substitutes `x` with `term` in `P`. If `x` is not a variable, but has the same shape as `term`, then the variable substitutions are computed which would take `x` to become `term` and those are applied. **TODO** condition on free variables of `term`. Note: if `P` is proven, this is the "Substitution" inference rule below. |
 | Universal quantification | `∀x P` | `!x P` | Variable must be numeric. Note if `P` is a *proven phrase* then this is the "Universal generalization" inference rule below. |
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |
@@ -45,6 +45,8 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
 | Cut | `phrase; var; path \| ✂` | `phrase; var; path \| <cut>` | The path must be a sequence of `↙`, `↘`, `↓`. The operation follows the `path` in the `phrase`'s syntax tree, removes the subtree there and replaces it with `var`. It returns a list with `new_phrase; removed_subtree; var` |
 | Parallel substitution | `phrase ⇅(template)` | `phrase <match>(template)` | If phrase has the same structure as template, substitute variables in template so that it results in phrase |
+| Apply theorem | `phrase ∘ theorem` | `phrase <apply> theorem` | `theorem` must be of the shape `P => Q` and `phrase` be of the same shape as `P`. `template` gets substituted so that `P` becomes `phrase` |
+| Backwards apply theorem | `theorem ∘⁻¹ phrase` | `theorem <backwards> phrase | `theorem` must be of the shape `P => Q` and `phrase` be of the same shape as `P`. `template` gets substituted so that `P` becomes `phrase` |
 | Auto-prove | `phrase⁇` | `phrase<prove>` | Try parallel substitute the phrase against all *proven phrases* in order to try to prove it |
 | List element | `aⅰ`, `aⅱ`, `aⅲ`, ... | `a<1>`, `a<2>`, `a<3>`, ... | Abbreviation for `a↙`, `a↘↙`, `a↘↘↙`, ... for the *n*th element of a list |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
