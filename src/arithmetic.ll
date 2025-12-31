@@ -253,7 +253,7 @@ and_impl_x ≔ {
     ⤷ false_implies_anything
     ⤷ recontra
     ⤷ deduce
-    import commute_ante
+    ⤷ commute_ante
 
     goal ≔ ('x; 'y | and) ⇒ 'x
 
@@ -295,6 +295,51 @@ x_impl_y_impl_and ≔ {
     goal['x / 'X]['y / 'Y]
 }
 
+xyz_impl_and ≔ {
+    ⤷ and
+
+    goal ≔ ('x ⇒ 'y ⇒ 'z) ⇒ ('x; 'y | and) ⇒ 'z
+
+    ⤷ ignore
+    ⤷ commute_ante
+    ⤷ distr
+    ⤷ deduce
+
+    b ≔ 'x; 'y | and
+
+    ignore['A / goal↙]['B / b];
+    distr['A / b]['B / 'x]['C / 'y ⇒ 'z] | deduce | commute_ante.MP;
+    distr['A / b]['B / 'y]['C / 'z] | deduce | commute_ante.MP
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
+}
+
+and_impl_xyz ≔ {
+    ⤷ and
+    ⤷ chain
+    ⤷ commute_ante
+
+    goal ≔ (('x; 'y | and) ⇒ 'z) ⇒ 'x ⇒ 'y ⇒ 'z
+
+    a ≔ chain['X / 'y]['Y / 'x; 'y | and]['Z / 'z]
+    chain['X / 'x]['Y / a↙]['Z / a↘].MP.MP.commute_ante
+
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
+}
+
+and_comm ≔ {
+    ⤷ and
+
+    goal ≔ ('x; 'y | and) ⇒ ('y; 'x | and)
+
+    ⤷ recontrapose
+
+    recontrapose['A / 'y ⇒ ¬'x]['B / 'x ⇒ ¬'y].MP
+
+    ⊦ goal
+}
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
