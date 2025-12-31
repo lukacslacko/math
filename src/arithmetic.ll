@@ -869,11 +869,20 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 /* X < Y if there is no Z such that X = Y + Z */
 less ≔ ∀Z(¬X = Y + Z)
-X = X + Z; Z; 0 | exists_by_example
-⊦ ¬less[Y / X]
+< ≔ λ{↵ less[X / ●ⅰ][Y / ●ⅱ]}
 
-X = 0 + Z; Z; X | exists_by_example
-⊦ ¬less[Y / 0]
+{
+    ⤷ exists_by_example
+    ⤷ less
+    ⤷ <
+    X = X + Z; Z; 0 | exists_by_example
+    ⊦ ¬less[Y / X]
+    ⊦ ¬(X; X | <)
+
+    X = 0 + Z; Z; X | exists_by_example
+    ⊦ ¬less[Y / 0]
+    ⊦ ¬(X; 0 | <)
+}
 
 {
     ⤷ less
@@ -903,6 +912,24 @@ X = 0 + Z; Z; X | exists_by_example
 
     ⊦ goal
     goal[x / X][y / Y]
+}
+
+{
+    ⤷ <
+    goal ≔ 0; 𝗦x | <
+
+    ⤷ peano1
+    ⤷ eq_trans
+    ⤷ eq_flip
+    ⤷ ignore
+
+    ∀Z(¬0 = u; u; v | ⪮[u = v / 𝗦Z = 1 + Z].MP.MP)
+    a ≔ 𝗦u + Z = 𝗦(u + Z)⁇[u / 𝗦x].eq_flip
+    b ≔ ∀Z(¬0 = u; u; v | ⪮[u = v / a].MP.MP)
+    step ≔ goal; x | ↺.MP
+    ∀x(ignore['A / b]['B / step↙↘↙].MP)
+    step.MP[x].MP
+    ⊦ goal
 }
 
 {
