@@ -367,21 +367,28 @@ fn interpret_inner(
             back(&stack, 2),
             back(&stack, 1),
         ) {
-            if variable.get_kind() != LogicVariable
-                && variable.get_kind() != NumericVariable
-            {
-                Err(format!(
-                    "substitution requires a numeric or logic variable before the slash, got '{variable:?}'"
-                ))?
-            }
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!(
                     "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
-            let result = logic_phrase
-                .clone()
-                .substitute(variable.clone(), term.clone())?;
+            let substitutions = if variable.get_kind() != LogicVariable
+                && variable.get_kind() != NumericVariable
+            {
+                variable.find_parallel_substitutions(term)?
+            } else {
+                vec![Substitution {
+                    variable: variable.clone(),
+                    term: term.clone(),
+                }]
+            };
+            let mut result = logic_phrase.clone();
+            for substitution in substitutions {
+                result = result.substitute(
+                    substitution.variable,
+                    substitution.term,
+                )?;
+            }
             logger
                 .borrow_mut()
                 .sublog("Substitution".to_string(), result.to_html())
@@ -439,21 +446,28 @@ fn interpret_inner(
             back(&stack, 2),
             back(&stack, 1),
         ) {
-            if variable.get_kind() != LogicVariable
-                && variable.get_kind() != NumericVariable
-            {
-                Err(format!(
-                    "substitution requires a numeric or logic variable before the slash, got '{variable:?}'"
-                ))?
-            }
             if variable.is_numeric() != term.is_numeric() {
                 Err(format!(
                     "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
                 ))?
             }
-            let result = numeric_phrase
-                .clone()
-                .substitute(variable.clone(), term.clone())?;
+            let substitutions = if variable.get_kind() != LogicVariable
+                && variable.get_kind() != NumericVariable
+            {
+                variable.find_parallel_substitutions(term)?
+            } else {
+                vec![Substitution {
+                    variable: variable.clone(),
+                    term: term.clone(),
+                }]
+            };
+            let mut result = numeric_phrase.clone();
+            for substitution in substitutions {
+                result = result.substitute(
+                    substitution.variable,
+                    substitution.term,
+                )?;
+            }
             logger
                 .borrow_mut()
                 .sublog("Substitution".to_string(), result.to_html())
@@ -970,11 +984,6 @@ fn interpret_inner(
             stack.push(Node::ImplyTok);
             continue;
         }
-        if token == Some("/") {
-            peek.take();
-            stack.push(Node::Slash);
-            continue;
-        }
         if let (
             Some(Node::LogicPhrase(a)),
             Some(Node::ImplyTok),
@@ -1029,6 +1038,11 @@ fn interpret_inner(
             };
             list.push(phrase);
             stack.push(Node::List(list));
+            continue;
+        }
+        if token == Some("/") {
+            peek.take();
+            stack.push(Node::Slash);
             continue;
         }
         if let (

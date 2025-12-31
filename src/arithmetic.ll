@@ -322,8 +322,7 @@ and_impl_xyz ≔ {
 
     goal ≔ (('x; 'y | and) ⇒ 'z) ⇒ 'x ⇒ 'y ⇒ 'z
 
-    a ≔ chain['X / 'y]['Y / 'x; 'y | and]['Z / 'z]
-    chain['X / 'x]['Y / a↙]['Z / a↘].MP.MP.commute_ante
+    chain['X / 'x]['Y ⇒ 'Z / chain['X / 'y]['Y / 'x; 'y | and]['Z / 'z]].MP.MP.commute_ante
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
@@ -375,14 +374,14 @@ equals_transitive ≔ {
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
     a ≔ y = z; y; x | ⪮
-    chain['X / x = y]['Y / a↙]['Z / a↘].MP.MP
+    chain['X / x = y]['Y ⇒ 'Z / a].MP.MP
 
     ⊦ goal
     goal[x / X][y / Y][z / Z]
 }
 
 eq_trans ≔ λ{
-    ↵ equals_transitive[X / ●ⅰ↙][Y / ●ⅰ↘][Z / ●ⅱ↘].MP.MP
+    ↵ equals_transitive[X = Y / ●ⅰ][Y = Z / ●ⅱ].MP.MP
 }
 
 not_equals_symmetric ≔ {

@@ -31,7 +31,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Logical variable | `'name` | | Identifiers starting with `'` are logical variables |
 | Numeric variable | `name` | | Must not start with `'` |
 | Assignment | `identifier ≔ value` | `:=` | Anything can be an identifier |
-| Substitution | `P[x / term]` | | Substitutes `x` with `term` in `P`. **TODO** condition on free variables of `term`. Note: if `P` is proven, this is the "Substitution" inference rule below. |
+| Substitution | `P[x / term]` | | Substitutes `x` with `term` in `P`. If `x` is not a variable, but has the same shape as `term`, then the variable substitutions are computed which would take `x` to become `term` and those are applied. **TODO** condition on free variables of `term`. Note: if `P` is proven, this is the "Substitution" inference rule below. |
 | Universal quantification | `∀x P` | `!x P` | Variable must be numeric. Note if `P` is a *proven phrase* then this is the "Universal generalization" inference rule below. |
 | Parentheses | `(phrase)` | | Any numeric or logical phrase can be parenthesized to express order of operations. Note: multiple phrases can be parenthesized, in which case the value of the parentheses is the last one. |
 | Empty parentheses | `()` | | These are ignored |

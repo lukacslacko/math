@@ -154,7 +154,7 @@ pub struct CutResult {
     pub removed: Phrase,
 }
 
-struct Substitution {
+pub struct Substitution {
     pub variable: Phrase,
     pub term: Phrase,
 }
@@ -361,7 +361,7 @@ impl PhraseData {
         })
     }
 
-    fn find_parallel_substitutions(
+    pub fn find_parallel_substitutions(
         self: &Phrase,
         other: &Phrase,
     ) -> std::result::Result<Vec<Substitution>, Box<dyn Error>> {
