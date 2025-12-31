@@ -45,8 +45,6 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Child | `a↓` | `a.v` | The child of a degree-one node in the syntax tree, eg `(¬A)↓` is `A` |
 | Cut | `phrase; var; path \| ✂` | `phrase; var; path \| <cut>` | The path must be a sequence of `↙`, `↘`, `↓`. The operation follows the `path` in the `phrase`'s syntax tree, removes the subtree there and replaces it with `var`. It returns a list with `new_phrase; removed_subtree; var` |
 | Parallel substitution | `phrase ⇅(template)` | `phrase <match>(template)` | If phrase has the same structure as template, substitute variables in template so that it results in phrase |
-| Apply theorem | `phrase ∘ theorem` | `phrase <apply> theorem` | `theorem` must be of the shape `P => Q` and `phrase` be of the same shape as `P`. `template` gets substituted so that `P` becomes `phrase` |
-| Backwards apply theorem | `theorem ∘⁻¹ phrase` | `theorem <backwards> phrase | `theorem` must be of the shape `P => Q` and `phrase` be of the same shape as `P`. `template` gets substituted so that `P` becomes `phrase` |
 | Auto-prove | `phrase⁇` | `phrase<prove>` | Try parallel substitute the phrase against all *proven phrases* in order to try to prove it |
 | List element | `aⅰ`, `aⅱ`, `aⅲ`, ... | `a<1>`, `a<2>`, `a<3>`, ... | Abbreviation for `a↙`, `a↘↙`, `a↘↘↙`, ... for the *n*th element of a list |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
