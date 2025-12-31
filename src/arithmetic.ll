@@ -164,28 +164,12 @@ contra ≔ λ{
     ↵ contrapose['A / ●↙↓]['B / ●↘↓]
 }
 
-contra' ≔ λ{
-    /*
-    Argument: P ⇒ Q
-    Returns:(¬Q ⇒ ¬P) ⇒ (P ⇒ Q)
-     */
-    ↵ contrapose['A / ¬●↘]['B / ¬●↙]
-}
-
 recontra ≔ λ{
     /*
     Argument: P ⇒ Q
     Returns:(P ⇒ Q) ⇒ (¬Q ⇒ ¬P)
      */
     ↵ recontrapose['A / ●↙]['B / ●↘]
-}
-
-recontra' ≔ λ{
-    /*
-    Argument:¬P ⇒ ¬Q
-    Returns:(Q ⇒ P) ⇒ (¬P ⇒ ¬Q)
-     */
-    ↵ recontrapose['A / ●↘↓]['B / ●↙↓]
 }
 
 preneg_flip ≔ {
@@ -358,16 +342,14 @@ and_assoc ≔ {
     ⤷ and
     goal ≔ ('x; 'y) | and; 'z | and ⇒ ('x; ('y; 'z | and) | and)
 
-    import recontra'
-    import xyz_impl_and
-    import chain
-    import commute_antecedents
+    ⤷ xyz_impl_and
+    ⤷ chain
+    ⤷ commute_ante
+    ⤷ deduce
+    ⤷ recontra
 
-    commute_antecedents<apply>chain FAX
-    commute_antecedents FAX
-
-    xyz_impl_and['X/'x]['Y/'y]['Z/~'z] FAX
-    goal.recontra'.MP
+    chain['X / 'x]['Y ⇒ 'Z / (¬¬'X ⇒ 'X)['X / 'y ⇒ ¬'z]].commute_ante.MP;
+    xyz_impl_and['X / 'x]['Y / 'y]['Z / ¬'z] | deduce | recontra.MP
 
     ⊦ goal
 }
