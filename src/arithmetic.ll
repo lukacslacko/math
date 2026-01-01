@@ -49,7 +49,7 @@ commute_ante ≔ λ{
     /*
     Argument: A ⇒ B ⇒ c
 
-    Swaps A and B, assumes the argument is proven.
+    Swaps A ∧ B, assumes the argument is proven.
 
     Result: B ⇒ A ⇒ C
      */
@@ -215,31 +215,18 @@ flip_postneg ≔ λ{
 }
 
 
-or ≔ λ{
-    ↵ ¬●ⅰ ⇒ ●ⅱ
-}
-
-and ≔ λ{
-    ↵ ¬(●ⅰ ⇒ ¬●ⅱ)
-}
-
 y_impl_or ≔ {
-    ⤷ or
+    goal ≔ 'y ⇒ 'x ∨ 'y
+
     ⤷ ignore
-
-    goal ≔ 'y ⇒ ('x; 'y | or)
-
     ignore['A / 'y]['B / ¬'x]
-    /* goal⁇ */
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
 
 x_impl_or ≔ {
-    ⤷ or
-
-    goal ≔ 'x ⇒ ('x; 'y | or)
+    goal ≔ 'x ⇒ 'x ∨ 'y
     goal⁇
 
     ⊦ goal
@@ -247,13 +234,12 @@ x_impl_or ≔ {
 }
 
 and_impl_x ≔ {
-    ⤷ and
+    goal ≔ 'x ∧ 'y ⇒ 'x
+
     ⤷ false_implies_anything
     ⤷ recontra
     ⤷ deduce
     ⤷ commute_ante
-
-    goal ≔ ('x; 'y | and) ⇒ 'x
 
     false_implies_anything['A / ¬'y]['B / 'x] | recontra.MP;
     ¬¬'x ⇒ 'x | deduce
@@ -263,12 +249,11 @@ and_impl_x ≔ {
 }
 
 and_impl_y ≔ {
-    ⤷ and
+    goal ≔ 'x ∧ 'y ⇒ 'y
+
     ⤷ ignore
     ⤷ recontra
     ⤷ deduce
-
-    goal ≔ ('x; 'y | and) ⇒ 'y
 
     ignore['A / ¬'y]['B / 'x] | recontra.MP;
     ¬¬'y ⇒ 'y | deduce
@@ -278,12 +263,11 @@ and_impl_y ≔ {
 }
 
 x_impl_y_impl_and ≔ {
-    ⤷ and
+    goal ≔ 'x ⇒ 'y ⇒ 'x ∧ 'y
+
     ⤷ commute_ante
     ⤷ flip_postneg
     ⤷ deduce
-
-    goal ≔ 'x ⇒ 'y ⇒ ('x; 'y | and)
 
     a ≔ ('X ⇒ 'X)['X / 'x ⇒ ¬'y] | commute_ante
     b ≔ ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
@@ -294,16 +278,14 @@ x_impl_y_impl_and ≔ {
 }
 
 xyz_impl_and ≔ {
-    ⤷ and
-
-    goal ≔ ('x ⇒ 'y ⇒ 'z) ⇒ ('x; 'y | and) ⇒ 'z
+    goal ≔ ('x ⇒ 'y ⇒ 'z) ⇒ 'x ∧ 'y ⇒ 'z
 
     ⤷ ignore
     ⤷ commute_ante
     ⤷ distr
     ⤷ deduce
 
-    b ≔ 'x; 'y | and
+    b ≔ 'x ∧ 'y
 
     ignore['A / goal↙]['B / b];
     distr['A / b]['B / 'x]['C / 'y ⇒ 'z] | deduce | commute_ante.MP;
@@ -314,22 +296,19 @@ xyz_impl_and ≔ {
 }
 
 and_impl_xyz ≔ {
-    ⤷ and
+    goal ≔ ('x ∧ 'y ⇒ 'z) ⇒ 'x ⇒ 'y ⇒ 'z
+
     ⤷ chain
     ⤷ commute_ante
 
-    goal ≔ (('x; 'y | and) ⇒ 'z) ⇒ 'x ⇒ 'y ⇒ 'z
-
-    chain['X / 'x]['Y ⇒ 'Z / chain['X / 'y]['Y / 'x; 'y | and]['Z / 'z]].MP.MP.commute_ante
+    chain['X / 'x]['Y ⇒ 'Z / chain['X / 'y]['Y / 'x ∧ 'y]['Z / 'z]].MP.MP.commute_ante
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 
 and_comm ≔ {
-    ⤷ and
-
-    goal ≔ ('x; 'y | and) ⇒ ('y; 'x | and)
+    goal ≔ 'x ∧ 'y ⇒ 'y ∧ 'x
 
     ⤷ recontrapose
 
@@ -339,8 +318,7 @@ and_comm ≔ {
 }
 
 and_assoc ≔ {
-    ⤷ and
-    goal ≔ ('x; 'y) | and; 'z | and ⇒ ('x; ('y; 'z | and) | and)
+    goal ≔ ('x ∧ 'y)∧ 'z ⇒ 'x ∧('y ∧ 'z)
 
     ⤷ xyz_impl_and
     ⤷ chain

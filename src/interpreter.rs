@@ -116,6 +116,8 @@ enum Node {
     Right,
     Child,
     Left,
+    SugarOr,
+    SugarAnd,
 }
 
 impl Node {
@@ -138,6 +140,8 @@ impl Node {
             | Node::OpenCurly
             | Node::Semicolon
             | Node::Slash
+            | Node::SugarOr
+            | Node::SugarAnd
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -384,10 +388,8 @@ fn interpret_inner(
             };
             let mut result = logic_phrase.clone();
             for substitution in substitutions {
-                result = result.substitute(
-                    substitution.variable,
-                    substitution.term,
-                )?;
+                result = result
+                    .substitute(substitution.variable, substitution.term)?;
             }
             logger
                 .borrow_mut()
@@ -463,10 +465,8 @@ fn interpret_inner(
             };
             let mut result = numeric_phrase.clone();
             for substitution in substitutions {
-                result = result.substitute(
-                    substitution.variable,
-                    substitution.term,
-                )?;
+                result = result
+                    .substitute(substitution.variable, substitution.term)?;
             }
             logger
                 .borrow_mut()
@@ -977,6 +977,46 @@ fn interpret_inner(
         if token == Some("=") {
             peek.take();
             stack.push(Node::EqualsTok);
+            continue;
+        }
+        if token == Some("∧") {
+            peek.take();
+            stack.push(Node::SugarAnd);
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(a)),
+            Some(Node::SugarAnd),
+            Some(Node::LogicPhrase(b)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(make_imply(
+                a.clone(),
+                make_not(b.clone())?,
+            )?)?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some("∨") {
+            peek.take();
+            stack.push(Node::SugarOr);
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(a)),
+            Some(Node::SugarOr),
+            Some(Node::LogicPhrase(b)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_imply(
+                make_not(a.clone())?,
+                b.clone(),
+            )?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
             continue;
         }
         if token == Some("⇒") {

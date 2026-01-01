@@ -60,6 +60,15 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Addition | `x + y` | | The sum of `x` and `y`. `x` and `y` must be numeric phrases |
 | Multiplication | `x * y` | | The product of `x` and `y`. `x` and `y` must be numeric phrases |
 
+### Syntax sugar
+
+These get expanded by the interpreter to the expressions described below.
+
+| Short form | Expanded |
+| -- | -- |
+| `x ∧ y` or `x and y`   | `¬(x ⇒ ¬y)` |
+| `x ∨ y` or `x or y`  | `¬x ⇒ y` |
+
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
