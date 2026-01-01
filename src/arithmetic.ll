@@ -890,27 +890,17 @@ is_even ≔ λ{↵ ¬●.is_odd}
 2 * x = y + y; y; x | exists_by_example
 ⊦ 2 * x | is_even
 
-/* X < Y if there is no Z such that X = Y + Z */
-less ≔ ∀Z(¬X = Y + Z)
-< ≔ λ{↵ less[X / ●ⅰ][Y / ●ⅱ]}
-
 {
     ⤷ exists_by_example
-    ⤷ less
-    ⤷ <
     X = X + Z; Z; 0 | exists_by_example
-    ⊦ ¬less[Y / X]
-    ⊦ ¬(X; X | <)
+    ⊦ ¬X < X
 
     X = 0 + Z; Z; X | exists_by_example
-    ⊦ ¬less[Y / 0]
-    ⊦ ¬(X; 0 | <)
+    ⊦ ¬X < 0
 }
 
 {
-    ⤷ less
-    /* x < y ⇒ x < y + 1 */
-    goal ≔ less[X / x][Y / y] ⇒ less[X / x][Y / 𝗦(y)]
+    goal ≔ x < y ⇒ x < 𝗦y
 
     ⤷ contrapose
     ⤷ deduce
@@ -938,8 +928,7 @@ less ≔ ∀Z(¬X = Y + Z)
 }
 
 {
-    ⤷ <
-    goal ≔ 0; 𝗦x | <
+    goal ≔ 0 < 𝗦x
 
     ⤷ peano1
     ⤷ eq_trans

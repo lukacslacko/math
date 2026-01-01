@@ -118,6 +118,7 @@ enum Node {
     Left,
     SugarOr,
     SugarAnd,
+    SugarLess,
 }
 
 impl Node {
@@ -142,6 +143,7 @@ impl Node {
             | Node::Slash
             | Node::SugarOr
             | Node::SugarAnd
+            | Node::SugarLess
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -964,6 +966,23 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
+        if let (
+            Some(Node::NumericPhrase(l)),
+            Some(Node::SugarLess),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            let var = make_numeric_variable(make_str("Z"))?;
+            let phrase = make_quantify(
+                var.clone(),
+                make_not(make_equals(l.clone(), make_add(r.clone(), var)?)?)?,
+            )?;
+            stack.push(Node::LogicPhrase(phrase));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
         if token == Some("⇅") {
             peek.take();
             stack.push(Node::Match);
@@ -977,6 +996,11 @@ fn interpret_inner(
         if token == Some("=") {
             peek.take();
             stack.push(Node::EqualsTok);
+            continue;
+        }
+        if token == Some("<") {
+            peek.take();
+            stack.push(Node::SugarLess);
             continue;
         }
         if token == Some("∧") {

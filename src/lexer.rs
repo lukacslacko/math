@@ -76,6 +76,7 @@ pub const PREFIXES: &[(&str, &str)] = &[
     ("<3>", "ⅲ"),
     ("<4>", "ⅳ"),
     ("<5>", "ⅴ"),
+    ("<", "<"),
 ];
 
 pub const KEYWORDS: &[(&str, &str)] = &[
