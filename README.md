@@ -75,7 +75,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | -- | -- |
 | Weakening | `'A ⇒ ('B ⇒ 'A)` |
 | Distribution of implication | `('A ⇒ ('B ⇒ 'C)) ⇒ (('A ⇒ 'B) ⇒ ('A ⇒ 'C))` |
-| Contraposition | (¬'A ⇒ ¬'B) ⇒ ('B ⇒ 'A)` |
+| Contraposition | `(¬'A ⇒ ¬'B) ⇒ ('B ⇒ 'A)` |
 | Peano 1 | `¬0 = 𝗦(X)` |
 | Peano 2 | `𝗦(X) = 𝗦(Y) ⇒ X = Y` |
 | Peano 3 | `X + 0 = X` |
