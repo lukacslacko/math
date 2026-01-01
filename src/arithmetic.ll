@@ -345,14 +345,33 @@ demorgan_or ≔ {
     ⊦ goal
 }
 
+reduce ≔ λ{
+    /*
+    Arguments: P ⇒ Q; Q'
+    Assumptions: P ⇒ Q is a proven theorem ∧ Q' has the shape of Q
+    Result: P[Q / Q'] ⇒ Q', the backwards application of the theorem to Q'
+     */
+    ↵ ●ⅰ[●ⅰ↘ / ●ⅱ]
+}
+
+apply ≔ λ{
+    /*
+    Arguments: P ⇒ Q; P'
+    Assumptions: P ⇒ Q is a proven theorem ∧ P' has the shape of P
+    Result: P' ⇒ Q[P / P'], the application of the theorem to P'
+     */
+    ↵ ●ⅰ[●ⅰ↙ / ●ⅱ]
+}
+
 demorgan_and ≔ {
     goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
 
+    ⤷ reduce
     ⤷ chain
     ⤷ recontrapose
 
-    a ≔ recontrapose[recontrapose↘ / goal]
-    chain[chain↘ / a↙].MP
+    a ≔ recontrapose; goal | reduce
+    chain; a↙ | reduce.MP
     a.MP
 
     ⊦ goal
