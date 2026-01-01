@@ -73,6 +73,8 @@ chain ≔ {
 ⊦ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
+chain' ≔ chain['X / 'x]['Y / 'y]['Z / 'z].commute_ante['x / 'X]['y / 'Y]['z / 'Z]
+
 deduce ≔ λ{
     /*
     Argument: P ⇒ Q; Q ⇒ R
@@ -328,6 +330,30 @@ and_assoc ≔ {
 
     chain['X / 'x]['Y ⇒ 'Z / (¬¬'X ⇒ 'X)['X / 'y ⇒ ¬'z]].commute_ante.MP;
     xyz_impl_and['X / 'x]['Y / 'y]['Z / ¬'z] | deduce | recontra.MP
+
+    ⊦ goal
+}
+
+demorgan_or ≔ {
+    goal ≔ 'x ∨ 'y ⇒ ¬(¬'x ∧¬'y)
+
+    ⤷ chain'
+
+    a ≔ chain'['X / ¬'x]['Y ⇒ 'Z / 'y ⇒ ¬¬'y].MP
+    chain'['X ⇒ 'Y / a]['X ⇒ 'Z / goal].MP.MP
+
+    ⊦ goal
+}
+
+demorgan_and ≔ {
+    goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
+
+    ⤷ chain
+    ⤷ recontrapose
+
+    a ≔ recontrapose[recontrapose↘ / goal]
+    chain[chain↘ / a↙].MP
+    a.MP
 
     ⊦ goal
 }
