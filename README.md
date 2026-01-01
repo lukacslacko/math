@@ -63,7 +63,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |
 | -- | -- | -- | -- |
-| Substitution | `phrase[var / term]` | | `phrase` must be a *proven phrase*, `var` must be a numeric or logical variable and `term` must be a phrase of the same kind. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
+| Substitution | `phrase[x / term]` | | `phrase` must be a *proven phrase*, `x` must be a numeric or logical variable or phrase and `term` must be a phrase of the same kind. If `x` is not a variable, but has the same shape as `term`, then the variable substitutions are computed which would take `x` to become `term` and those are applied. **TODO** condition on free variables of `term`. Note: if `phrase` is not proven, this is still a valid expression. |
 | Modus ponens | `phrase.MP` | | `phrase` must be of the shape `A ⇒ B` and `A` must be a *proven phrase*, the result is `B`. If `A` is not proven, it will try to match it with `⇅` against all *proven phrases* to try to prove it  |
 | Universal generalization | `∀x P` | `!x P` | If `P` is a *proven phrase*, this becomes a *proven phrase* as well. Note 1: if `P` is not proven, this is still a valid expression. Note 2: consider the vacuous generalization [axiom schema](#axiom-schemas) for adding quantification to any phrase |
 
@@ -73,6 +73,9 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 
 | Name | Axiom |
 | -- | -- |
+| Weakening | `'A ⇒ ('B ⇒ 'A)` |
+| Distribution of implication | `('A ⇒ ('B ⇒ 'C)) ⇒ (('A ⇒ 'B) ⇒ ('A ⇒ 'C))` |
+| Contraposition | (¬'A ⇒ ¬'B) ⇒ ('B ⇒ 'A)` |
 | Peano 1 | `¬0 = 𝗦(X)` |
 | Peano 2 | `𝗦(X) = 𝗦(Y) ⇒ X = Y` |
 | Peano 3 | `X + 0 = X` |
