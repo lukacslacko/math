@@ -2,11 +2,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
+use std::hash;
 use std::rc::Rc;
 
 thread_local! {
-    static KNOWN_TRUTHS: RefCell<HashMap<Phrase, Proof>> = RefCell::new(HashMap::new());
-    static ZERO: Phrase = Rc::new(PhraseData{kind: Zero,children:Children::Zero(),variable_name:None});
+    static KNOWN_TRUTHS: RefCell<HashMap<Phrase, Proof, hash::BuildHasherDefault<hash::DefaultHasher>>> = RefCell::default();
+    static ZERO: Phrase = Rc::new(PhraseData{kind: Zero, children: Children::Zero(), variable_name: None});
 }
 
 pub type Phrase = Rc<PhraseData>;
