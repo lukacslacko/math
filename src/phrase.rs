@@ -520,11 +520,7 @@ impl PhraseData {
     }
 
     pub fn to_html(&self) -> String {
-        format!("{}{}", self, if self.get_is_proven() {
-            " ✅"
-        } else {
-            ""
-        })
+        format!("{}{}", self, if self.get_is_proven() { " ✅" } else { "" })
     }
 }
 
