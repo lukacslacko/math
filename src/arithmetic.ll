@@ -934,20 +934,19 @@ is_even ≔ λ{↵ ¬●.is_odd}
     ⊦ goal
 }
 
+X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
+⊦ X = Y ⇒ X ≤ Y
+
 {
     goal ≔ x < y ⇒ ¬x = y
 
     ⤷ recontra
-    ⤷ equals_transitive
-    ⤷ commute_ante
+    ⤷ not_equals_symmetric
     ⤷ deduce
 
-    ('x ⇒ ¬¬'x)['x / x < y];
-    (
-        equals_transitive[X / x][Y / y][Z / y + 0].commute_ante.MP;
-        ('x ⇒ ¬¬'x)['x / x = y + 0] | deduce;
-        (x < y)[0].recontra.MP | deduce.recontra.MP
-    ) | deduce
+    ('x ⇒ ¬¬'x)['x / Y < X];
+    (X = Y ⇒ X ≤ Y).recontra.MP | deduce
+    (x < y ⇒ ¬y = x)⁇; not_equals_symmetric[X / y][Y / x] | deduce
 
     ⊦ goal
 }
