@@ -877,9 +877,9 @@ conditional_exists_by_example ≔ λ{
 
 exists_ante ≔ λ{
     /*
-    Argument: P ⇒ ¬Q; var
-    Assumes: P ⇒ ¬Q is proven, var is not free in Q
-    Returns:(¬∀var¬P) ⇒ ¬Q
+    Argument: P ⇒ Q; var
+    Assumes: P ⇒ Q is proven, var is not free in Q
+    Returns:(¬∀var¬P) ⇒ Q
 
     Introduces an exists quantifier on the antecedent of a proven
     implication.
@@ -890,11 +890,13 @@ exists_ante ≔ λ{
      */
 
     P ≔ ●ⅰ↙
-    Q ≔ ●ⅰ↘↓
+    Q ≔ ●ⅰ↘
     var ≔ ●ⅱ
 
-    u ≔ ∀var(●ⅰ; postneg_flip | apply.MP) ⇆.MP
-    ↵ Q.∀var; u | deduce; recontrapose | apply.MP
+    u ≔ ∀var(●ⅰ; recontrapose | apply.MP) ⇆.MP
+    v ≔ (¬Q).∀var
+    w ≔ chain['X ⇒ 'Y / v]['Y ⇒ 'Z / u].MP.MP; recontrapose | apply.MP
+    ↵ chain['X ⇒ 'Y / w]['Z / Q].MP.MP
 }
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
@@ -988,6 +990,60 @@ is_even ≔ λ{↵ ¬●.is_odd}
     h[z / Z]; Z | exists_ante
 
     ⊦ goal
+}
+
+leq_trans ≔ {
+    goal ≔ x ≤ y ⇒ y ≤ z ⇒ x ≤ z
+
+    ⤷ commute_antecedents
+    ⤷ apply
+    ⤷ reduce
+    ⤷ replace_cut
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+
+    step ≔ {
+        goal ≔ y = x + w ⇒ y ≤ z ⇒ x ≤ z
+
+        ⤷ commute_antecedents
+        ⤷ apply
+        ⤷ reduce
+        ⤷ replace_cut
+        ⤷ xyz_impl_and
+        ⤷ and_impl_xyz
+        ⤷ conditional_exists_by_example
+        ⤷ exists_ante
+
+        h ≔ commute_antecedents; goal | reduce
+
+        step ≔ {
+            goal ≔ z = y + u ⇒ y = x + w ⇒ z = x + (w + u)
+
+            ⤷ commute_antecedents
+            ⤷ replace_cut
+            ⤷ reduce
+            h ≔ commute_antecedents; goal | reduce
+            g ≔ z = a + u; a; b | ⪮[a = b / y = x + w]
+            g; a; ↘↘↘ | ✂; x + (w + u) | replace_cut.MP
+            h.MP
+            ⊦ goal
+            goal
+        }
+        g ≔ step; xyz_impl_and | apply.MP;
+        Z; ↘↘↘ | ✂ | conditional_exists_by_example;
+        and_impl_xyz | apply.MP
+        g[u / Z]; Z | exists_ante
+        h.MP
+        ⊦ goal
+        goal
+    }
+
+    g := step[w / Z]; Z | exists_ante
+
+    ⊦ goal
+    goal
 }
 
 X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
