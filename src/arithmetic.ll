@@ -992,6 +992,13 @@ is_even ≔ λ{↵ ¬●.is_odd}
     ⊦ goal
 }
 
+{
+    goal ≔ x ≤ x + a
+    ⤷ exists_by_example
+    x + a = x + Z; Z; a | exists_by_example
+    ⊦ goal
+}
+
 leq_trans ≔ {
     goal ≔ x ≤ y ⇒ y ≤ z ⇒ x ≤ z
 
@@ -1040,7 +1047,7 @@ leq_trans ≔ {
         goal
     }
 
-    g := step[w / Z]; Z | exists_ante
+    g ≔ step[w / Z]; Z | exists_ante
 
     ⊦ goal
     goal
