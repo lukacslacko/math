@@ -69,6 +69,7 @@ These get expanded by the interpreter to the expressions described below.
 | `x ∧ y` or `x and y`   | `¬(x ⇒ ¬y)` |
 | `x ∨ y` or `x or y`  | `¬x ⇒ y` |
 | `x < y` | `∀Z(¬x = y + Z)` |
+| `x ≤ y` or `x <= y` | `¬∀Z(¬y = x + Z)` |
 
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |

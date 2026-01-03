@@ -119,6 +119,7 @@ enum Node {
     SugarOr,
     SugarAnd,
     SugarLess,
+    SugarLessOrEqual,
 }
 
 impl Node {
@@ -144,6 +145,7 @@ impl Node {
             | Node::SugarOr
             | Node::SugarAnd
             | Node::SugarLess
+            | Node::SugarLessOrEqual
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -983,6 +985,23 @@ fn interpret_inner(
             stack.pop();
             continue;
         }
+        if let (
+            Some(Node::NumericPhrase(l)),
+            Some(Node::SugarLessOrEqual),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            let var = make_numeric_variable(make_str("Z"))?;
+            let phrase = make_not(make_quantify(
+                var.clone(),
+                make_not(make_equals(r.clone(), make_add(l.clone(), var)?)?)?,
+            )?)?;
+            stack.push(Node::LogicPhrase(phrase));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
         if token == Some("⇅") {
             peek.take();
             stack.push(Node::Match);
@@ -1001,6 +1020,11 @@ fn interpret_inner(
         if token == Some("<") {
             peek.take();
             stack.push(Node::SugarLess);
+            continue;
+        }
+        if token == Some("≤") {
+            peek.take();
+            stack.push(Node::SugarLessOrEqual);
             continue;
         }
         if token == Some("∧") {
@@ -1250,7 +1274,16 @@ fn interpret_inner(
             (back(&stack, 2), back(&stack, 1))
         {
             if !logic_phrase.get_is_proven() {
-                Err(format!("assertion failed {:b}", **logic_phrase,))?
+                match logic_phrase.clone().try_prove() {
+                    Ok(_) => {}
+                    Err(err) => Err(format!(
+                        "assertion couldn't prove {:b}, {err}",
+                        **logic_phrase,
+                    ))?,
+                }
+            }
+            if !logic_phrase.get_is_proven() {
+                Err(format!("assertion failed {:b}", **logic_phrase))?
             }
             stack.pop();
             stack.pop();

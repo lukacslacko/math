@@ -356,11 +356,11 @@ reduce ≔ λ{
 
 apply ≔ λ{
     /*
-    Arguments: P ⇒ Q; P'
+    Arguments: P'; P ⇒ Q
     Assumptions: P ⇒ Q is a proven theorem ∧ P' has the shape of P
     Result: P' ⇒ Q[P / P'], the application of the theorem to P'
      */
-    ↵ ●ⅰ[●ⅰ↙ / ●ⅱ]
+    ↵ ●ⅱ[●ⅱ↙ / ●ⅰ]
 }
 
 demorgan_and ≔ {
@@ -892,55 +892,45 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 {
     ⤷ exists_by_example
+
     X = X + Z; Z; 0 | exists_by_example
     ⊦ ¬X < X
+    ⊦ X ≤ X
 
     X = 0 + Z; Z; X | exists_by_example
     ⊦ ¬X < 0
+    ⊦ 0 ≤ X
+
+    ⊦ X < Y ⇒ ¬Y ≤ X
+    ⊦ X ≤ Y ⇒ ¬Y < X
 }
 
-{
-    goal ≔ x < y ⇒ x < 𝗦y
 
-    ⤷ contrapose
+{
+    goal ≔ x ≤ y ⇒ x ≤ 𝗦y
+
+    ⤷ recontrapose
+    ⤷ apply
+    ⤷ reduce
     ⤷ deduce
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ exists_by_example
-    ⤷ flip_postneg
-    ⤷ recontra
     ⤷ replace_cut
+    ⤷ chain
 
-    1 + X = X + 1; X + 1 = 𝗦(X) | eq_trans | eq_flip
+    step ≔ {
+        goal ≔ y = x + z ⇒ 𝗦y = x + 𝗦z
+        ⤷ replace_cut
+        y = x + z ⇒ 𝗦y = 𝗦(x + z); u; ↘↘ | ✂; x + 𝗦z | replace_cut.MP
+        ⊦ goal
+        goal
+    }
 
-    a ≔ x = u + Z; u; v | ⪮[u / 𝗦(y)][v / y + 1].MP; u; ↘↘ | ✂;
-    y + (1 + Z) | replace_cut.MP; u; ↘↘↘ | ✂;
-    𝗦(Z) | replace_cut.MP;
-    ((∀Z(¬x = y + Z))[𝗦(z)] | flip_postneg.MP) | deduce | flip_postneg.MP
+    suffices ≔ recontrapose; goal | reduce↙
 
-    b ≔ (∀Z a) ⇆.MP
-    b↙↘.∀Z; b | deduce | recontra.MP
+    c ≔ suffices↙[𝗦z][z / Z]
+    d ≔ step[z / Z]; recontrapose | apply.MP
+    e ≔ chain['X / c↙]['Y / c↘]['Z / d↘].MP.MP
+    c↙.∀Z; (∀Z e ⇆.MP) | deduce; recontrapose | apply.MP
 
-    contrapose['B / goal↙]['A / goal↘].MP
-
-    ⊦ goal
-    goal[x / X][y / Y]
-}
-
-{
-    goal ≔ 0 < 𝗦x
-
-    ⤷ peano1
-    ⤷ eq_trans
-    ⤷ eq_flip
-    ⤷ ignore
-
-    ∀Z(¬0 = u; u; v | ⪮[u = v / 𝗦Z = 1 + Z].MP.MP)
-    a ≔ 𝗦u + Z = 𝗦(u + Z)⁇[u / 𝗦x].eq_flip
-    b ≔ ∀Z(¬0 = u; u; v | ⪮[u = v / a].MP.MP)
-    step ≔ goal; x | ↺.MP
-    ∀x(ignore['A / b]['B / step↙↘↙].MP)
-    step.MP[x].MP
     ⊦ goal
 }
 
