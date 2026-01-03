@@ -935,6 +935,24 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 
 {
+    goal ≔ x < y ⇒ ¬x = y
+
+    ⤷ recontra
+    ⤷ equals_transitive
+    ⤷ commute_ante
+    ⤷ deduce
+
+    ('x ⇒ ¬¬'x)['x / x < y];
+    (
+        equals_transitive[X / x][Y / y][Z / y + 0].commute_ante.MP;
+        ('x ⇒ ¬¬'x)['x / x = y + 0] | deduce;
+        (x < y)[0].recontra.MP | deduce.recontra.MP
+    ) | deduce
+
+    ⊦ goal
+}
+
+{
     ⤷ peano1
     ⤷ peano2
     ⤷ peano4
