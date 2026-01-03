@@ -1008,6 +1008,21 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 }
 
 {
+    goal ≔ x ≤ y ⇒ x + x ≤ y + y
+
+    ⤷ replace
+    ⤷ add_XY_ZW_eq_XZ_YW
+    ⤷ replace_cut
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+
+    a ≔ add_XY_ZW_eq_XZ_YW[X / x][Z / x][Y / Z][W / Z]
+    X + X; X; y; x + Z | replace; X; ↘↘ | ✂; a↘ | replace_cut.MP; Z; ↘↘↘ | ✂.conditional_exists_by_example; Z | exists_ante
+
+    ⊦ goal
+}
+
+{
     ⤷ peano1
     ⤷ peano2
     ⤷ peano4
