@@ -174,6 +174,18 @@ recontra ≔ λ{
     ↵ recontrapose['A / ●↙]['B / ●↘]
 }
 
+{
+    goal ≔ 'x ∨ 'x ⇒ 'x
+    ⤷ distr
+    ⤷ contrapose
+    ⤷ deduce
+    a ≔ distr['A / ¬'B]['C / 'A].MP['B / 'x]['A / ¬'A];
+    contrapose['A / 'x]['B / 'A] | deduce
+    ('x ⇒ 'x)['x / a↙]
+    distr['B / a↘↙]['C / a↘↘]['A / a↙].MP.MP
+    ⊦ goal
+}
+
 preneg_flip ≔ {
     goal ≔ (¬'x ⇒ 'y) ⇒ (¬'y ⇒ 'x)
 
