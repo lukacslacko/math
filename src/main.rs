@@ -11,11 +11,11 @@ fn main() -> UnitResult {
     };
     let tokens = preprocessor::preprocess(input_file)?;
     let tokens = preprocessor::apply_abbreviations(tokens);
-    format::write_formatted_file(
-        &tokens,
-        "preprocessed.ll",
-        /*as_ascii=*/ false,
-    );
+    // format::write_formatted_file(
+    //     &tokens,
+    //     "preprocessed.ll",
+    //     /*as_ascii=*/ false,
+    // );
     let logger = logger::Logger::new();
     interpreter::interpret(tokens.iter(), logger.clone())?;
     #[cfg(feature = "html")]
