@@ -990,7 +990,7 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 
     ('x ⇒ ¬¬'x)['x / Y < X];
     (X = Y ⇒ X ≤ Y).recontra.MP | deduce
-    (x < y ⇒ ¬y = x)⁇; not_equals_symmetric[X / y][Y / x] | deduce
+    (x < y ⇒ ¬y = x); not_equals_symmetric[X / y][Y / x] | deduce
 
     ⊦ goal
 }
