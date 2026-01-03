@@ -837,6 +837,54 @@ exists_by_example ≔ {
     }
 }
 
+conditional_exists_by_example ≔ λ{
+    /*
+    Argument: P ⇒ Q; example; var(that is, a cut result)
+    Returns: P ⇒ ¬∀var¬Q
+
+    Creates a conditional existential statement.A typical way to
+    use this is by proving a statement of the shape of
+    P ⇒ Q[var / example], then pass in P ⇒ R; example; var to get
+    P ⇒ ¬∀var¬Q.Typically var is present in both P ∧ Q ∧
+    example is an appropriate expression depending on var, satisfying
+    Q based on P.
+     */
+
+    phrase ≔ ●ⅰ
+    P ≔ phrase↙
+    Q ≔ phrase↘
+    example ≔ ●ⅱ
+    var ≔ ●ⅲ
+
+    Q' ≔ Q[var / example]
+    phrase' ≔ P ⇒ Q'
+
+    u ≔ (∀var¬Q)[example]; recontrapose | apply.MP
+    ↵ phrase'; Q' ⇒ ¬¬Q' | deduce; u | deduce
+}
+
+exists_ante ≔ λ{
+    /*
+    Argument: P ⇒ ¬Q; var
+    Assumes: P ⇒ ¬Q is proven, var is not free in Q
+    Returns:(¬∀var¬P) ⇒ ¬Q
+
+    Introduces an exists quantifier on the antecedent of a proven
+    implication.
+
+    The idea is that if P implies Q, then it must imply it for some
+    concrete value of the variable, it cannot be the it does not imply
+    it for all values, because then it would simply not imply Q.
+     */
+
+    P ≔ ●ⅰ↙
+    Q ≔ ●ⅰ↘↓
+    var ≔ ●ⅱ
+
+    u ≔ ∀var(●ⅰ; postneg_flip | apply.MP) ⇆.MP
+    ↵ Q.∀var; u | deduce; recontrapose | apply.MP
+}
+
 is_odd ≔ λ{↵ ∀y¬● = y + y}
 is_even ≔ λ{↵ ¬●.is_odd}
 
@@ -905,16 +953,10 @@ is_even ≔ λ{↵ ¬●.is_odd}
     ⊦ X ≤ Y ⇒ ¬Y < X
 }
 
-
 {
     goal ≔ x ≤ y ⇒ x ≤ 𝗦y
 
-    ⤷ recontrapose
-    ⤷ apply
-    ⤷ reduce
-    ⤷ deduce
     ⤷ replace_cut
-    ⤷ chain
 
     step ≔ {
         goal ≔ y = x + z ⇒ 𝗦y = x + 𝗦z
@@ -924,12 +966,14 @@ is_even ≔ λ{↵ ¬●.is_odd}
         goal
     }
 
-    suffices ≔ recontrapose; goal | reduce↙
-
-    c ≔ suffices↙[𝗦z][z / Z]
-    d ≔ step[z / Z]; recontrapose | apply.MP
-    e ≔ chain['X / c↙]['Y / c↘]['Z / d↘].MP.MP
-    c↙.∀Z; (∀Z e ⇆.MP) | deduce; recontrapose | apply.MP
+    ⤷ conditional_exists_by_example
+    h ≔ step; Z; ↘↘↘ | ✂ | conditional_exists_by_example
+    /*
+    h is now y = x + z ⇒ x ≤ 𝗦y
+    by applying exists_ante, we turn the antecedent into x ≤ y.
+     */
+    ⤷ exists_ante
+    h[z / Z]; Z | exists_ante
 
     ⊦ goal
 }
