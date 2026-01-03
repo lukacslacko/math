@@ -171,9 +171,7 @@ pub fn render_bracket_groups(input: &str, max_depth_classes: usize) -> String {
             depth += 1;
         } else if matches!(ch, ')' | ']' | '}') {
             // Balanced input assumed. We'll still be defensive.
-            if depth > 0 {
-                depth -= 1;
-            }
+            depth = depth.saturating_sub(1);
             if let Some(expected) = stack.pop() {
                 // If it doesn't match, still emit what we got and close one group.
                 // (With your generator, it should always match.)
