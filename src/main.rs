@@ -18,6 +18,7 @@ fn main() -> UnitResult {
     );
     let logger = logger::Logger::new();
     interpreter::interpret(tokens.iter(), logger.clone())?;
+    #[cfg(feature = "html")]
     std::fs::write("log.html", html::render_html(&logger.borrow()))?;
     println!("Hello, world!");
     Ok(())

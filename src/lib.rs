@@ -1,6 +1,7 @@
 use std::error::Error;
 
 pub mod format;
+#[cfg(feature = "html")]
 pub mod html;
 pub mod interpreter;
 pub mod lexer;

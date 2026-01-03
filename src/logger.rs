@@ -40,7 +40,11 @@ impl Logger {
         self.entries.last_mut().unwrap()
     }
 
-    pub fn sublog(&mut self, info: String, phrase: String) -> Rc<RefCell<Logger>> {
+    pub fn sublog(
+        &mut self,
+        info: String,
+        phrase: String,
+    ) -> Rc<RefCell<Logger>> {
         self.new_entry(info, phrase).details.clone()
     }
 }
