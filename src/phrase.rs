@@ -13,6 +13,37 @@ thread_local! {
 pub type Phrase = Rc<PhraseData>;
 pub type Result = std::result::Result<Phrase, Box<dyn Error>>;
 
+enum ParallelError {
+    DifferAfter { s: Phrase, o: Phrase, n: Phrase },
+    KindMismatch { s: Phrase, o: Phrase },
+    ChildrenMismatch { s: Phrase, o: Phrase },
+}
+
+impl Error for ParallelError {}
+impl fmt::Debug for ParallelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
+}
+impl fmt::Display for ParallelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::DifferAfter { s, o, n } => write!(
+                f,
+                "Structure matches but phrases differ after substitution, self: {s}, other: {o}, new_phrase: {n}"
+            ),
+            Self::KindMismatch { s, o } => write!(
+                f,
+                "find_parallel_substitutions kind mismatch: {s} vs {o}"
+            ),
+            Self::ChildrenMismatch { s, o } => write!(
+                f,
+                "find_parallel_substitutions number of children mismatch: {s} vs {o}"
+            ),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Proof {
     Name(&'static str),
@@ -376,24 +407,27 @@ impl PhraseData {
             },
             Children::One(child) => {
                 if self.kind != other.kind {
-                    Err(format!(
-                        "find_parallel_substitutions kind mismatch: {self} vs {other}"
-                    ))?
+                    Err(ParallelError::KindMismatch {
+                        s: self.clone(),
+                        o: other.clone(),
+                    })?
                 }
                 match &other.children {
                     Children::One(other_child) => {
                         child.find_parallel_substitutions(other_child)
                     }
-                    _ => Err(format!(
-                        "find_parallel_substitutions number of children mismatch: {self} vs {other}"
-                    ))?,
+                    _ => Err(ParallelError::ChildrenMismatch {
+                        s: self.clone(),
+                        o: other.clone(),
+                    })?,
                 }
             }
             Children::Two(left, right) => {
                 if self.kind != other.kind {
-                    Err(format!(
-                        "find_parallel_substitutions kind mismatch: {self} vs {other}"
-                    ))?
+                    Err(ParallelError::KindMismatch {
+                        s: self.clone(),
+                        o: other.clone(),
+                    })?
                 }
                 match &other.children {
                     Children::Two(other_left, other_right) => {
@@ -404,9 +438,10 @@ impl PhraseData {
                         subs_left.extend(subs_right);
                         Ok(subs_left)
                     }
-                    _ => Err(format!(
-                        "find_parallel_substitutions number of children mismatch: {self} vs {other}"
-                    ))?,
+                    _ => Err(ParallelError::ChildrenMismatch {
+                        s: self.clone(),
+                        o: other.clone(),
+                    })?,
                 }
             }
         }
@@ -425,9 +460,11 @@ impl PhraseData {
         if new_phrase == *other {
             Ok(new_phrase)
         } else {
-            Err(format!(
-                "Structure matches but phrases differ after substitution, self: {self}, other: {other}, new_phrase: {new_phrase}"
-            ))?
+            Err(ParallelError::DifferAfter {
+                s: self.clone(),
+                o: other.clone(),
+                n: new_phrase,
+            })?
         }
     }
 
@@ -520,7 +557,14 @@ impl PhraseData {
     }
 
     pub fn to_html(&self) -> String {
-        format!("{}{}", self, if self.get_is_proven() { " ✅" } else { "" })
+        #[cfg(feature = "html")]
+        return format!(
+            "{}{}",
+            self,
+            if self.get_is_proven() { " ✅" } else { "" }
+        );
+        #[cfg(not(feature = "html"))]
+        return "".to_string();
     }
 }
 
