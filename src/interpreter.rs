@@ -361,7 +361,7 @@ fn interpret_inner(
             Err("} without matching {")?
         }
         if let (
-            Some(Node::LogicPhrase(logic_phrase)),
+            Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
             Some(Node::OpenSquare),
             Some(Node::LogicPhrase(variable) | Node::NumericPhrase(variable)),
             Some(Node::Slash),
@@ -390,7 +390,7 @@ fn interpret_inner(
                     term: term.clone(),
                 }]
             };
-            let mut result = logic_phrase.clone();
+            let mut result = phrase.clone();
             for substitution in substitutions {
                 result = result
                     .substitute(substitution.variable, substitution.term)?;
@@ -399,16 +399,20 @@ fn interpret_inner(
                 .borrow_mut()
                 .sublog("Substitution".to_string(), result.to_html())
                 .borrow_mut()
-                .log("Original phrase".to_string(), logic_phrase.to_html())
+                .log("Original phrase".to_string(), phrase.to_html())
                 .log("Variable".to_string(), variable.to_html())
                 .log("Term".to_string(), term.to_html());
-            stack.push(Node::LogicPhrase(result));
-            stack.swap_remove(stack.len() - 7);
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
+            stack.pop();
+            stack.push(if result.is_numeric() {
+                Node::NumericPhrase(result)
+            } else {
+                Node::LogicPhrase(result)
+            });
             continue;
         }
         if let (
@@ -432,57 +436,6 @@ fn interpret_inner(
                 .log("Term".to_string(), numeric_term.to_html());
             stack.push(Node::LogicPhrase(result));
             stack.swap_remove(stack.len() - 5);
-            stack.pop();
-            stack.pop();
-            stack.pop();
-            continue;
-        }
-        if let (
-            Some(Node::NumericPhrase(numeric_phrase)),
-            Some(Node::OpenSquare),
-            Some(Node::LogicPhrase(variable) | Node::NumericPhrase(variable)),
-            Some(Node::Slash),
-            Some(Node::LogicPhrase(term) | Node::NumericPhrase(term)),
-            Some(Node::CloseSquare),
-        ) = (
-            back(&stack, 6),
-            back(&stack, 5),
-            back(&stack, 4),
-            back(&stack, 3),
-            back(&stack, 2),
-            back(&stack, 1),
-        ) {
-            if variable.is_numeric() != term.is_numeric() {
-                Err(format!(
-                    "substitution requires the variable and the term before and after the slash to be both numeric or both logic, got variable '{variable:?}' and term '{term}'"
-                ))?
-            }
-            let substitutions = if variable.get_kind() != LogicVariable
-                && variable.get_kind() != NumericVariable
-            {
-                variable.find_parallel_substitutions(term)?
-            } else {
-                vec![Substitution {
-                    variable: variable.clone(),
-                    term: term.clone(),
-                }]
-            };
-            let mut result = numeric_phrase.clone();
-            for substitution in substitutions {
-                result = result
-                    .substitute(substitution.variable, substitution.term)?;
-            }
-            logger
-                .borrow_mut()
-                .sublog("Substitution".to_string(), result.to_html())
-                .borrow_mut()
-                .log("Original phrase".to_string(), numeric_phrase.to_html())
-                .log("Variable".to_string(), variable.to_html())
-                .log("Term".to_string(), term.to_html());
-            stack.push(Node::NumericPhrase(result));
-            stack.swap_remove(stack.len() - 7);
-            stack.pop();
-            stack.pop();
             stack.pop();
             stack.pop();
             stack.pop();
