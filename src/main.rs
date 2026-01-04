@@ -17,7 +17,7 @@ fn main() -> UnitResult {
     //     /*as_ascii=*/ false,
     // );
     let logger = logger::Logger::new();
-    interpreter::interpret(tokens.iter(), logger.clone())?;
+    interpreter::interpret(tokens.into_iter(), logger.clone())?;
     #[cfg(feature = "html")]
     std::fs::write("log.html", html::render_html(&logger.borrow()))?;
     println!("Hello, world!");

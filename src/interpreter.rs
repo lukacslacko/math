@@ -212,8 +212,8 @@ fn back(stack: &[Node], index: usize) -> Option<&Node> {
     stack.iter().nth_back(index - 1)
 }
 
-pub fn interpret<'a>(
-    tokens: impl Iterator<Item = &'a LToken>,
+pub fn interpret(
+    tokens: impl Iterator<Item = LToken>,
     logger: Rc<RefCell<Logger>>,
 ) -> UnitResult {
     let mut peek = Peek(
