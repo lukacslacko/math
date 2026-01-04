@@ -2,12 +2,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
-use std::hash;
+use std::hash::{self, Hash, Hasher};
 use std::rc::Rc;
 
 thread_local! {
     static KNOWN_TRUTHS: RefCell<HashMap<Phrase, Proof, hash::BuildHasherDefault<hash::DefaultHasher>>> = RefCell::default();
-    static ZERO: Phrase = Rc::new(PhraseData{kind: Zero, children: Children::Zero(), variable_name: None});
+    static ZERO: Phrase = PhraseData::new(Zero, Children::Zero(), None);
 }
 
 pub type Phrase = Rc<PhraseData>;
@@ -99,11 +99,12 @@ pub enum Direction {
     Child,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct PhraseData {
     kind: PhraseKind,
     children: Children,
     variable_name: Option<Rc<str>>,
+    hash: u64,
 }
 
 impl fmt::Display for PhraseData {
@@ -161,6 +162,12 @@ impl fmt::Binary for PhraseData {
     }
 }
 
+impl hash::Hash for PhraseData {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.hash.hash(state);
+    }
+}
+
 impl Children {
     pub fn unwrap_zero(&self) {
         let Children::Zero() = self else {
@@ -192,6 +199,23 @@ pub struct Substitution {
 }
 
 impl PhraseData {
+    fn new(
+        kind: PhraseKind,
+        children: Children,
+        variable_name: Option<Rc<str>>,
+    ) -> Phrase {
+        let mut hasher = hash::DefaultHasher::new();
+        kind.hash(&mut hasher);
+        children.hash(&mut hasher);
+        variable_name.hash(&mut hasher);
+        let hash = hasher.finish();
+        Rc::new(PhraseData {
+            kind,
+            children,
+            variable_name,
+            hash,
+        })
+    }
     pub fn get_children(&self) -> &Children {
         &self.children
     }
@@ -281,9 +305,9 @@ impl PhraseData {
                     ))?
                 }
             }
-            Rc::new(PhraseData {
-                kind: self.kind,
-                children: match &self.children {
+            Self::new(
+                self.kind,
+                match &self.children {
                     Children::Zero() => Children::Zero(),
                     Children::One(child) => Children::One(
                         child
@@ -298,8 +322,8 @@ impl PhraseData {
                             .substitute(variable.clone(), term.clone())?,
                     ),
                 },
-                variable_name: self.variable_name.clone(),
-            })
+                self.variable_name.clone(),
+            )
         };
         if self.get_is_proven() {
             new.clone().assert_axiom(NameVariablePhrase(
@@ -382,11 +406,8 @@ impl PhraseData {
                 ))?,
             },
         };
-        let new_phrase = Rc::new(PhraseData {
-            kind: self.kind,
-            children: new_children,
-            variable_name: self.variable_name.clone(),
-        });
+        let new_phrase =
+            Self::new(self.kind, new_children, self.variable_name.clone());
         Ok(CutResult {
             new_phrase,
             removed,
@@ -574,11 +595,7 @@ pub fn make_logic_variable(name: Rc<str>) -> Result {
             "logic variable must start with an apostrophe, got {name}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: LogicVariable,
-        children: Children::Zero(),
-        variable_name: Some(name),
-    }))
+    Ok(PhraseData::new(LogicVariable, Children::Zero(), Some(name)))
 }
 
 pub fn make_numeric_variable(name: Rc<str>) -> Result {
@@ -587,11 +604,11 @@ pub fn make_numeric_variable(name: Rc<str>) -> Result {
             "numeric variable must not start with an apostrophe, got {name}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: NumericVariable,
-        children: Children::Zero(),
-        variable_name: Some(name),
-    }))
+    Ok(PhraseData::new(
+        NumericVariable,
+        Children::Zero(),
+        Some(name),
+    ))
 }
 
 pub fn make_numeric_constant_zero() -> Phrase {
@@ -604,22 +621,18 @@ pub fn make_imply(antecedent: Phrase, consequent: Phrase) -> Result {
             "make_imply requires propositions, got antecedent: {antecedent}, consequent: {consequent}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Imply,
-        children: Children::Two(antecedent, consequent),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(
+        Imply,
+        Children::Two(antecedent, consequent),
+        None,
+    ))
 }
 
 pub fn make_not(negand: Phrase) -> Result {
     if !negand.is_proposition() {
         Err(format!("make_not requires a proposition, got {negand}"))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Not,
-        children: Children::One(negand),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(Not, Children::One(negand), None))
 }
 
 pub fn make_equals(left: Phrase, right: Phrase) -> Result {
@@ -628,11 +641,7 @@ pub fn make_equals(left: Phrase, right: Phrase) -> Result {
             "make_equals requires numeric phrases, got left: {left}, right: {right}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Equals,
-        children: Children::Two(left, right),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(Equals, Children::Two(left, right), None))
 }
 
 pub fn make_successor(number: Phrase) -> Result {
@@ -641,11 +650,7 @@ pub fn make_successor(number: Phrase) -> Result {
             "make_successor requires a numeric phrase, got {number}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Successor,
-        children: Children::One(number),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(Successor, Children::One(number), None))
 }
 
 pub fn make_add(left: Phrase, right: Phrase) -> Result {
@@ -654,11 +659,7 @@ pub fn make_add(left: Phrase, right: Phrase) -> Result {
             "make_add requires numeric phrases, got left: {left}, right: {right}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Add,
-        children: Children::Two(left, right),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(Add, Children::Two(left, right), None))
 }
 
 pub fn make_multiply(left: Phrase, right: Phrase) -> Result {
@@ -667,11 +668,7 @@ pub fn make_multiply(left: Phrase, right: Phrase) -> Result {
             "make_multiply requires numeric phrases, got left: {left}, right: {right}"
         ))?
     }
-    Ok(Rc::new(PhraseData {
-        kind: Multiply,
-        children: Children::Two(left, right),
-        variable_name: None,
-    }))
+    Ok(PhraseData::new(Multiply, Children::Two(left, right), None))
 }
 
 pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
@@ -680,11 +677,11 @@ pub fn make_quantify(variable: Phrase, predicate: Phrase) -> Result {
             "make_quantify requires a numeric variable and a proposition, got variable: {variable}, predicate: {predicate}"
         ))?
     }
-    let new = Rc::new(PhraseData {
-        kind: Quantify,
-        children: Children::Two(variable, predicate.clone()),
-        variable_name: None,
-    });
+    let new = PhraseData::new(
+        Quantify,
+        Children::Two(variable, predicate.clone()),
+        None,
+    );
     if predicate.clone().get_is_proven() {
         new.clone().assert_axiom(NamePhrase(
             "universal generalization",
