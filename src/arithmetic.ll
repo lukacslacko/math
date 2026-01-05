@@ -1335,3 +1335,30 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
     ⊦ goal
     goal[x / X][y / Y]
 }
+
+{
+    goal ≔ 𝗦x ≤ 𝗦y ⇒ x ≤ y
+
+    ⤷ peano2
+    ⤷ deduce
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+
+    step ≔ {
+        goal ≔ 𝗦y = 𝗦x + a ⇒ y = x + a
+        ⤷ peano2
+        ⤷ deduce
+        𝗦y = u; u; v | ⪮[u = v / 𝗦x + a = 𝗦(x + a)].MP;
+        peano2[X = Y / y = x + a] | deduce
+        ⊦ goal
+        goal
+    }
+
+    step; Z; ↘↘↘ | ✂.conditional_exists_by_example[a / Z]; Z | exists_ante
+
+    ⊦ goal
+    goal[x / X][y / Y]
+}
+
+⊦ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
+⊦ 𝗦X ≤ 𝗦Y ⇒ X ≤ Y
