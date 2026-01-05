@@ -1013,6 +1013,56 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 
 {
+    goal ≔ x0 ≤ y0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
+    ⤷ replace
+    ⤷ replace_cut
+    ⤷ deduce
+    ⤷ apply
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ conditional_exists_by_example
+    ⤷ commute_ante
+    ⤷ exists_ante
+    step ≔ {
+        goal ≔ y0 = x0 + a0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
+        ⤷ replace
+        ⤷ replace_cut
+        ⤷ deduce
+        ⤷ apply
+        ⤷ xyz_impl_and
+        ⤷ and_impl_xyz
+        ⤷ conditional_exists_by_example
+        ⤷ commute_ante
+        ⤷ exists_ante
+        step ≔ {
+            goal ≔ y0 = x0 + a0 ⇒ y1 = x1 + a1 ⇒ y0 + y1 = (x0 + x1) + (a0 + a1)
+            ⤷ replace
+            ⤷ replace_cut
+            ⤷ deduce
+            ⤷ apply
+            ⤷ xyz_impl_and
+            ⤷ and_impl_xyz
+            h ≔ y0 + u; u; y1; x1 + a1 | replace
+            g ≔ h; u; ↘↘↙ | ✂; x0 + a0 | replace_cut
+            k ≔ g; u; ↘↘↘ | ✂; (x0 + x1) + (a0 + a1) | replace_cut.MP
+            ⊦ goal
+            goal
+        }
+        step; xyz_impl_and | apply.MP;
+        Z; ↘↘↘ | ✂.conditional_exists_by_example;
+        and_impl_xyz | apply.MP | commute_ante[a1 / Z];
+        Z | exists_ante.commute_ante
+        ⊦ goal
+        goal
+    }
+    step[a0 / Z]; Z | exists_ante
+    ⊦ goal
+    goal[x0 / X0][y0 / Y0][x1 / X1][y1 / Y1]
+}
+⊦ A = B + C ⇒ A' = B' + C' ⇒ A + A' = (B + B') + (C + C')
+⊦ X ≤ Y ⇒ X' ≤ Y' ⇒ X + X' ≤ Y + Y'
+
+{
     goal ≔ x ≤ x + a
     ⤷ exists_by_example
     x + a = x + Z; Z; a | exists_by_example
