@@ -1258,3 +1258,57 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 }
 
 ⊦ ¬x = 𝗦x
+
+{
+    ⤷ peano4
+    ⤷ replace_cut
+    goal ≔ 𝗦X + 𝗦Y = 𝗦𝗦(X + Y)
+    peano4[X / 𝗦X]; Z; ↘↓ | ✂; goal↘↓ | replace_cut.MP
+    (x = y ⇒ y = x)[x / goal↙][y / goal↘].MP
+    ⊦ goal
+}
+
+{
+    ⤷ contra
+    ⤷ ignore
+    ⤷ peano1
+    ⤷ peano2
+    ⤷ peano3
+    ⤷ peano4
+    ⤷ replace_cut
+    ⤷ recontra
+    ⤷ deduce
+    ⤷ commute_ante
+    ⤷ distr
+    ⤷ add_comm
+    ⤷ eq_trans
+    ⤷ eq_flip
+    goal ≔ x ≤ y ⇒ ¬x = 𝗦y
+    goal4 ≔ ¬y = 𝗦y + x
+    peano4[X / x][Y / 0]
+    peano1[X / x + 0]
+    1 + x = x + 1 ⇅add_comm; y; ↘ | ✂; 𝗦(x + 0) | replace_cut.MP
+    0 = x; x; y | ⪮[x / 1 + x][y / 𝗦(x + 0)].MP.recontra.MP.MP
+    e ≔ add_comm[X / 𝗦𝗦y][Y / x];
+    peano4[X / x][Y / 𝗦y] | eq_trans; z; ↘↓ | ✂; add_comm[X / x][Y / 𝗦y]↘ | replace_cut.MP.eq_flip
+    ∀y(peano2[X / y][Y / 𝗦y + x].recontra.MP; z; ↘↓↘ | ✂; e↘ | replace_cut.MP)
+    goal4; y | ↺.MP.MP[y].MP
+    ⊦ goal4
+    peano3[X / 𝗦y]
+    (¬x = 𝗦x)[x / y]
+    a ≔ y = x + 0; x; z | ⪮[z / 𝗦y]; z; ↘↘↘ | ✂; 𝗦y | replace_cut.MP
+    b ≔ a; a↘.recontra | deduce.commute_ante.MP;
+    (¬y = x + Z; Z).↺ | deduce
+    goal4[x / 𝗦Z]
+    c ≔ y = x + 𝗦Z; x; z | ⪮[z / 𝗦y]
+    d ≔ c; c↘.recontra | deduce.commute_ante.MP
+    (x = 𝗦y).∀Z;
+    (∀Z ignore['A / d]['B / b↘↙↘↙].MP.commute_ante ⇆.MP) | deduce
+    distr['A / b↙]['B / b↘↙]['C / b↘↘].MP.MP.recontra.MP
+    ⊦ goal
+}
+
+⊦ 𝗦X + 𝗦Y = 𝗦𝗦(X + Y)
+⊦ 𝗦𝗦(X + Y) = 𝗦X + 𝗦Y
+⊦ ¬y = 𝗦y + x
+⊦ x ≤ y ⇒ ¬x = 𝗦y
