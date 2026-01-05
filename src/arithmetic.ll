@@ -1312,3 +1312,26 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 ⊦ 𝗦𝗦(X + Y) = 𝗦X + 𝗦Y
 ⊦ ¬y = 𝗦y + x
 ⊦ x ≤ y ⇒ ¬x = 𝗦y
+
+{
+    goal ≔ x ≤ y ⇒ 𝗦x ≤ 𝗦y
+
+    ⤷ replace
+    ⤷ replace_cut
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+
+    step ≔ {
+        goal ≔ y = x + a ⇒ 𝗦y = 𝗦x + a
+        ⤷ replace
+        ⤷ replace_cut
+        𝗦u; u; y; x + a | replace; u; ↘↘ | ✂; 𝗦x + a | replace_cut.MP
+        ⊦ goal
+        goal
+    }
+
+    step; Z; ↘↘↘ | ✂.conditional_exists_by_example[a / Z]; Z | exists_ante
+
+    ⊦ goal
+    goal[x / X][y / Y]
+}
