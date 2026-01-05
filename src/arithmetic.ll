@@ -329,6 +329,7 @@ and_comm ≔ {
     recontrapose['A / 'y ⇒ ¬'x]['B / 'x ⇒ ¬'y].MP
 
     ⊦ goal
+    goal['x / 'X]['y / 'Y]
 }
 
 and_assoc ≔ {
@@ -344,6 +345,7 @@ and_assoc ≔ {
     xyz_impl_and['X / 'x]['Y / 'y]['Z / ¬'z] | deduce | recontra.MP
 
     ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 
 demorgan_or ≔ {
@@ -389,6 +391,22 @@ demorgan_and ≔ {
     ⊦ goal
 }
 
+conditional_and ≔ {
+    goal ≔ ('x ⇒ 'y) ⇒ ('x ⇒ 'z) ⇒ ('x ⇒ 'y ∧ 'z)
+    ⤷ x_impl_y_impl_and
+    ⤷ ignore
+    ⤷ distr
+    ⤷ apply
+    ⤷ deduce
+    a ≔ x_impl_y_impl_and['X / 'y]['Y / 'z]
+    b ≔ ignore['A / a]['B / 'x].MP; distr | apply.MP
+    c ≔ b↘; distr | apply
+    b; c | deduce
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
+}
+
+
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
 
@@ -428,6 +446,8 @@ equals_transitive ≔ {
     ⊦ goal
     goal[x / X][y / Y][z / Z]
 }
+
+equals_transitive' ≔ equals_transitive.commute_ante
 
 eq_trans ≔ λ{
     ↵ equals_transitive[X = Y / ●ⅰ][Y = Z / ●ⅱ].MP.MP
@@ -1051,6 +1071,113 @@ leq_trans ≔ {
 
     ⊦ goal
     goal
+}
+
+{
+    goal ≔ x = x + y ⇒ y = 0
+
+    ⤷ equals_transitive
+    ⤷ equals_transitive'
+    ⤷ deduce
+    ⤷ chain
+
+    0 = 0 + y ⇒ 0 + y = 0;
+    equals_transitive[X = Y / y = 0 + y][Z / 0].MP | deduce
+
+    h ≔ equals_transitive'[X / 𝗦x][Y / 𝗦x + y][Z / 𝗦(x + y)].MP;
+    𝗦x = 𝗦(x + y) ⇒ x = x + y | deduce
+    chain['X ⇒ 'Y / h]['Z / y = 0].MP
+
+    goal; x | ↺.MP.MP[x].MP
+    ⊦ goal
+    goal[x / X][y / Y]
+}
+
+{
+    goal ≔ x + y = 0 ⇒ y = 0
+    ⤷ equals_transitive
+    ⤷ reduce
+    ⤷ deduce
+    ⤷ contrapose
+    ⤷ ignore
+
+    X = Y ⇒ Y = X; 𝗦(x + y) = 𝗦x + y | reduce.MP
+    g ≔ equals_transitive; 𝗦x + y = 0 ⇒ 𝗦(x + y) = 0 | reduce.MP
+    ignore['A / ¬𝗦(x + y) = 0]['B / ¬y = 0].MP
+    h ≔ contrapose; 𝗦(x + y) = 0 ⇒ y = 0 | reduce.MP
+    g; h | deduce
+    i ≔ goal; x | ↺.MP
+    ∀x(ignore; i↙↘ | reduce.MP)
+    i.MP[x].MP
+    ⊦ goal
+    goal[x / X][y / Y]
+}
+
+{
+    goal ≔ x + y = 0 ⇒ x = 0
+    ⤷ reduce
+    ⤷ deduce
+    ⤷ equals_transitive
+    equals_transitive; x + y = 0 ⇒ y + x = 0 | reduce.MP;
+    y + x = 0 ⇒ x = 0 | deduce
+    ⊦ goal
+    goal
+}
+
+{
+    goal ≔ x ≤ y ⇒ y ≤ x ⇒ x = y
+
+    ⤷ commute_antecedents
+    ⤷ reduce
+    ⤷ deduce
+    ⤷ apply
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ and_impl_x
+    ⤷ replace_cut
+    ⤷ exists_ante
+    step ≔ {
+        goal ≔ y = x + a ⇒ y ≤ x ⇒ x = y
+
+        ⤷ commute_antecedents
+        ⤷ reduce
+        ⤷ deduce
+        ⤷ apply
+        ⤷ xyz_impl_and
+        ⤷ and_impl_xyz
+        ⤷ and_impl_x
+        ⤷ replace_cut
+        ⤷ exists_ante
+        h ≔ commute_antecedents; goal | reduce
+
+        step ≔ {
+            goal ≔ x = y + b ⇒ y = x + a ⇒ x = y
+            ⤷ deduce
+            ⤷ apply
+            ⤷ xyz_impl_and
+            ⤷ and_impl_xyz
+            ⤷ replace_cut
+            ⤷ and_impl_x
+            h ≔ y = u + a; u; v | ⪮[u = v / x = y + b]; xyz_impl_and | apply.MP
+            g ≔ y = u; u; v | ⪮[u = v / (y + b) + a = y + (b + a)].MP
+            j ≔ y = y + (b + a) ⇒ b + a = 0
+            k ≔ h; g | deduce; j | deduce; b + a = 0 ⇒ b = 0 | deduce
+            m ≔ k↙; and_impl_x | apply
+            n1 ≔ (k ⇒ m ⇒ k↙ ⇒ (k↘∧ m↘))⁇.MP.MP
+            n2 ≔ x = y + b; b; u | ⪮[u / 0]; u; ↘↘↘ | ✂; y | replace_cut.MP; xyz_impl_and | apply.MP
+            n1; n2 | deduce; and_impl_xyz | apply.MP
+            ⊦ goal
+            goal
+        }
+
+        step[b / Z]; Z | exists_ante
+
+        h.MP
+        ⊦ goal
+        goal
+    }
+    step[a / Z]; Z | exists_ante
+    ⊦ goal
 }
 
 X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
