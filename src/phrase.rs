@@ -1,3 +1,4 @@
+use colored::Colorize;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
@@ -158,7 +159,7 @@ impl fmt::Binary for PhraseData {
         } else {
             "Unproven"
         };
-        write!(f, "{is_known_truth}:{self}")
+        write!(f, "{is_known_truth}:{self}\n\n{}\n", self.pretty_print())
     }
 }
 
@@ -196,6 +197,26 @@ pub struct CutResult {
 pub struct Substitution {
     pub variable: Phrase,
     pub term: Phrase,
+}
+
+struct ExistsPieces {
+    var: Phrase,
+    predicate: Phrase,
+}
+
+struct LessThanOrEqualPieces {
+    left: Phrase,
+    right: Phrase,
+}
+
+struct OrPieces {
+    left: Phrase,
+    right: Phrase,
+}
+
+struct AndPieces {
+    left: Phrase,
+    right: Phrase,
 }
 
 impl PhraseData {
@@ -586,6 +607,184 @@ impl PhraseData {
         );
         #[cfg(not(feature = "html"))]
         return "".to_string();
+    }
+
+    fn pretty_print(&self) -> String {
+        self.pretty_print_level(0)
+    }
+
+    fn exists_pieces(&self) -> Option<ExistsPieces> {
+        if self.kind != Not {
+            return None;
+        }
+        let child = self.children.unwrap_one();
+        if child.kind != Quantify {
+            return None;
+        }
+        let grandchildren = child.children.unwrap_two();
+        if grandchildren.1.kind != Not {
+            return None;
+        }
+        let (var, predicate) = grandchildren;
+        Some(ExistsPieces {
+            var: var.clone(),
+            predicate: predicate.children.unwrap_one().clone(),
+        })
+    }
+
+    fn less_than_or_equal_pieces(&self) -> Option<LessThanOrEqualPieces> {
+        if let Some(exists) = self.exists_pieces() {
+            let grandchildren = exists.predicate.children.unwrap_two();
+            if grandchildren.1.kind == Add {
+                let (add_left, add_right) =
+                    grandchildren.1.children.unwrap_two();
+                if add_right == &exists.var {
+                    return Some(LessThanOrEqualPieces {
+                        left: add_left.clone(),
+                        right: grandchildren.0.clone(),
+                    });
+                }
+            }
+        }
+        None
+    }
+
+    fn or_pieces(&self) -> Option<OrPieces> {
+        if self.kind != Imply {
+            return None;
+        }
+        let (antecedent, consequent) = self.children.unwrap_two();
+        if let Some(_) = antecedent.less_than_or_equal_pieces() {
+            return None;
+        }
+        if antecedent.kind == Not {
+            let negand = antecedent.children.unwrap_one();
+            return Some(OrPieces {
+                left: negand.clone(),
+                right: consequent.clone(),
+            });
+        }
+        None
+    }
+
+    fn and_pieces(&self) -> Option<AndPieces> {
+        if self.kind != Not {
+            return None;
+        }
+        let child = self.children.unwrap_one();
+        if child.kind != Imply {
+            return None;
+        }
+        let (antecedent, consequent) = child.children.unwrap_two();
+        if let Some(_) = consequent.less_than_or_equal_pieces() {
+            return None;
+        }
+        if consequent.kind == Not {
+            let negand = consequent.children.unwrap_one();
+            return Some(AndPieces {
+                left: antecedent.clone(),
+                right: negand.clone(),
+            });
+        }
+        None
+    }
+
+    fn pretty_print_level(&self, level: usize) -> String {
+        let paint = |s: String| {
+            s.on_truecolor(
+                255 - level as u8 * 10,
+                255 - level as u8 * 10,
+                255 - level as u8 * 10,
+            )
+            .to_string()
+        };
+        if let Some(less_than_or_equal) = self.less_than_or_equal_pieces() {
+            return paint(format!(
+                "({} ≤ {})",
+                less_than_or_equal.left.pretty_print_level(level + 1),
+                less_than_or_equal.right.pretty_print_level(level + 1)
+            ));
+        }
+        if let Some(or) = self.or_pieces() {
+            return paint(format!(
+                "({} ∨ {})",
+                or.left.pretty_print_level(level + 1),
+                or.right.pretty_print_level(level + 1)
+            ));
+        }
+        if let Some(and) = self.and_pieces() {
+            return paint(format!(
+                "({} ∧ {})",
+                and.left.pretty_print_level(level + 1),
+                and.right.pretty_print_level(level + 1)
+            ));
+        }
+        if let Some(exists) = self.exists_pieces() {
+            return paint(format!(
+                "∃{} {}",
+                exists.var.pretty_print_level(level + 1),
+                exists.predicate.pretty_print_level(level + 1)
+            ));
+        }
+        match self.kind {
+            LogicVariable | NumericVariable => {
+                self.children.unwrap_zero();
+                if let Some(variable_name) = &self.variable_name {
+                    paint(format!("{variable_name}"))
+                } else {
+                    paint(format!("unnamed variable"))
+                }
+            }
+            Zero => paint(format!("0")),
+            Imply => {
+                let (antecedent, consequent) = self.children.unwrap_two();
+                paint(format!(
+                    "( {}  =>  {} )",
+                    antecedent.pretty_print_level(level + 1),
+                    consequent.pretty_print_level(level + 1)
+                ))
+            }
+            Not => {
+                let child = self.children.unwrap_one();
+                paint(format!("¬{}", child.pretty_print_level(level + 1)))
+            }
+            Equals => {
+                let (left, right) = self.children.unwrap_two();
+                paint(format!(
+                    "({} = {})",
+                    left.pretty_print_level(level + 1),
+                    right.pretty_print_level(level + 1)
+                ))
+            }
+            Successor => {
+                let child = self.children.unwrap_one();
+                paint(format!("𝗦({})", child.pretty_print_level(level + 1)))
+            }
+            Add => {
+                let (left, right) = self.children.unwrap_two();
+                paint(format!(
+                    "({} + {})",
+                    left.pretty_print_level(level + 1),
+                    right.pretty_print_level(level + 1)
+                ))
+            }
+            Multiply => {
+                let (left, right) = self.children.unwrap_two();
+                paint(format!(
+                    "({} * {})",
+                    left.pretty_print_level(level + 1),
+                    right.pretty_print_level(level + 1)
+                ))
+            }
+            Quantify => {
+                let (left, right) = self.children.unwrap_two();
+                paint(format!(
+                    "∀{} {}",
+                    left.pretty_print_level(level + 1),
+                    right.pretty_print_level(level + 1)
+                ))
+            }
+        }
     }
 }
 

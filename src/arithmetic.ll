@@ -1308,7 +1308,7 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
     ⊦ goal
 }
 
-{
+leq_mul ≔ {
     goal ≔ x ≤ y ⇒ a * x ≤ a * y
     ⤷ mul_add_distr
     ⤷ replace_cut
@@ -1323,11 +1323,10 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
     y = x + z ⇒ x + z = y | prededuce;
     Z; ↘↘↘ | ✂.conditional_exists_by_example[z / Z];
     Z | exists_ante
-
-    v ≔ y = x + z ⇒ a * y = a * x + a * z
     ⊦ goal
     goal[x / X][y / Y][a / A]
 }
+⊦ X ≤ Y ⇒ A * X ≤ A * Y
 
 {
     ⤷ peano1

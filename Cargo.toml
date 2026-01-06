@@ -8,3 +8,4 @@ default-run = "math"
 html = []
 
 [dependencies]
+colored = "3.0.0"
