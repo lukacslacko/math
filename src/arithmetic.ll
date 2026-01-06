@@ -429,7 +429,7 @@ or_impl_distr ≔ {
     ⤷ apply
     a ≔ quadchain['X / ¬'y]['Y / ¬'x]['Z / 'z]['W / 'w]
     b ≔ recontrapose['A / 'x]['B / 'y]
-    c ≔ b; a | deduce ℻
+    c ≔ b; a | deduce 
     c; (c↘; commute_antecedents | apply) | deduce
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
