@@ -1478,3 +1478,22 @@ leq_mul ≔ {
 
 ⊦ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
 ⊦ 𝗦X ≤ 𝗦Y ⇒ X ≤ Y
+
+{
+    goal ≔ x = 0 ∨¬∀y¬x = 𝗦y
+    ⤷ x_impl_or
+    ⤷ y_impl_or
+    ⤷ exists_by_example
+    ⤷ ignore
+    ⤷ reduce
+    i ≔ goal; x | ↺
+    x_impl_or; i↙ | reduce.MP
+    j ≔ i.MP
+    a ≔ 𝗦x = 𝗦y; y; x | exists_by_example
+    y_impl_or; j↙↘↘ | reduce.MP
+    ∀x(ignore; j↙↘ | reduce.MP)
+    j.MP[x].MP
+    ⊦ goal
+    goal[x / X]
+}
+⊦ X = 0 ∨¬∀y¬X = 𝗦y

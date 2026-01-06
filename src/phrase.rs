@@ -691,7 +691,7 @@ impl PhraseData {
 
     fn pretty_print_level(&self, level: usize) -> String {
         let paint = |s: String| {
-            s.on_truecolor(
+            s.black().on_truecolor(
                 255 - level as u8 * 10,
                 255 - level as u8 * 10,
                 255 - level as u8 * 10,
