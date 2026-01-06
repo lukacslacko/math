@@ -84,6 +84,23 @@ deduce ≔ λ{
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
 
+prededuce ≔ λ{
+    /*
+    Argument: Q ⇒ R; P ⇒ Q
+    Assumption: both implications are proven
+    Returns: P ⇒ R
+
+    This is the unnatural order of deduction, when one has an
+    implication ∧ wants to exchange the antecedent in it by
+    chaining something in front of it.
+
+    This can be useful for cases when one has a long chain of
+    operations ∧ needs to change something in the antecedent
+    but one doesn't want to break to flow of the operation chain.
+     */
+    ↵ ●ⅱ; ●ⅰ | deduce
+}
+
 false_implies_anything ≔ {
     goal ≔ ¬'B ⇒ 'B ⇒ 'A
 
@@ -429,12 +446,12 @@ or_impl_distr ≔ {
     ⤷ apply
     a ≔ quadchain['X / ¬'y]['Y / ¬'x]['Z / 'z]['W / 'w]
     b ≔ recontrapose['A / 'x]['B / 'y]
-    c ≔ b; a | deduce 
+    c ≔ b; a | deduce
     c; (c↘; commute_antecedents | apply) | deduce
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
 }
-|- ('X ⇒ 'Y) ⇒ ('Z ⇒ 'W) ⇒ ('X ∨ 'Z ⇒ 'Y ∨ 'W)
+⊦ ('X ⇒ 'Y) ⇒ ('Z ⇒ 'W) ⇒ ('X ∨ 'Z ⇒ 'Y ∨ 'W)
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
@@ -1289,6 +1306,27 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
     X + X; X; y; x + Z | replace; X; ↘↘ | ✂; a↘ | replace_cut.MP; Z; ↘↘↘ | ✂.conditional_exists_by_example; Z | exists_ante
 
     ⊦ goal
+}
+
+{
+    goal ≔ x ≤ y ⇒ a * x ≤ a * y
+    ⤷ mul_add_distr
+    ⤷ replace_cut
+    ⤷ prededuce
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+    mul_add_distr[X / x][Y / z][Z / a];
+    w; ↙ | ✂; a * (x + z) | replace_cut.MP;
+    w; ↘↙ | ✂; a * x | replace_cut.MP;
+    w; ↘↘ | ✂; a * z | replace_cut.MP;
+    w; ↙↘ | ✂; y | replace_cut;
+    y = x + z ⇒ x + z = y | prededuce;
+    Z; ↘↘↘ | ✂.conditional_exists_by_example[z / Z];
+    Z | exists_ante
+
+    v ≔ y = x + z ⇒ a * y = a * x + a * z
+    ⊦ goal
+    goal[x / X][y / Y][a / A]
 }
 
 {
