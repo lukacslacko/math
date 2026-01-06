@@ -406,6 +406,19 @@ conditional_and ≔ {
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 
+quadchain ≔ {
+    goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ ('z ⇒ 'w) ⇒ ('x ⇒ 'w)
+    ⤷ chain
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ apply
+    ⤷ deduce
+    a ≔ chain['X / 'x]['Y / 'z]['Z / 'w]
+    b ≔ chain['X / 'x]['Y / 'y]['Z / 'z]; xyz_impl_and | apply.MP
+    b; a | deduce; and_impl_xyz | apply.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
+}
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
