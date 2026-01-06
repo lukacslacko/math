@@ -1497,3 +1497,85 @@ leq_mul ≔ {
     goal[x / X]
 }
 ⊦ X = 0 ∨¬∀y¬X = 𝗦y
+
+{
+    goal ≔ ∀x(x ≤ y ∨ y ≤ x)
+
+    ⤷ x_impl_or
+    ⤷ y_impl_or
+    ⤷ or_impl_distr
+    ⤷ ignore
+    ⤷ reduce
+
+    ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
+    i ≔ goal; y | ↺.MP
+
+    /*
+    We still need to prove that
+    ∀y(∀x((x ≤ y)∨(y ≤ x)) ⇒ ∀x((x ≤ 𝗦(y))∨(𝗦(y) ≤ x)))
+     */
+    i↙℻
+
+    /*
+    We will prove the expression below, then(∀y h)will prove i.
+     */
+    h ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ ∀x((x ≤ 𝗦(y))∨(𝗦(y) ≤ x))
+
+    /* This shows that they are the same indeed. */
+    i↙↘℻
+    h ℻
+
+    /*
+    Now we'll prove the expression below instead, from which
+    we'll somehow get h, probably with.∀x ⇆something
+    like that.
+     */
+    h' ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (x ≤ 𝗦(y))∨(𝗦(y) ≤ x)
+
+    /*
+    We want to prove h' in two parts, once for x = 0,
+    once for x = 𝗦a.
+     */
+
+    /*
+    This is the part for x = 0.
+     */
+    h'0 ≔ {
+        goal ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (0 ≤ 𝗦(y))∨(𝗦(y) ≤ 0)
+
+        ⤷ x_impl_or
+        ⤷ ignore
+        ⤷ reduce
+
+        goal↘℻
+
+        x_impl_or; goal↘ | reduce.MP
+        ignore; goal | reduce.MP
+
+        ⊦ goal
+        goal
+    }
+
+    /*
+    This is the part for x = 𝗦a.
+     */
+    h'S ≔ {
+        goal ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (𝗦(a) ≤ 𝗦(y))∨(𝗦(y) ≤ 𝗦(a))
+
+        ⤷ or_impl_distr
+
+        m ≔ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
+        b ≔ or_impl_distr['X ⇒ 'Y / m[X / x][Y / y]]['Z ⇒ 'W / m[X / y][Y / x]].MP.MP
+
+        b ℻
+        goal ℻
+
+        /*
+        TODO somehow derive goal from b
+         */
+    }
+
+    /*
+    TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
+     */
+}
