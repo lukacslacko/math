@@ -101,6 +101,15 @@ prededuce ≔ λ{
     ↵ ●ⅱ; ●ⅰ | deduce
 }
 
+rename_quantify ≔ λ{
+    /*
+    Argument:∀var1 P; var2
+    Assumption: var2 is not free in P
+    Returns:(∀var1 P) ⇒ (∀var2 P)
+     */
+    ↵ ●ⅰ.∀●ⅱ; (∀●ⅱ●ⅰ[●ⅱ] ⇆).MP | deduce
+}
+
 false_implies_anything ≔ {
     goal ≔ ¬'B ⇒ 'B ⇒ 'A
 
