@@ -420,6 +420,22 @@ quadchain ≔ {
     goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
 }
 
+or_impl_distr ≔ {
+    goal ≔ ('x ⇒ 'y) ⇒ ('z ⇒ 'w) ⇒ ('x ∨ 'z ⇒ 'y ∨ 'w)
+    ⤷ quadchain
+    ⤷ recontrapose
+    ⤷ deduce
+    ⤷ commute_antecedents
+    ⤷ apply
+    a ≔ quadchain['X / ¬'y]['Y / ¬'x]['Z / 'z]['W / 'w]
+    b ≔ recontrapose['A / 'x]['B / 'y]
+    c ≔ b; a | deduce ℻
+    c; (c↘; commute_antecedents | apply) | deduce
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
+}
+|- ('X ⇒ 'Y) ⇒ ('Z ⇒ 'W) ⇒ ('X ∨ 'Z ⇒ 'Y ∨ 'W)
+
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
 
