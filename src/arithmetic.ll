@@ -1538,6 +1538,8 @@ leq_mul ≔ {
     ⤷ apply
     ⤷ replace_cut
     ⤷ prededuce
+    ⤷ exists_ante
+    ⤷ conditional_or
 
     ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
     i ≔ goal; y | ↺.MP
@@ -1601,13 +1603,33 @@ leq_mul ≔ {
     /*
     TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
      */
-    ⊦ X = 0 ∨¬∀y¬X = 𝗦y ℻
-    h' ℻
-    h'0 ℻
-    h'S ℻
+    two_cases ≔ (X = 0 ∨¬∀y¬X = 𝗦y)[X / x]
 
     /* Prove h' for x = 0 */
     ignore['A / h'0]['B / x = 0].MP; 0 = x ⇒ x = 0 | prededuce
-    h'0a ≔ h'[x / x0]; x0; x | ⪮[x0 / 0]; distr | apply.MP.MP
-    h'0a ℻
+    h'0a ≔ h'[x / x0]; x0; x | ⪮[x0 / 0]; distr | apply.MP.MP;
+    x = 0 ⇒ 0 = x | prededuce
+
+    /* Prove h' for x = 𝗦a */
+    ignore['A / h'S]['B / x = 𝗦a].MP; 𝗦a = x ⇒ x = 𝗦a | prededuce
+    h'Sa ≔ h'[x / xS]; xS; x | ⪮[xS / 𝗦a]; distr | apply.MP.MP;
+    x = 𝗦a ⇒ 𝗦a = x | prededuce
+
+    /* Reshape the proof of h' for x = 𝗦a to have an exists at
+    the beginning, since that's how the split in two_cases is
+    proven */
+    h'Sb ≔ h'Sa[y / Y][a / y]; y | exists_ante[Y / y]
+
+    conditional_or['X ⇒ 'Z / h'0a]['Y ⇒ 'Z / h'Sb].MP.MP.MP
+
+    /* This concludes the proof of h', now back to h */
+    h_almost ≔ ∀x h' ⇆.MP
+    h_almost↙↘.∀x; h_almost | deduce
+
+    /* Now that h is ready, finish the induction */
+    ∀y h
+    result ≔ i.MP[y].MP[x].MP
+    result[x / X][y / Y]
 }
+
+⊦ X ≤ Y ∨ Y ≤ X
