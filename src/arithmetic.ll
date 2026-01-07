@@ -1534,6 +1534,10 @@ leq_mul ≔ {
     ⤷ ignore
     ⤷ reduce
     ⤷ deduce
+    ⤷ distr
+    ⤷ apply
+    ⤷ replace_cut
+    ⤷ prededuce
 
     ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
     i ≔ goal; y | ↺.MP
@@ -1597,9 +1601,13 @@ leq_mul ≔ {
     /*
     TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
      */
-    ⊦ X = 0 ∨¬∀y¬X = 𝗦y
-    i ℻
-    h ℻
+    ⊦ X = 0 ∨¬∀y¬X = 𝗦y ℻
+    h' ℻
     h'0 ℻
     h'S ℻
+
+    /* Prove h' for x = 0 */
+    ignore['A / h'0]['B / x = 0].MP; 0 = x ⇒ x = 0 | prededuce
+    h'0a ≔ h'[x / x0]; x0; x | ⪮[x0 / 0]; distr | apply.MP.MP
+    h'0a ℻
 }
