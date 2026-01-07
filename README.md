@@ -70,6 +70,7 @@ These get expanded by the interpreter to the expressions described below.
 | `x ∨ y` or `x or y`  | `¬x ⇒ y` |
 | `x < y` | `∀Z(¬x = y + Z)` |
 | `x ≤ y` or `x <= y` | `¬∀Z(¬y = x + Z)` |
+| `x ∣ y` or `x <div> y` | `¬∀M(¬y = x * M)` |
 
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |

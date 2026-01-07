@@ -209,6 +209,11 @@ struct LessThanOrEqualPieces {
     right: Phrase,
 }
 
+struct DividesPieces {
+    left: Phrase,
+    right: Phrase,
+}
+
 struct OrPieces {
     left: Phrase,
     right: Phrase,
@@ -649,12 +654,32 @@ impl PhraseData {
         None
     }
 
+    fn divides_pieces(&self) -> Option<DividesPieces> {
+        if let Some(exists) = self.exists_pieces() {
+            let grandchildren = exists.predicate.children.unwrap_two();
+            if grandchildren.1.kind == Multiply {
+                let (multiply_left, multiply_right) =
+                    grandchildren.1.children.unwrap_two();
+                if multiply_right == &exists.var {
+                    return Some(DividesPieces {
+                        left: multiply_left.clone(),
+                        right: grandchildren.0.clone(),
+                    });
+                }
+            }
+        }
+        None
+    }
+
     fn or_pieces(&self) -> Option<OrPieces> {
         if self.kind != Imply {
             return None;
         }
         let (antecedent, consequent) = self.children.unwrap_two();
         if let Some(_) = antecedent.less_than_or_equal_pieces() {
+            return None;
+        }
+        if let Some(_) = antecedent.divides_pieces() {
             return None;
         }
         if antecedent.kind == Not {
@@ -677,6 +702,9 @@ impl PhraseData {
         }
         let (antecedent, consequent) = child.children.unwrap_two();
         if let Some(_) = consequent.less_than_or_equal_pieces() {
+            return None;
+        }
+        if let Some(_) = consequent.divides_pieces() {
             return None;
         }
         if consequent.kind == Not {
@@ -703,6 +731,13 @@ impl PhraseData {
                 "({} ≤ {})",
                 less_than_or_equal.left.pretty_print_level(level + 1),
                 less_than_or_equal.right.pretty_print_level(level + 1)
+            ));
+        }
+        if let Some(divides) = self.divides_pieces() {
+            return paint(format!(
+                "({} ∣ {})",
+                divides.left.pretty_print_level(level + 1),
+                divides.right.pretty_print_level(level + 1)
             ));
         }
         if let Some(or) = self.or_pieces() {

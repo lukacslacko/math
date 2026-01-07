@@ -41,6 +41,7 @@ pub fn write_formatted_file(
         ("↵", "↵ "),
         ("<", " < "),
         ("≤", " ≤ "),
+        ("∣", " ∣ "),
     ];
 
     let mut ascii_versions = HashMap::new();

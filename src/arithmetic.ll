@@ -1633,3 +1633,20 @@ leq_mul ≔ {
 }
 
 ⊦ X ≤ Y ∨ Y ≤ X
+
+{
+    goal ≔ x ∣ x * a
+    ⤷ exists_by_example
+    x * a = x * M; M; a | exists_by_example
+    ⊦ goal
+    goal[x / X][a / A]
+}
+⊦ X ∣ X * A
+
+{
+    goal ≔ x ∣ a * x
+    x ∣ u; u; v | ⪮[u = v / x * a = a * x].MP.MP
+    ⊦ goal
+    goal[x / X][a / A]
+}
+⊦ X ∣ A * X
