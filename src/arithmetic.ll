@@ -462,6 +462,24 @@ or_impl_distr ≔ {
 }
 ⊦ ('X ⇒ 'Y) ⇒ ('Z ⇒ 'W) ⇒ ('X ∨ 'Z ⇒ 'Y ∨ 'W)
 
+conditional_or ≔ {
+    goal ≔ ('x ⇒ 'z) ⇒ ('y ⇒ 'z) ⇒ 'x ∨ 'y ⇒ 'z
+    ⤷ or_impl_distr
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ apply
+    ⤷ deduce
+    or_impl_distr['X / 'x]['Y / 'z]['Z / 'y]['W / 'z];
+    xyz_impl_and | apply.MP;
+    xyz_impl_and | apply.MP;
+    'z ∨ 'z ⇒ 'z | deduce;
+    and_impl_xyz | apply.MP;
+    and_impl_xyz | apply.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
+}
+⊦ ('X ⇒ 'Z) ⇒ ('Y ⇒ 'Z) ⇒ 'X ∨ 'Y ⇒ 'Z
+
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
 
@@ -1515,7 +1533,7 @@ leq_mul ≔ {
     ⤷ or_impl_distr
     ⤷ ignore
     ⤷ reduce
-    import deduce
+    ⤷ deduce
 
     ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
     i ≔ goal; y | ↺.MP
@@ -1579,8 +1597,9 @@ leq_mul ≔ {
     /*
     TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
      */
-    i FAX
-    h FAX
-    h'0 FAX
-    h'S FAX
+    ⊦ X = 0 ∨¬∀y¬X = 𝗦y
+    i ℻
+    h ℻
+    h'0 ℻
+    h'S ℻
 }
