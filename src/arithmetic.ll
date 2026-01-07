@@ -1515,6 +1515,7 @@ leq_mul ≔ {
     ⤷ or_impl_distr
     ⤷ ignore
     ⤷ reduce
+    import deduce
 
     ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
     i ≔ goal; y | ↺.MP
@@ -1523,16 +1524,11 @@ leq_mul ≔ {
     We still need to prove that
     ∀y(∀x((x ≤ y)∨(y ≤ x)) ⇒ ∀x((x ≤ 𝗦(y))∨(𝗦(y) ≤ x)))
      */
-    i↙℻
 
     /*
     We will prove the expression below, then(∀y h)will prove i.
      */
     h ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ ∀x((x ≤ 𝗦(y))∨(𝗦(y) ≤ x))
-
-    /* This shows that they are the same indeed. */
-    i↙↘℻
-    h ℻
 
     /*
     Now we'll prove the expression below instead, from which
@@ -1556,8 +1552,6 @@ leq_mul ≔ {
         ⤷ ignore
         ⤷ reduce
 
-        goal↘℻
-
         x_impl_or; goal↘ | reduce.MP
         ignore; goal | reduce.MP
 
@@ -1572,19 +1566,21 @@ leq_mul ≔ {
         goal ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (𝗦(a) ≤ 𝗦(y))∨(𝗦(y) ≤ 𝗦(a))
 
         ⤷ or_impl_distr
+        ⤷ deduce
 
         m ≔ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
         b ≔ or_impl_distr['X ⇒ 'Y / m[X / x][Y / y]]['Z ⇒ 'W / m[X / y][Y / x]].MP.MP
-
-        b ℻
-        goal ℻
-
-        /*
-        TODO somehow derive goal from b
-         */
+        c ≔ (∀x b) ⇆.MP
+        c; c↘[a] | deduce
+        ⊦ goal
+        goal
     }
 
     /*
     TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
      */
+    i FAX
+    h FAX
+    h'0 FAX
+    h'S FAX
 }
