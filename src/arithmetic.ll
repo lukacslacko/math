@@ -923,6 +923,21 @@ mul_assoc ≔ {
     goal[x / X][y / Y][z / Z]
 }
 
+mul_XY_ZW_eq_XZ_YW ≔ {
+    goal ≔ (x * x') * (a * a') = (x * a) * (x' * a')
+    ⤷ eq_trans
+    ⤷ replace
+    (x * x') * (a * a') = x * (x' * (a * a'));
+    (x * (x' * u); u; a * a'; a' * a | replace.MP) | eq_trans;
+    (x * u; u; x' * (a' * a); (x' * a') * a | replace.MP) | eq_trans;
+    (x * u; u; (x' * a') * a; a * (x' * a') | replace.MP) | eq_trans;
+    x * (a * (x' * a')) = (x * a) * (x' * a') | eq_trans
+    ⊦ goal
+    goal[x / X][x' / Y][a / Z][a' / W]
+}
+
+⊦ (X * Y) * (Z * W) = (X * Z) * (Y * W)
+
 exists_by_example ≔ {
     ⤷ recontrapose
 
@@ -1650,3 +1665,28 @@ leq_mul ≔ {
     goal[x / X][a / A]
 }
 ⊦ X ∣ A * X
+
+{
+    goal ≔ x ∣ y ⇒ x' ∣ y' ⇒ x * x' ∣ y * y'
+    ⤷ replace
+    ⤷ replace_cut
+    ⤷ eq_flip
+    ⤷ xyz_impl_and
+    ⤷ and_impl_xyz
+    ⤷ apply
+    ⤷ conditional_exists_by_example
+    ⤷ exists_ante
+    ⤷ commute_ante
+    (x * x') * (a * a') = (x * a) * (x' * a') | eq_flip
+    y * u; u; y'; x' * a' | replace; u; ↘↘↙ | ✂; x * a | replace_cut;
+    u; ↘↘↘ | ✂; (x * x') * (a * a') | replace_cut.MP;
+    xyz_impl_and | apply.MP;
+    M; ↘↘↘ | ✂ | conditional_exists_by_example;
+    and_impl_xyz | apply.MP[a / M];
+    M | exists_ante | commute_ante[a' / M];
+    M | exists_ante | commute_ante
+
+    ⊦ goal
+    goal[x / X][x' / X'][y / Y][y' / Y']
+}
+⊦ X ∣ Y ⇒ X' ∣ Y' ⇒ X * X' ∣ Y * Y'
