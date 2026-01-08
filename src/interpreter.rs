@@ -1257,7 +1257,7 @@ fn interpret_inner(
                 match logic_phrase.clone().try_prove() {
                     Ok(_) => {}
                     Err(err) => Err(format!(
-                        "assertion couldn't prove {:b}, {err}",
+                        "assertion couldn't prove {}, {err}",
                         **logic_phrase,
                     ))?,
                 }

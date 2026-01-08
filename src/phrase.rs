@@ -717,6 +717,18 @@ impl PhraseData {
         None
     }
 
+    fn number_piece(&self) -> Option<usize> {
+        if self.kind == Successor {
+            let child = self.children.unwrap_one();
+            if let Some(n) = child.number_piece() {
+                return Some(n + 1);
+            }
+        } else if self.kind == Zero {
+            return Some(0);
+        }
+        None
+    }
+
     fn pretty_print_level(&self, level: usize) -> String {
         let paint = |s: String| {
             s.black().on_truecolor(
@@ -760,6 +772,9 @@ impl PhraseData {
                 exists.var.pretty_print_level(level + 1),
                 exists.predicate.pretty_print_level(level + 1)
             ));
+        }
+        if let Some(n) = self.number_piece() {
+            return paint(format!("{n}"));
         }
         match self.kind {
             LogicVariable | NumericVariable => {

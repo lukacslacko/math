@@ -18,8 +18,10 @@ contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
     goal['x / 'X]
 }
 
-1 ≔ 𝗦(0)
-2 ≔ 𝗦(1)
+1 ≔ 𝗦0
+2 ≔ 𝗦1
+3 ≔ 𝗦2
+4 ≔ 𝗦3
 
 commute_antecedents ≔ {
     ⤷ ignore
@@ -1426,7 +1428,7 @@ leq_mul ≔ {
     ⊦ goal
 }
 
-{
+succ_is_not_leq ≔ {
     ⤷ contra
     ⤷ ignore
     ⤷ peano1
@@ -1464,12 +1466,36 @@ leq_mul ≔ {
     (∀Z ignore['A / d]['B / b↘↙↘↙].MP.commute_ante ⇆.MP) | deduce
     distr['A / b↙]['B / b↘↙]['C / b↘↘].MP.MP.recontra.MP
     ⊦ goal
+    goal[x / X][y / Y]
 }
 
 ⊦ 𝗦X + 𝗦Y = 𝗦𝗦(X + Y)
 ⊦ 𝗦𝗦(X + Y) = 𝗦X + 𝗦Y
 ⊦ ¬y = 𝗦y + x
 ⊦ x ≤ y ⇒ ¬x = 𝗦y
+
+x_less_succ ≔ {
+    goal ≔ x < 𝗦x
+
+    ⤷ succ_is_not_leq
+    ⤷ flip_postneg
+    ⤷ apply
+
+    succ_is_not_leq[X / 𝗦x][Y / x].flip_postneg.MP.MP;
+    ¬¬'X ⇒ 'X | apply.MP
+    ⊦ goal
+    goal[x / X]
+}
+{
+    goal ≔ x < x + 1
+    ⤷ x_less_succ
+    ⤷ replace_cut
+    x_less_succ[X / x]; u; ↘↓↘↙ | ✂; x + 1 | replace_cut.MP ℻
+    ⊦ goal
+    goal[x / X]
+}
+⊦ X < 𝗦X
+⊦ X < X + 1
 
 {
     goal ≔ x ≤ y ⇒ 𝗦x ≤ 𝗦y
