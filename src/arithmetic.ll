@@ -1780,6 +1780,52 @@ singleton ≔ λ{
 ⊦ 3.singleton; 0; 3 | element
 
 /*
+gcd ≔ λ{
+    /*
+    Argument: x; y; d
+    Returns: whether d is the greatest common divisor of x ∧ y
+     */
+    x ≔ ●ⅰ
+    y ≔ ●ⅱ
+    d ≔ ●ⅲ
+    ↵ d ∣ x ∧ d ∣ y ∧∀d' d' ∣ x ∧ d' ∣ y ⇒ d' ≤ d
+}
+
+gcd_commutes ≔ {
+    ⤷ gcd
+    goal ≔ x; y; d | gcd ⇒ y; x; d | gcd
+    goal
+    ⊦ goal
+}
+
+gcd_divides_x ≔ {
+    ⤷ gcd
+    goal ≔ x; y; d | gcd ⇒ d ∣ x
+    goal
+    ⊦ goal
+}
+
+gcd_divides_y ≔ {
+    ⤷ gcd
+    goal ≔ x; y; d | gcd ⇒ d ∣ y
+    goal
+    ⊦ goal
+}
+
+gcd_exists ≔ {
+    ⤷ gcd
+    goal ≔ 1 ≤ x ∨ 1 ≤ y ⇒ ¬∀d¬x; y; d | gcd
+    goal
+    ⊦ goal
+}
+
+gcd_unique ≔ {
+    ⤷ gcd
+    goal ≔ x; y; d | gcd ⇒ x; y; d' | gcd ⇒ d = d'
+    goal
+    ⊦ goal
+}
+
 max ≔ λ{
     /*
     Argument: x; y; m
@@ -1817,4 +1863,10 @@ y_leq_max ≔ {
     goal ≔ x; y; m | max ⇒ y ≤ m
     ⊦ goal
 }
-*/
+
+max_commutes ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ⇒ y; x; m | max
+    ⊦ goal
+}
+ */
