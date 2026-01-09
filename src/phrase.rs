@@ -650,7 +650,7 @@ impl PhraseData {
             if grandchildren.1.kind == Add {
                 let (add_left, add_right) =
                     grandchildren.1.children.unwrap_two();
-                if add_right == &exists.var {
+                if add_right == &exists.var && add_left != &exists.var {
                     return Some(LessThanOrEqualPieces {
                         left: add_left.clone(),
                         right: grandchildren.0.clone(),

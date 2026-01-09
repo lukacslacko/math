@@ -1918,7 +1918,7 @@ max_commutes ≔ {
     o | deduce.flip_postneg.MP; (¬y = x + z; z).↺ | deduce; distr | apply.MP.MP
     p ≔ ∀y(i; (i↘; Z).rename_quantify | deduce.recontra.MP.recontra.MP; x ≤ y ∨ y ≤ x | deduce; o | deduce; 'x ∨ 'x ⇒ 'x | apply.MP.neq_flip)
     (¬∀y¬𝗦x = y + y).∀y; (∀y((x = y ⇒ y = x)[x / z][y / x + x]; (p; z; ↘↓↙↓ | ✂;
-    z | replace_cut) | deduce[x / y][z / x].recontra.MP) ⇆.MP) | deduce.flip_preneg.MP
+                z | replace_cut) | deduce[x / y][z / x].recontra.MP) ⇆.MP) | deduce.flip_preneg.MP
 }
 
 ⊦ 𝗦(x + x) | is_odd
@@ -1928,3 +1928,40 @@ max_commutes ≔ {
 ⊦ a = b + 𝗦c ⇒ ¬a = b
 ⊦ (¬∀x¬'x) ⇒ 'x
 ⊦ x.is_even ⇒ (𝗦x).is_odd
+⊦ x.is_odd ∨ x.is_even
+⊦ x.is_even ⇒ ¬x.is_odd
+⊦ x.is_odd ⇒ ¬x.is_even
+
+{
+    ⤷ is_even
+    ⤷ is_odd
+    goal ≔ x.is_odd ⇒ (𝗦x).is_even
+
+    ⤷ contrapose
+    ⤷ reduce
+    ⤷ deduce
+    ⤷ conditional_exists_by_example
+    ⤷ ignore
+    ⤷ exists_ante
+    ⤷ commute_ante
+    ⤷ prededuce
+    ⤷ or_impl_distr
+
+    proof ≔ contrapose; goal | reduce
+    i ≔ proof↙; x | ↺
+    ignore; i↙ | reduce.MP
+    j ≔ i.MP
+    𝗦𝗦u = 𝗦y + 𝗦y; u; v | ⪮[u = v / y + y = x].commute_ante.MP;
+    x = y + y ⇒ y + y = x | prededuce[y / Y]
+    a ≔ x = Y + Y ⇒ 𝗦𝗦x = y + y;
+    𝗦Y; y | conditional_exists_by_example[Y / y]; y | exists_ante
+    b ≔ ('X ⇒ 'X)['X / ¬∀y¬𝗦x = y + y]
+    c ≔ or_impl_distr['X ⇒ 'Y / a]['Z ⇒ 'W / b].MP.MP
+    ∀x(('X ∨ 'Y ⇒ 'Y ∨ 'X)['Y ∨ 'X / c↙]; c | deduce)
+    j.MP[x].MP
+    proof.MP
+    ⊦ goal
+    goal[x / X]
+}
+⊦ X.is_odd ⇒ (𝗦X).is_even
+⊦ (𝗦X).is_even ∨ X.is_even
