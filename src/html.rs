@@ -32,7 +32,7 @@ fn render_logger(logger: &Logger) -> String {
 pub fn render_html(logger: &Logger) -> String {
     let mut html = String::new();
     writeln!(html, "<html>").unwrap();
-    writeln!(html, "<head><style>
+    writeln!(html, "<head><meta charset=\"UTF-8\"><style>
 
 /* Ensure the summary uses flex to keep the icon and text on the same row */
 summary {{

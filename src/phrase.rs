@@ -607,7 +607,7 @@ impl PhraseData {
         #[cfg(feature = "html")]
         return format!(
             "{}{}",
-            self,
+            self.pretty_print_monochrome(),
             if self.get_is_proven() { " ✅" } else { "" }
         );
         #[cfg(not(feature = "html"))]
@@ -615,7 +615,11 @@ impl PhraseData {
     }
 
     fn pretty_print(&self) -> String {
-        self.pretty_print_level(0)
+        self.pretty_print_level(0, true)
+    }
+
+    fn pretty_print_monochrome(&self) -> String {
+        self.pretty_print_level(0, false)
     }
 
     fn exists_pieces(&self) -> Option<ExistsPieces> {
@@ -639,6 +643,9 @@ impl PhraseData {
 
     fn less_than_or_equal_pieces(&self) -> Option<LessThanOrEqualPieces> {
         if let Some(exists) = self.exists_pieces() {
+            if exists.predicate.kind != Equals {
+                return None;
+            }
             let grandchildren = exists.predicate.children.unwrap_two();
             if grandchildren.1.kind == Add {
                 let (add_left, add_right) =
@@ -656,6 +663,9 @@ impl PhraseData {
 
     fn divides_pieces(&self) -> Option<DividesPieces> {
         if let Some(exists) = self.exists_pieces() {
+            if exists.predicate.kind != Equals {
+                return None;
+            }
             let grandchildren = exists.predicate.children.unwrap_two();
             if grandchildren.1.kind == Multiply {
                 let (multiply_left, multiply_right) =
@@ -729,48 +739,51 @@ impl PhraseData {
         None
     }
 
-    fn pretty_print_level(&self, level: usize) -> String {
+    fn pretty_print_level(&self, level: usize, color: bool) -> String {
         let paint = |s: String| {
-            s.black().on_truecolor(
-                255 - level as u8 * 10,
-                255 - level as u8 * 10,
-                255 - level as u8 * 10,
-            )
-            .to_string()
+            if color {
+                s.black().on_truecolor(
+                    255 - level as u8 * 10,
+                    255 - level as u8 * 10,
+                    255 - level as u8 * 10,
+                ).to_string()
+            } else {
+                s
+            }
         };
         if let Some(less_than_or_equal) = self.less_than_or_equal_pieces() {
             return paint(format!(
                 "({} ≤ {})",
-                less_than_or_equal.left.pretty_print_level(level + 1),
-                less_than_or_equal.right.pretty_print_level(level + 1)
+                less_than_or_equal.left.pretty_print_level(level + 1, color),
+                less_than_or_equal.right.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(divides) = self.divides_pieces() {
             return paint(format!(
                 "({} ∣ {})",
-                divides.left.pretty_print_level(level + 1),
-                divides.right.pretty_print_level(level + 1)
+                divides.left.pretty_print_level(level + 1, color),
+                divides.right.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(or) = self.or_pieces() {
             return paint(format!(
                 "({} ∨ {})",
-                or.left.pretty_print_level(level + 1),
-                or.right.pretty_print_level(level + 1)
+                or.left.pretty_print_level(level + 1, color),
+                or.right.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(and) = self.and_pieces() {
             return paint(format!(
                 "({} ∧ {})",
-                and.left.pretty_print_level(level + 1),
-                and.right.pretty_print_level(level + 1)
+                and.left.pretty_print_level(level + 1, color),
+                and.right.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(exists) = self.exists_pieces() {
             return paint(format!(
                 "∃{} {}",
-                exists.var.pretty_print_level(level + 1),
-                exists.predicate.pretty_print_level(level + 1)
+                exists.var.pretty_print_level(level + 1, color),
+                exists.predicate.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(n) = self.number_piece() {
@@ -790,48 +803,48 @@ impl PhraseData {
                 let (antecedent, consequent) = self.children.unwrap_two();
                 paint(format!(
                     "( {}  =>  {} )",
-                    antecedent.pretty_print_level(level + 1),
-                    consequent.pretty_print_level(level + 1)
+                    antecedent.pretty_print_level(level + 1, color),
+                    consequent.pretty_print_level(level + 1, color)
                 ))
             }
             Not => {
                 let child = self.children.unwrap_one();
-                paint(format!("¬{}", child.pretty_print_level(level + 1)))
+                paint(format!("¬{}", child.pretty_print_level(level + 1, color)))
             }
             Equals => {
                 let (left, right) = self.children.unwrap_two();
                 paint(format!(
                     "({} = {})",
-                    left.pretty_print_level(level + 1),
-                    right.pretty_print_level(level + 1)
+                    left.pretty_print_level(level + 1, color),
+                    right.pretty_print_level(level + 1, color)
                 ))
             }
             Successor => {
                 let child = self.children.unwrap_one();
-                paint(format!("𝗦({})", child.pretty_print_level(level + 1)))
+                paint(format!("𝗦({})", child.pretty_print_level(level + 1, color)))
             }
             Add => {
                 let (left, right) = self.children.unwrap_two();
                 paint(format!(
                     "({} + {})",
-                    left.pretty_print_level(level + 1),
-                    right.pretty_print_level(level + 1)
+                    left.pretty_print_level(level + 1, color),
+                    right.pretty_print_level(level + 1, color)
                 ))
             }
             Multiply => {
                 let (left, right) = self.children.unwrap_two();
                 paint(format!(
                     "({} * {})",
-                    left.pretty_print_level(level + 1),
-                    right.pretty_print_level(level + 1)
+                    left.pretty_print_level(level + 1, color),
+                    right.pretty_print_level(level + 1, color)
                 ))
             }
             Quantify => {
                 let (left, right) = self.children.unwrap_two();
                 paint(format!(
                     "∀{} {}",
-                    left.pretty_print_level(level + 1),
-                    right.pretty_print_level(level + 1)
+                    left.pretty_print_level(level + 1, color),
+                    right.pretty_print_level(level + 1, color)
                 ))
             }
         }
