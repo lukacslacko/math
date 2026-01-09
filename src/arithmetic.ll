@@ -1490,7 +1490,7 @@ x_less_succ ≔ {
     goal ≔ x < x + 1
     ⤷ x_less_succ
     ⤷ replace_cut
-    x_less_succ[X / x]; u; ↘↓↘↙ | ✂; x + 1 | replace_cut.MP ℻
+    x_less_succ[X / x]; u; ↘↓↘↙ | ✂; x + 1 | replace_cut.MP
     ⊦ goal
     goal[x / X]
 }
@@ -1716,3 +1716,65 @@ x_less_succ ≔ {
     goal[x / X][x' / X'][y / Y][y' / Y']
 }
 ⊦ X ∣ Y ⇒ X' ∣ Y' ⇒ X * X' ∣ Y * Y'
+
+
+remainder ≔ λ{
+    /*
+    Argument: n; m; k
+    Returns: Whether k is the remainder of n divided by m
+     */
+    n ≔ ●ⅰ
+    m ≔ ●ⅱ
+    k ≔ ●ⅲ
+    ↵ k < m ∧¬∀d¬n = d * m + k
+}
+
+element ≔ λ{
+    /*
+    Argument: b; c; i; x
+    Returns: Whether x is the i'th element(0-based)in the sequence
+    encoded by b; c
+
+    See https://en.wikipedia.org/wiki/G%C3%B6del%27s_%CE%B2_function,
+    that is, Gödel's β function
+     */
+    b ≔ ●ⅰ
+    c ≔ ●ⅱ
+    i ≔ ●ⅲ
+    x ≔ ●ⅳ
+    ↵ b; i * c + c + 1; x | remainder
+}
+
+singleton ≔ λ{
+    /*
+    Argument: value
+    Returns: the encoding of a sequence starting with the value
+     */
+    ↵ ●; ●
+}
+
+{
+    ⤷ singleton
+    ⤷ element
+
+    goal ≔ n.singleton; 0; n | element
+
+    ⤷ replace
+    ⤷ eq_trans
+    import replace_cut
+    import eq_flip
+    import exists_by_example
+    import x_impl_y_impl_and
+
+    0 = 0 * n
+    n = 0 + n; (u + n; u; 0; 0 * n | replace.MP) | eq_trans
+    a := u + 1; u; n; (0 * n) + n | replace.MP|eq_flip
+    goal1 := n<u;u;v|<eq_subs>[v=u/a].MP.MP
+    X = u+X;u;v|<eq_subs>[u=v/0=0*Y].MP.MP
+    goal2 := n = d*(((0*n)+n)+1)+n;d;0|exists_by_example
+    x_impl_y_impl_and['X/goal1]['Y/goal2].MP.MP
+    ⊦ goal
+    goal[n/X]
+}
+|- X.singleton; 0; X | element
+|- 3.singleton; 0; 3 | element 
