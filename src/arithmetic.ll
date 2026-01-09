@@ -106,7 +106,7 @@ prededuce ≔ λ{
 rename_quantify ≔ λ{
     /*
     Argument:∀var1 P; var2
-    Assumption: var2 is not free in P
+    Assumption: var2 is not free in∀var1 P
     Returns:(∀var1 P) ⇒ (∀var2 P)
      */
     ↵ ●ⅰ.∀●ⅱ; (∀●ⅱ●ⅰ[●ⅱ] ⇆).MP | deduce
@@ -1717,7 +1717,6 @@ x_less_succ ≔ {
 }
 ⊦ X ∣ Y ⇒ X' ∣ Y' ⇒ X * X' ∣ Y * Y'
 
-
 remainder ≔ λ{
     /*
     Argument: n; m; k
@@ -1870,3 +1869,62 @@ max_commutes ≔ {
     ⊦ goal
 }
  */
+
+{
+    ⤷ flip_preneg
+    goal ≔ (¬∀x¬'x) ⇒ 'x
+    ((¬'x).∀x).flip_preneg.MP
+    ⊦ goal
+}
+
+{
+    ⤷ commute_ante
+    ⤷ replace
+    ⤷ peano4
+    ⤷ add_XY_ZW_eq_XZ_YW
+    ⤷ eq_trans
+    ⤷ add_comm
+    ⤷ replace_cut
+    ⤷ eq_flip
+    ⤷ neq_flip
+    ⤷ apply
+    ⤷ deduce
+    ⤷ flip_postneg
+    ⤷ flip_preneg
+    ⤷ ignore
+    ⤷ distr
+    ⤷ recontra
+    ⤷ rename_quantify
+    q ≔ peano4↙[X / x][Y / y]; add_comm | apply
+    (𝗦X + 𝗦Y = 𝗦𝗦(X + Y))[X / z][Y / z]
+    w ≔ add_XY_ZW_eq_XZ_YW[X / Z][Z / x][Y / W][W / 𝗦z]; Z; ↘↘ | ✂; 𝗦𝗦(z + z) | replace_cut.MP
+    e ≔ 𝗦(x + y) = x + 𝗦y; q | eq_trans
+    r ≔ {
+        ⤷ replace_cut
+        ⤷ peano4
+        ⤷ flip_postneg
+        goal ≔ a = b + 𝗦c ⇒ ¬a = b
+        ¬y = 𝗦y + x; z; ↓↘ | ✂; 𝗦(y + x) | replace_cut.MP; z; ↓↘ | ✂; y + 𝗦x | replace_cut.MP[x / c][y / a];
+        b; ↓↘↙ | ✂; b | replace_cut.flip_postneg.MP
+        ⊦ goal
+        goal
+    }
+    t ≔ w; peano4[X / w↘↙][Y / w↘↘↓] | eq_trans;
+    (e; z; ↙↓ | ✂; y + x | replace_cut.MP[x / 𝗦(z + z)][y / x + x]) | eq_trans
+    u ≔ X + X; X; y; x + 𝗦z | replace; X; ↘↘ | ✂; t↘ | replace_cut.MP; r[a / y + y][b / 𝗦(x + x)][c / z + z] | deduce.flip_postneg.MP
+    (y + y = 𝗦(x + x)).∀z; (∀z ignore['A / u]['B / ¬y = x + z].MP.commute_ante ⇆.MP) | deduce
+    o ≔ (x ≤ y ⇒ x + x ≤ y + y)[y / z][x / y][z / x]; (x ≤ y ⇒ ¬x = 𝗦y)[y / z][x / y + y][z / x + x] | deduce
+    i ≔ (x = y ⇒ x ≤ y)[y / z][x / y][z / x]; z; ↙↘ | ✂; x + 0 | replace_cut.MP;
+    o | deduce.flip_postneg.MP; (¬y = x + z; z).↺ | deduce; distr | apply.MP.MP
+    p ≔ ∀y(i; (i↘; Z).rename_quantify | deduce.recontra.MP.recontra.MP; x ≤ y ∨ y ≤ x | deduce; o | deduce; 'x ∨ 'x ⇒ 'x | apply.MP.neq_flip)
+    (¬∀y¬𝗦x = y + y).∀y; (∀y((x = y ⇒ y = x)[x / z][y / x + x]; (p; z; ↘↓↙↓ | ✂;
+    z | replace_cut) | deduce[x / y][z / x].recontra.MP) ⇆.MP) | deduce.flip_preneg.MP
+}
+
+⊦ 𝗦(x + x) | is_odd
+⊦ (x + 𝗦y) + (x + 𝗦y) = (x + x) + 𝗦𝗦(y + y)
+⊦ (x + 𝗦y) + (x + 𝗦y) = 𝗦(x + x) + 𝗦(y + y)
+⊦ 𝗦(x + y) = 𝗦x + y
+⊦ a = b + 𝗦c ⇒ ¬a = b
+⊦ (¬∀x¬'x) ⇒ 'x
+⊦ x.is_even ⇒ (𝗦x).is_odd
