@@ -1735,7 +1735,7 @@ element ≔ λ{
     Returns: Whether x is the i'th element(0-based)in the sequence
     encoded by b; c
 
-    See https://en.wikipedia.org/wiki/G%C3%B6del%27s_%CE%B2_function,
+    See https: /  / en.wikipedia.org / wiki / G%C3%B6del%27s_%CE%B2_function,
     that is, Gödel's β function
      */
     b ≔ ●ⅰ
@@ -1761,20 +1761,60 @@ singleton ≔ λ{
 
     ⤷ replace
     ⤷ eq_trans
-    import replace_cut
-    import eq_flip
-    import exists_by_example
-    import x_impl_y_impl_and
+    ⤷ replace_cut
+    ⤷ eq_flip
+    ⤷ exists_by_example
+    ⤷ x_impl_y_impl_and
 
     0 = 0 * n
     n = 0 + n; (u + n; u; 0; 0 * n | replace.MP) | eq_trans
-    a := u + 1; u; n; (0 * n) + n | replace.MP|eq_flip
-    goal1 := n<u;u;v|<eq_subs>[v=u/a].MP.MP
-    X = u+X;u;v|<eq_subs>[u=v/0=0*Y].MP.MP
-    goal2 := n = d*(((0*n)+n)+1)+n;d;0|exists_by_example
-    x_impl_y_impl_and['X/goal1]['Y/goal2].MP.MP
+    a ≔ u + 1; u; n; (0 * n) + n | replace.MP | eq_flip
+    goal1 ≔ n < u; u; v | ⪮[v = u / a].MP.MP
+    X = u + X; u; v | ⪮[u = v / 0 = 0 * Y].MP.MP
+    goal2 ≔ n = d * (((0 * n) + n) + 1) + n; d; 0 | exists_by_example
+    x_impl_y_impl_and['X / goal1]['Y / goal2].MP.MP
     ⊦ goal
-    goal[n/X]
+    goal[n / X]
 }
-|- X.singleton; 0; X | element
-|- 3.singleton; 0; 3 | element 
+⊦ X.singleton; 0; X | element
+⊦ 3.singleton; 0; 3 | element
+
+/*
+max ≔ λ{
+    /*
+    Argument: x; y; m
+    Returns: whether m equals the max of x; y
+     */
+    ↵ (m = x ∧ y ≤ x)∨(m = y ∧ x ≤ y)
+}
+
+max_exists ≔ {
+    ⤷ max
+    goal ≔ ∀x∀y¬∀m¬x; y; m | max
+    ⊦ goal
+}
+
+max_unique ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ∧ x; y; m' | max ⇒ m = m'
+    ⊦ goal
+}
+
+max_is_x_or_y ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ⇒ m = x ∨ m = y ℻
+    ⊦ goal
+}
+
+x_leq_max ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ⇒ x ≤ m
+    ⊦ goal
+}
+
+y_leq_max ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ⇒ y ≤ m
+    ⊦ goal
+}
+*/
