@@ -618,6 +618,7 @@ impl PhraseData {
         self.pretty_print_level(0, true)
     }
 
+    #[cfg(feature = "html")]
     fn pretty_print_monochrome(&self) -> String {
         self.pretty_print_level(0, false)
     }

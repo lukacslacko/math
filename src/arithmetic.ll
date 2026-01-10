@@ -1,14 +1,14 @@
 ignore ≔ 'A ⇒ 'B ⇒ 'A
 ⊦ ignore
+⤶ ignore
 distr ≔ ('A ⇒ 'B ⇒ 'C) ⇒ ('A ⇒ 'B) ⇒ 'A ⇒ 'C
 ⊦ distr
+⤶ distr
 contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
 ⊦ contrapose
+⤶ contrapose
 {
     goal ≔ 'x ⇒ 'x
-
-    ⤷ ignore
-    ⤷ distr
 
     ignore['A / 'x]['B / 'x ⇒ 'x]
     ignore['A / 'x]['B / 'x]
@@ -24,9 +24,6 @@ contrapose ≔ (¬'A ⇒ ¬'B) ⇒ 'B ⇒ 'A
 4 ≔ 𝗦3
 
 commute_antecedents ≔ {
-    ⤷ ignore
-    ⤷ distr
-
     goal ≔ ('x ⇒ 'y ⇒ 'z) ⇒ 'y ⇒ 'x ⇒ 'z
 
     p ≔ 'x ⇒ 'y
@@ -45,6 +42,7 @@ commute_antecedents ≔ {
 }
 
 ⊦ commute_antecedents
+⤶ commute_antecedents
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ 'Y ⇒ 'X ⇒ 'Z
 
 commute_ante ≔ λ{
@@ -57,13 +55,10 @@ commute_ante ≔ λ{
      */
     ↵ commute_antecedents['X / ●↙]['Y / ●↘↙]['Z / ●↘↘].MP
 }
+⤶ commute_ante
 
 chain ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ 'x ⇒ 'z
-
-    ⤷ ignore
-    ⤷ distr
-    ⤷ commute_ante
 
     ignore['A / 'y ⇒ 'z]['B / 'x]
     ignore['A / distr['A / 'x]['B / 'y]['C / 'z]]['B / 'y ⇒ 'z].MP
@@ -73,9 +68,11 @@ chain ≔ {
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 ⊦ chain
+⤶ chain
 ⊦ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'Z) ⇒ 'X ⇒ 'Z
 
 chain' ≔ chain['X / 'x]['Y / 'y]['Z / 'z].commute_ante['x / 'X]['y / 'Y]['z / 'Z]
+⤶ chain'
 
 deduce ≔ λ{
     /*
@@ -85,6 +82,7 @@ deduce ≔ λ{
      */
     ↵ chain['X / ●ⅰ↙]['Y / ●ⅰ↘]['Z / ●ⅱ↘].MP.MP
 }
+⤶ deduce
 
 prededuce ≔ λ{
     /*
@@ -102,6 +100,7 @@ prededuce ≔ λ{
      */
     ↵ ●ⅱ; ●ⅰ | deduce
 }
+⤶ prededuce
 
 rename_quantify ≔ λ{
     /*
@@ -111,14 +110,10 @@ rename_quantify ≔ λ{
      */
     ↵ ●ⅰ.∀●ⅱ; (∀●ⅱ●ⅰ[●ⅱ] ⇆).MP | deduce
 }
+⤶ rename_quantify
 
 false_implies_anything ≔ {
     goal ≔ ¬'B ⇒ 'B ⇒ 'A
-
-    ⤷ ignore
-    ⤷ deduce
-    ⤷ contrapose
-    ⤷ commute_ante
 
     ignore['A / 'X]['B / 'Y]['X / ¬'B]['Y / ¬'A];
     contrapose | deduce
@@ -127,6 +122,7 @@ false_implies_anything ≔ {
     goal.commute_ante
     goal
 }
+⤶ false_implies_anything
 
 from_false ≔ λ{
     /*
@@ -136,14 +132,10 @@ from_false ≔ λ{
      */
     ↵ false_implies_anything['B / ●↙]['A / ●↘].MP
 }
+⤶ from_false
 
 {
     goal ≔ ¬¬'x ⇒ 'x
-
-    ⤷ ignore
-    ⤷ contrapose
-    ⤷ deduce
-    ⤷ distr
 
     ignore['A / ¬¬'x]['B / ¬¬¬¬'x];
     contrapose['A / ¬¬¬'x]['B / ¬'x] | deduce;
@@ -159,8 +151,6 @@ from_false ≔ λ{
 {
     goal ≔ 'x ⇒ ¬¬'x
 
-    ⤷ contrapose
-
     (¬¬'X ⇒ 'X)['X / ¬'x]
     contrapose['A / ¬¬'x]['B / 'x].MP
     ⊦ goal
@@ -168,11 +158,6 @@ from_false ≔ λ{
 }
 
 recontrapose ≔ {
-    ⤷ chain
-    ⤷ commute_ante
-    ⤷ contrapose
-    ⤷ deduce
-
     goal ≔ ('x ⇒ 'y) ⇒ ¬'y ⇒ ¬'x
 
     s ≔ chain['X / ¬¬'x]['Y / 'x]['Z / 'y].MP
@@ -185,6 +170,7 @@ recontrapose ≔ {
     ⊦ goal
     goal['x / 'A]['y / 'B]
 }
+⤶ recontrapose
 
 contra ≔ λ{
     /*
@@ -193,6 +179,7 @@ contra ≔ λ{
      */
     ↵ contrapose['A / ●↙↓]['B / ●↘↓]
 }
+⤶ contra
 
 recontra ≔ λ{
     /*
@@ -201,12 +188,10 @@ recontra ≔ λ{
      */
     ↵ recontrapose['A / ●↙]['B / ●↘]
 }
+⤶ recontra
 
 {
     goal ≔ 'x ∨ 'x ⇒ 'x
-    ⤷ distr
-    ⤷ contrapose
-    ⤷ deduce
     a ≔ distr['A / ¬'B]['C / 'A].MP['B / 'x]['A / ¬'A];
     contrapose['A / 'x]['B / 'A] | deduce
     ('x ⇒ 'x)['x / a↙]
@@ -217,17 +202,13 @@ recontra ≔ λ{
 preneg_flip ≔ {
     goal ≔ (¬'x ⇒ 'y) ⇒ (¬'y ⇒ 'x)
 
-    ⤷ chain
-    ⤷ commute_ante
-    ⤷ contrapose
-    ⤷ deduce
-
     chain['X / ¬'x]['Y / 'y]['Z / ¬¬'y] | commute_ante.MP;
     contrapose['A / 'x]['B / ¬'y] | deduce
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ preneg_flip
 flip_preneg ≔ λ{
     /*
     Argument:¬P ⇒ Q
@@ -235,12 +216,9 @@ flip_preneg ≔ λ{
      */
     ↵ preneg_flip['X / ●↙↓]['Y / ●↘]
 }
+⤶ flip_preneg
 postneg_flip ≔ {
     goal ≔ ('x ⇒ ¬'y) ⇒ 'y ⇒ ¬'x
-
-    ⤷ chain
-    ⤷ recontrapose
-    ⤷ deduce
 
     recontrapose['A / 'x]['B / ¬'y];
     chain['X / 'y]['Y / ¬¬'y]['Z / ¬'x].MP | deduce
@@ -248,6 +226,7 @@ postneg_flip ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ postneg_flip
 flip_postneg ≔ λ{
     /*
     Argument: P ⇒ ¬Q
@@ -255,17 +234,17 @@ flip_postneg ≔ λ{
      */
     ↵ postneg_flip['X / ●↙]['Y / ●↘↓]
 }
-
+⤶ flip_postneg
 
 y_impl_or ≔ {
     goal ≔ 'y ⇒ 'x ∨ 'y
 
-    ⤷ ignore
     ignore['A / 'y]['B / ¬'x]
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ y_impl_or
 
 x_impl_or ≔ {
     goal ≔ 'x ⇒ 'x ∨ 'y
@@ -274,14 +253,10 @@ x_impl_or ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ x_impl_or
 
 and_impl_x ≔ {
     goal ≔ 'x ∧ 'y ⇒ 'x
-
-    ⤷ false_implies_anything
-    ⤷ recontra
-    ⤷ deduce
-    ⤷ commute_ante
 
     false_implies_anything['A / ¬'y]['B / 'x] | recontra.MP;
     ¬¬'x ⇒ 'x | deduce
@@ -289,13 +264,10 @@ and_impl_x ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ and_impl_x
 
 and_impl_y ≔ {
     goal ≔ 'x ∧ 'y ⇒ 'y
-
-    ⤷ ignore
-    ⤷ recontra
-    ⤷ deduce
 
     ignore['A / ¬'y]['B / 'x] | recontra.MP;
     ¬¬'y ⇒ 'y | deduce
@@ -303,13 +275,10 @@ and_impl_y ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ and_impl_y
 
 x_impl_y_impl_and ≔ {
     goal ≔ 'x ⇒ 'y ⇒ 'x ∧ 'y
-
-    ⤷ commute_ante
-    ⤷ flip_postneg
-    ⤷ deduce
 
     a ≔ ('X ⇒ 'X)['X / 'x ⇒ ¬'y] | commute_ante
     b ≔ ('x ⇒ ¬'y) ⇒ ¬'y | flip_postneg
@@ -318,14 +287,10 @@ x_impl_y_impl_and ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ x_impl_y_impl_and
 
 xyz_impl_and ≔ {
     goal ≔ ('x ⇒ 'y ⇒ 'z) ⇒ 'x ∧ 'y ⇒ 'z
-
-    ⤷ ignore
-    ⤷ commute_ante
-    ⤷ distr
-    ⤷ deduce
 
     b ≔ 'x ∧ 'y
 
@@ -336,38 +301,30 @@ xyz_impl_and ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
+⤶ xyz_impl_and
 
 and_impl_xyz ≔ {
     goal ≔ ('x ∧ 'y ⇒ 'z) ⇒ 'x ⇒ 'y ⇒ 'z
-
-    ⤷ chain
-    ⤷ commute_ante
 
     chain['X / 'x]['Y ⇒ 'Z / chain['X / 'y]['Y / 'x ∧ 'y]['Z / 'z]].MP.MP.commute_ante
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
+⤶ and_impl_xyz
 
 and_comm ≔ {
     goal ≔ 'x ∧ 'y ⇒ 'y ∧ 'x
-
-    ⤷ recontrapose
 
     recontrapose['A / 'y ⇒ ¬'x]['B / 'x ⇒ ¬'y].MP
 
     ⊦ goal
     goal['x / 'X]['y / 'Y]
 }
+⤶ and_comm
 
 and_assoc ≔ {
     goal ≔ ('x ∧ 'y)∧ 'z ⇒ 'x ∧('y ∧ 'z)
-
-    ⤷ xyz_impl_and
-    ⤷ chain
-    ⤷ commute_ante
-    ⤷ deduce
-    ⤷ recontra
 
     chain['X / 'x]['Y ⇒ 'Z / (¬¬'X ⇒ 'X)['X / 'y ⇒ ¬'z]].commute_ante.MP;
     xyz_impl_and['X / 'x]['Y / 'y]['Z / ¬'z] | deduce | recontra.MP
@@ -375,17 +332,18 @@ and_assoc ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
+⤶ and_assoc
 
 demorgan_or ≔ {
     goal ≔ 'x ∨ 'y ⇒ ¬(¬'x ∧¬'y)
-
-    ⤷ chain'
 
     a ≔ chain'['X / ¬'x]['Y ⇒ 'Z / 'y ⇒ ¬¬'y].MP
     chain'['X ⇒ 'Y / a]['X ⇒ 'Z / goal].MP.MP
 
     ⊦ goal
+    goal
 }
+⤶ demorgan_or
 
 reduce ≔ λ{
     /*
@@ -395,6 +353,7 @@ reduce ≔ λ{
      */
     ↵ ●ⅰ[●ⅰ↘ / ●ⅱ]
 }
+⤶ reduce
 
 apply ≔ λ{
     /*
@@ -404,28 +363,22 @@ apply ≔ λ{
      */
     ↵ ●ⅱ[●ⅱ↙ / ●ⅰ]
 }
+⤶ apply
 
 demorgan_and ≔ {
     goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
-
-    ⤷ reduce
-    ⤷ chain
-    ⤷ recontrapose
 
     a ≔ recontrapose; goal | reduce
     chain; a↙ | reduce.MP
     a.MP
 
     ⊦ goal
+    goal
 }
+⤶ demorgan_and
 
 conditional_and ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('x ⇒ 'z) ⇒ ('x ⇒ 'y ∧ 'z)
-    ⤷ x_impl_y_impl_and
-    ⤷ ignore
-    ⤷ distr
-    ⤷ apply
-    ⤷ deduce
     a ≔ x_impl_y_impl_and['X / 'y]['Y / 'z]
     b ≔ ignore['A / a]['B / 'x].MP; distr | apply.MP
     c ≔ b↘; distr | apply
@@ -433,28 +386,20 @@ conditional_and ≔ {
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
+⤶ conditional_and
 
 quadchain ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('y ⇒ 'z) ⇒ ('z ⇒ 'w) ⇒ ('x ⇒ 'w)
-    ⤷ chain
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ apply
-    ⤷ deduce
     a ≔ chain['X / 'x]['Y / 'z]['Z / 'w]
     b ≔ chain['X / 'x]['Y / 'y]['Z / 'z]; xyz_impl_and | apply.MP
     b; a | deduce; and_impl_xyz | apply.MP
     ⊦ goal
     goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
 }
+⤶ quadchain
 
 or_impl_distr ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('z ⇒ 'w) ⇒ ('x ∨ 'z ⇒ 'y ∨ 'w)
-    ⤷ quadchain
-    ⤷ recontrapose
-    ⤷ deduce
-    ⤷ commute_antecedents
-    ⤷ apply
     a ≔ quadchain['X / ¬'y]['Y / ¬'x]['Z / 'z]['W / 'w]
     b ≔ recontrapose['A / 'x]['B / 'y]
     c ≔ b; a | deduce
@@ -463,14 +408,10 @@ or_impl_distr ≔ {
     goal['x / 'X]['y / 'Y]['z / 'Z]['w / 'W]
 }
 ⊦ ('X ⇒ 'Y) ⇒ ('Z ⇒ 'W) ⇒ ('X ∨ 'Z ⇒ 'Y ∨ 'W)
+⤶ or_impl_distr
 
 conditional_or ≔ {
     goal ≔ ('x ⇒ 'z) ⇒ ('y ⇒ 'z) ⇒ 'x ∨ 'y ⇒ 'z
-    ⤷ or_impl_distr
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ apply
-    ⤷ deduce
     or_impl_distr['X / 'x]['Y / 'z]['Z / 'y]['W / 'z];
     xyz_impl_and | apply.MP;
     xyz_impl_and | apply.MP;
@@ -481,17 +422,17 @@ conditional_or ≔ {
     goal['x / 'X]['y / 'Y]['z / 'Z]
 }
 ⊦ ('X ⇒ 'Z) ⇒ ('Y ⇒ 'Z) ⇒ 'X ∨ 'Y ⇒ 'Z
+⤶ conditional_or
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
-
-    ⤷ commute_ante
 
     (X = X)[X / x]
     x = z; x; y | ⪮[z / x] | commute_ante.MP
     ⊦ goal
     goal[x / X][y / Y]
 }
+⤶ equals_symmetric
 
 eq_flip ≔ λ{
     /*
@@ -500,6 +441,7 @@ eq_flip ≔ λ{
      */
     ↵ equals_symmetric[X / ●↙][Y / ●↘].MP
 }
+⤶ eq_flip
 
 neq_flip ≔ λ{
     /*
@@ -508,11 +450,9 @@ neq_flip ≔ λ{
      */
     ↵ equals_symmetric.recontra.MP[X / ●↓↘][Y / ●↓↙].MP
 }
+⤶ neq_flip
 
 equals_transitive ≔ {
-    ⤷ chain
-    ⤷ equals_symmetric
-
     goal ≔ x = y ⇒ y = z ⇒ x = z
 
     a ≔ y = z; y; x | ⪮
@@ -521,17 +461,17 @@ equals_transitive ≔ {
     ⊦ goal
     goal[x / X][y / Y][z / Z]
 }
+⤶ equals_transitive
 
 equals_transitive' ≔ equals_transitive.commute_ante
+⤶ equals_transitive'
 
 eq_trans ≔ λ{
     ↵ equals_transitive[X = Y / ●ⅰ][Y = Z / ●ⅱ].MP.MP
 }
+⤶ eq_trans
 
 not_equals_symmetric ≔ {
-    ⤷ equals_symmetric
-    ⤷ recontrapose
-
     goal ≔ ¬x = y ⇒ ¬y = x
 
     equals_symmetric[X / y][Y / x]
@@ -540,6 +480,7 @@ not_equals_symmetric ≔ {
     ⊦ goal
     goal[x / X][y / Y]
 }
+⤶ not_equals_symmetric
 
 peano1 ≔ ¬0 = 𝗦(X)
 peano2 ≔ 𝗦(X) = 𝗦(Y) ⇒ X = Y
@@ -555,15 +496,14 @@ peano6 ≔ X * 𝗦(Y) = (X * Y) + X
 ⊦ peano5
 ⊦ peano6
 
-{
-    ⤷ peano1
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ peano5
-    ⤷ peano6
+⤶ peano1
+⤶ peano2
+⤶ peano3
+⤶ peano4
+⤶ peano5
+⤶ peano6
 
-    ⤷ eq_flip
-    ⤷ neq_flip
+{
     peano1[X / x].neq_flip[x / X]
     peano3[X / x].eq_flip[x / X]
     peano4[X / x][Y / y].eq_flip[x / X][y / Y]
@@ -580,29 +520,14 @@ replace ≔ λ{
     (X = X)[X / ●ⅰ[●ⅱ / ●ⅲ]]
     ↵ ●ⅰ = ●ⅰ[●ⅱ / A]; A; B | ⪮[A / ●ⅲ][B / ●ⅳ][●ⅱ / ●ⅲ] | commute_ante.MP
 }
+⤶ replace
 
 𝗦(x); x; X; Y | replace
 
 add_comm ≔ {
     goal ≔ (x + y) = (y + x)
 
-    ⤷ chain
-    ⤷ commute_ante
-    ⤷ commute_antecedents
-    ⤷ equals_transitive
-    ⤷ deduce
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ equals_symmetric
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
-
     a ≔ {
-        ⤷ peano3
-        ⤷ peano4
-        ⤷ commute_ante
-
         goal ≔ 0 + x = x
 
         peano3[X / 0]
@@ -621,16 +546,6 @@ add_comm ≔ {
 
     b ≔ {
         goal ≔ (𝗦(x) + y) = 𝗦(x + y)
-
-        ⤷ chain
-        ⤷ commute_antecedents
-        ⤷ deduce
-        ⤷ equals_symmetric
-        ⤷ equals_transitive
-        ⤷ eq_flip
-        ⤷ eq_trans
-        ⤷ peano3
-        ⤷ peano4
 
         peano3[X / x].eq_flip
         (X = X)[X / 𝗦(x)]
@@ -674,15 +589,10 @@ add_comm ≔ {
     ⊦ goal
     goal[x / X][y / Y]
 }
+⤶ add_comm
 
 add_assoc ≔ {
     goal ≔ (x + y) + z = x + (y + z)
-
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
 
     peano3[X / y] | eq_flip
     peano3[X / x + y];
@@ -708,18 +618,10 @@ add_assoc ≔ {
     goal.eq_flip[x / X][y / Y][z / Z]
     goal[x / X][y / Y][z / Z]
 }
+⤶ add_assoc
 
 mul_comm ≔ {
     goal ≔ x * y = y * x
-
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ peano5
-    ⤷ peano6
-    ⤷ commute_ante
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
 
     peano5[X / 0]
     peano6[X / 0][Y / x]; peano3[X / 0 * x] | eq_trans
@@ -731,12 +633,6 @@ mul_comm ≔ {
 
     {
         goal ≔ 𝗦(x) = x + 1
-
-        ⤷ peano3
-        ⤷ peano4
-        ⤷ eq_flip
-        ⤷ eq_trans
-        ⤷ replace
 
         (X + Y = Y + X)[X / 0][Y / 1]; peano3[X / 1] | eq_trans | eq_flip
         (X + Y = Y + X)[X / x][Y / 1]
@@ -755,12 +651,6 @@ mul_comm ≔ {
     }
     a ≔ {
         goal ≔ 𝗦(y) * x = (y * x) + x
-
-        ⤷ peano5
-        ⤷ peano6
-        ⤷ eq_flip
-        ⤷ eq_trans
-        ⤷ replace
 
         peano5[X / y]
 
@@ -823,6 +713,7 @@ mul_comm ≔ {
     goal[x / X][y / Y]
     goal
 }
+⤶ mul_comm
 
 replace_cut ≔ λ{
     /*
@@ -835,6 +726,7 @@ replace_cut ≔ λ{
      */
     ↵ ●ⅰ; ●ⅲ; _new_var | ⪮[●ⅲ / ●ⅱ][_new_var / ●ⅳ] | commute_ante.MP
 }
+⤶ replace_cut
 
 add_equals ≔ λ{
     /*
@@ -843,14 +735,10 @@ add_equals ≔ λ{
      */
     ↵ ●ⅰ↙ + Y; Y; ●ⅱ↙; ●ⅱ↘ | replace.MP; X; ↘↙ | ✂; ●ⅰ↘ | replace_cut.MP
 }
+⤶ add_equals
 
 add_XY_ZW_eq_XZ_YW ≔ {
     goal ≔ (X + Y) + (Z + W) = (X + Z) + (Y + W)
-
-    ⤷ add_assoc
-    ⤷ add_comm
-    ⤷ eq_flip
-    ⤷ replace_cut
 
     add_assoc[X / x][Y / y][Z / z + w]; u; ↘↘ | ✂;
     (y + z) + w | replace_cut.MP; u; ↘↘↙ | ✂;
@@ -861,19 +749,10 @@ add_XY_ZW_eq_XZ_YW ≔ {
     ⊦ goal
     goal
 }
+⤶ add_XY_ZW_eq_XZ_YW
 
 mul_add_distr ≔ {
     goal ≔ (x + y) * z = (x * z) + (y * z)
-
-    ⤷ peano3
-    ⤷ peano5
-    ⤷ peano6
-    ⤷ add_equals
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
-    ⤷ replace_cut
-    ⤷ add_XY_ZW_eq_XZ_YW
 
     peano3[X / 0].eq_flip;
     (a + 0; a; 0; x * 0 | replace.MP) | eq_trans;
@@ -900,14 +779,10 @@ mul_add_distr ≔ {
 
     goal[x / X][y / Y][z / Z]
 }
+⤶ mul_add_distr
 
 mul_assoc ≔ {
     goal ≔ (x * y) * z = x * (y * z)
-
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
-    ⤷ replace_cut
 
     (x * y) * 0 = 0;
     0 = x * 0 | eq_trans;
@@ -924,11 +799,10 @@ mul_assoc ≔ {
     goal.eq_flip[x / X][y / Y][z / Z]
     goal[x / X][y / Y][z / Z]
 }
+⤶ mul_assoc
 
 mul_XY_ZW_eq_XZ_YW ≔ {
     goal ≔ (x * x') * (a * a') = (x * a) * (x' * a')
-    ⤷ eq_trans
-    ⤷ replace
     (x * x') * (a * a') = x * (x' * (a * a'));
     (x * (x' * u); u; a * a'; a' * a | replace.MP) | eq_trans;
     (x * u; u; x' * (a' * a); (x' * a') * a | replace.MP) | eq_trans;
@@ -937,27 +811,24 @@ mul_XY_ZW_eq_XZ_YW ≔ {
     ⊦ goal
     goal[x / X][x' / Y][a / Z][a' / W]
 }
-
+⤶ mul_XY_ZW_eq_XZ_YW
 ⊦ (X * Y) * (Z * W) = (X * Z) * (Y * W)
 
-exists_by_example ≔ {
-    ⤷ recontrapose
-
-    λ{
-        /*
-        Arguments: phrase, variable, example_value
-        Assumes: phrase[variable / example_value]is proven
-        Returns:¬∀variable¬phrase
-         */
-        phrase ≔ ●ⅰ
-        var ≔ ●ⅱ
-        example ≔ ●ⅲ
-        proof ≔ phrase[var / example]
-        ('X ⇒ ¬¬'X)['X / proof].MP
-        u ≔ (∀var¬phrase)[example]
-        ↵ recontrapose['A / u↙]['B / u↘].MP.MP
-    }
+exists_by_example ≔ λ{
+    /*
+    Arguments: phrase, variable, example_value
+    Assumes: phrase[variable / example_value]is proven
+    Returns:¬∀variable¬phrase
+     */
+    phrase ≔ ●ⅰ
+    var ≔ ●ⅱ
+    example ≔ ●ⅲ
+    proof ≔ phrase[var / example]
+    ('X ⇒ ¬¬'X)['X / proof].MP
+    u ≔ (∀var¬phrase)[example]
+    ↵ recontrapose['A / u↙]['B / u↘].MP.MP
 }
+⤶ exists_by_example
 
 conditional_exists_by_example ≔ λ{
     /*
@@ -984,6 +855,7 @@ conditional_exists_by_example ≔ λ{
     u ≔ (∀var¬Q)[example]; recontrapose | apply.MP
     ↵ phrase'; Q' ⇒ ¬¬Q' | deduce; u | deduce
 }
+⤶ conditional_exists_by_example
 
 exists_ante ≔ λ{
     /*
@@ -1008,9 +880,12 @@ exists_ante ≔ λ{
     w ≔ chain['X ⇒ 'Y / v]['Y ⇒ 'Z / u].MP.MP; recontrapose | apply.MP
     ↵ chain['X ⇒ 'Y / w]['Z / Q].MP.MP
 }
+⤶ exists_ante
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
 is_even ≔ λ{↵ ¬●.is_odd}
+⤶ is_odd
+⤶ is_even
 
 0 = y + y; y; 0 | exists_by_example
 ⊦ 0.is_even
@@ -1018,10 +893,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 ⊦ 2.is_even
 
 {
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace_cut
-
     goal ≔ 1 * x = x
     1 * x = x * 1;
     x * 1 = x * 0 + x | eq_trans; u; ↘↙ | ✂;
@@ -1034,8 +905,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 {
     goal ≔ x * 1 = x
-    ⤷ eq_flip
-    ⤷ eq_trans
     x * 1 = 1 * x;
     1 * x = x | eq_trans
     ⊦ goal
@@ -1044,10 +913,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 
 {
-    ⤷ eq_flip
-    ⤷ eq_trans
-    ⤷ replace
-    ⤷ replace_cut
     goal ≔ 2 * x = x + x
 
     a * x; a; 2; 1 + 1 | replace.MP;
@@ -1063,8 +928,6 @@ is_even ≔ λ{↵ ¬●.is_odd}
 ⊦ 2 * x | is_even
 
 {
-    ⤷ exists_by_example
-
     X = X + Z; Z; 0 | exists_by_example
     ⊦ ¬X < X
     ⊦ X ≤ X
@@ -1080,23 +943,18 @@ is_even ≔ λ{↵ ¬●.is_odd}
 {
     goal ≔ x ≤ y ⇒ x ≤ 𝗦y
 
-    ⤷ replace_cut
-
     step ≔ {
         goal ≔ y = x + z ⇒ 𝗦y = x + 𝗦z
-        ⤷ replace_cut
         y = x + z ⇒ 𝗦y = 𝗦(x + z); u; ↘↘ | ✂; x + 𝗦z | replace_cut.MP
         ⊦ goal
         goal
     }
 
-    ⤷ conditional_exists_by_example
     h ≔ step; Z; ↘↘↘ | ✂ | conditional_exists_by_example
     /*
     h is now y = x + z ⇒ x ≤ 𝗦y
     by applying exists_ante, we turn the antecedent into x ≤ y.
      */
-    ⤷ exists_ante
     h[z / Z]; Z | exists_ante
 
     ⊦ goal
@@ -1104,34 +962,10 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 {
     goal ≔ x0 ≤ y0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
-    ⤷ replace
-    ⤷ replace_cut
-    ⤷ deduce
-    ⤷ apply
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ conditional_exists_by_example
-    ⤷ commute_ante
-    ⤷ exists_ante
     step ≔ {
         goal ≔ y0 = x0 + a0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
-        ⤷ replace
-        ⤷ replace_cut
-        ⤷ deduce
-        ⤷ apply
-        ⤷ xyz_impl_and
-        ⤷ and_impl_xyz
-        ⤷ conditional_exists_by_example
-        ⤷ commute_ante
-        ⤷ exists_ante
         step ≔ {
             goal ≔ y0 = x0 + a0 ⇒ y1 = x1 + a1 ⇒ y0 + y1 = (x0 + x1) + (a0 + a1)
-            ⤷ replace
-            ⤷ replace_cut
-            ⤷ deduce
-            ⤷ apply
-            ⤷ xyz_impl_and
-            ⤷ and_impl_xyz
             h ≔ y0 + u; u; y1; x1 + a1 | replace
             g ≔ h; u; ↘↘↙ | ✂; x0 + a0 | replace_cut
             k ≔ g; u; ↘↘↘ | ✂; (x0 + x1) + (a0 + a1) | replace_cut.MP
@@ -1154,43 +988,17 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 {
     goal ≔ x ≤ x + a
-    ⤷ exists_by_example
     x + a = x + Z; Z; a | exists_by_example
     ⊦ goal
 }
 
 leq_trans ≔ {
     goal ≔ x ≤ y ⇒ y ≤ z ⇒ x ≤ z
-
-    ⤷ commute_antecedents
-    ⤷ apply
-    ⤷ reduce
-    ⤷ replace_cut
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
-
     step ≔ {
         goal ≔ y = x + w ⇒ y ≤ z ⇒ x ≤ z
-
-        ⤷ commute_antecedents
-        ⤷ apply
-        ⤷ reduce
-        ⤷ replace_cut
-        ⤷ xyz_impl_and
-        ⤷ and_impl_xyz
-        ⤷ conditional_exists_by_example
-        ⤷ exists_ante
-
         h ≔ commute_antecedents; goal | reduce
-
         step ≔ {
             goal ≔ z = y + u ⇒ y = x + w ⇒ z = x + (w + u)
-
-            ⤷ commute_antecedents
-            ⤷ replace_cut
-            ⤷ reduce
             h ≔ commute_antecedents; goal | reduce
             g ≔ z = a + u; a; b | ⪮[a = b / y = x + w]
             g; a; ↘↘↘ | ✂; x + (w + u) | replace_cut.MP
@@ -1216,11 +1024,6 @@ leq_trans ≔ {
 {
     goal ≔ x = x + y ⇒ y = 0
 
-    ⤷ equals_transitive
-    ⤷ equals_transitive'
-    ⤷ deduce
-    ⤷ chain
-
     0 = 0 + y ⇒ 0 + y = 0;
     equals_transitive[X = Y / y = 0 + y][Z / 0].MP | deduce
 
@@ -1235,11 +1038,6 @@ leq_trans ≔ {
 
 {
     goal ≔ x + y = 0 ⇒ y = 0
-    ⤷ equals_transitive
-    ⤷ reduce
-    ⤷ deduce
-    ⤷ contrapose
-    ⤷ ignore
 
     X = Y ⇒ Y = X; 𝗦(x + y) = 𝗦x + y | reduce.MP
     g ≔ equals_transitive; 𝗦x + y = 0 ⇒ 𝗦(x + y) = 0 | reduce.MP
@@ -1255,9 +1053,6 @@ leq_trans ≔ {
 
 {
     goal ≔ x + y = 0 ⇒ x = 0
-    ⤷ reduce
-    ⤷ deduce
-    ⤷ equals_transitive
     equals_transitive; x + y = 0 ⇒ y + x = 0 | reduce.MP;
     y + x = 0 ⇒ x = 0 | deduce
     ⊦ goal
@@ -1266,38 +1061,11 @@ leq_trans ≔ {
 
 {
     goal ≔ x ≤ y ⇒ y ≤ x ⇒ x = y
-
-    ⤷ commute_antecedents
-    ⤷ reduce
-    ⤷ deduce
-    ⤷ apply
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ and_impl_x
-    ⤷ replace_cut
-    ⤷ exists_ante
     step ≔ {
         goal ≔ y = x + a ⇒ y ≤ x ⇒ x = y
-
-        ⤷ commute_antecedents
-        ⤷ reduce
-        ⤷ deduce
-        ⤷ apply
-        ⤷ xyz_impl_and
-        ⤷ and_impl_xyz
-        ⤷ and_impl_x
-        ⤷ replace_cut
-        ⤷ exists_ante
         h ≔ commute_antecedents; goal | reduce
-
         step ≔ {
             goal ≔ x = y + b ⇒ y = x + a ⇒ x = y
-            ⤷ deduce
-            ⤷ apply
-            ⤷ xyz_impl_and
-            ⤷ and_impl_xyz
-            ⤷ replace_cut
-            ⤷ and_impl_x
             h ≔ y = u + a; u; v | ⪮[u = v / x = y + b]; xyz_impl_and | apply.MP
             g ≔ y = u; u; v | ⪮[u = v / (y + b) + a = y + (b + a)].MP
             j ≔ y = y + (b + a) ⇒ b + a = 0
@@ -1326,10 +1094,6 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 {
     goal ≔ x < y ⇒ ¬x = y
 
-    ⤷ recontra
-    ⤷ not_equals_symmetric
-    ⤷ deduce
-
     ('x ⇒ ¬¬'x)['x / Y < X];
     (X = Y ⇒ X ≤ Y).recontra.MP | deduce
     (x < y ⇒ ¬y = x); not_equals_symmetric[X / y][Y / x] | deduce
@@ -1340,12 +1104,6 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 {
     goal ≔ x ≤ y ⇒ x + x ≤ y + y
 
-    ⤷ replace
-    ⤷ add_XY_ZW_eq_XZ_YW
-    ⤷ replace_cut
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
-
     a ≔ add_XY_ZW_eq_XZ_YW[X / x][Z / x][Y / Z][W / Z]
     X + X; X; y; x + Z | replace; X; ↘↘ | ✂; a↘ | replace_cut.MP; Z; ↘↘↘ | ✂.conditional_exists_by_example; Z | exists_ante
 
@@ -1354,11 +1112,6 @@ X ≤ W; W; Y | ⪮[W / X].commute_ante.MP
 
 leq_mul ≔ {
     goal ≔ x ≤ y ⇒ a * x ≤ a * y
-    ⤷ mul_add_distr
-    ⤷ replace_cut
-    ⤷ prededuce
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
     mul_add_distr[X / x][Y / z][Z / a];
     w; ↙ | ✂; a * (x + z) | replace_cut.MP;
     w; ↘↙ | ✂; a * x | replace_cut.MP;
@@ -1373,18 +1126,6 @@ leq_mul ≔ {
 ⊦ X ≤ Y ⇒ A * X ≤ A * Y
 
 {
-    ⤷ peano1
-    ⤷ peano2
-    ⤷ peano4
-    ⤷ is_odd
-    ⤷ neq_flip
-    ⤷ equals_transitive
-    ⤷ commute_ante
-    ⤷ deduce
-    ⤷ recontra
-    ⤷ chain
-    ⤷ ignore
-
     goal ≔ 1.is_odd
 
     peano1[X / 0].neq_flip
@@ -1407,10 +1148,6 @@ leq_mul ≔ {
 ⊦ 1.is_odd
 
 {
-    ⤷ peano1
-    ⤷ peano2
-    ⤷ recontra
-
     goal ≔ ¬x = 𝗦x
     ∀x peano2[X / x][Y / 𝗦x].recontra.MP
     goal; x | ↺.MP.MP[x].MP
@@ -1420,8 +1157,6 @@ leq_mul ≔ {
 ⊦ ¬x = 𝗦x
 
 {
-    ⤷ peano4
-    ⤷ replace_cut
     goal ≔ 𝗦X + 𝗦Y = 𝗦𝗦(X + Y)
     peano4[X / 𝗦X]; Z; ↘↓ | ✂; goal↘↓ | replace_cut.MP
     (x = y ⇒ y = x)[x / goal↙][y / goal↘].MP
@@ -1429,20 +1164,6 @@ leq_mul ≔ {
 }
 
 succ_is_not_leq ≔ {
-    ⤷ contra
-    ⤷ ignore
-    ⤷ peano1
-    ⤷ peano2
-    ⤷ peano3
-    ⤷ peano4
-    ⤷ replace_cut
-    ⤷ recontra
-    ⤷ deduce
-    ⤷ commute_ante
-    ⤷ distr
-    ⤷ add_comm
-    ⤷ eq_trans
-    ⤷ eq_flip
     goal ≔ x ≤ y ⇒ ¬x = 𝗦y
     goal4 ≔ ¬y = 𝗦y + x
     peano4[X / x][Y / 0]
@@ -1468,6 +1189,7 @@ succ_is_not_leq ≔ {
     ⊦ goal
     goal[x / X][y / Y]
 }
+⤶ succ_is_not_leq
 
 ⊦ 𝗦X + 𝗦Y = 𝗦𝗦(X + Y)
 ⊦ 𝗦𝗦(X + Y) = 𝗦X + 𝗦Y
@@ -1477,19 +1199,14 @@ succ_is_not_leq ≔ {
 x_less_succ ≔ {
     goal ≔ x < 𝗦x
 
-    ⤷ succ_is_not_leq
-    ⤷ flip_postneg
-    ⤷ apply
-
     succ_is_not_leq[X / 𝗦x][Y / x].flip_postneg.MP.MP;
     ¬¬'X ⇒ 'X | apply.MP
     ⊦ goal
     goal[x / X]
 }
+⤶ x_less_succ
 {
     goal ≔ x < x + 1
-    ⤷ x_less_succ
-    ⤷ replace_cut
     x_less_succ[X / x]; u; ↘↓↘↙ | ✂; x + 1 | replace_cut.MP
     ⊦ goal
     goal[x / X]
@@ -1499,16 +1216,8 @@ x_less_succ ≔ {
 
 {
     goal ≔ x ≤ y ⇒ 𝗦x ≤ 𝗦y
-
-    ⤷ replace
-    ⤷ replace_cut
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
-
     step ≔ {
         goal ≔ y = x + a ⇒ 𝗦y = 𝗦x + a
-        ⤷ replace
-        ⤷ replace_cut
         𝗦u; u; y; x + a | replace; u; ↘↘ | ✂; 𝗦x + a | replace_cut.MP
         ⊦ goal
         goal
@@ -1522,16 +1231,8 @@ x_less_succ ≔ {
 
 {
     goal ≔ 𝗦x ≤ 𝗦y ⇒ x ≤ y
-
-    ⤷ peano2
-    ⤷ deduce
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
-
     step ≔ {
         goal ≔ 𝗦y = 𝗦x + a ⇒ y = x + a
-        ⤷ peano2
-        ⤷ deduce
         𝗦y = u; u; v | ⪮[u = v / 𝗦x + a = 𝗦(x + a)].MP;
         peano2[X = Y / y = x + a] | deduce
         ⊦ goal
@@ -1549,11 +1250,6 @@ x_less_succ ≔ {
 
 {
     goal ≔ x = 0 ∨¬∀y¬x = 𝗦y
-    ⤷ x_impl_or
-    ⤷ y_impl_or
-    ⤷ exists_by_example
-    ⤷ ignore
-    ⤷ reduce
     i ≔ goal; x | ↺
     x_impl_or; i↙ | reduce.MP
     j ≔ i.MP
@@ -1568,19 +1264,6 @@ x_less_succ ≔ {
 
 {
     goal ≔ ∀x(x ≤ y ∨ y ≤ x)
-
-    ⤷ x_impl_or
-    ⤷ y_impl_or
-    ⤷ or_impl_distr
-    ⤷ ignore
-    ⤷ reduce
-    ⤷ deduce
-    ⤷ distr
-    ⤷ apply
-    ⤷ replace_cut
-    ⤷ prededuce
-    ⤷ exists_ante
-    ⤷ conditional_or
 
     ∀x(y_impl_or; x ≤ 0 ∨ 0 ≤ x | reduce.MP)
     i ≔ goal; y | ↺.MP
@@ -1613,10 +1296,6 @@ x_less_succ ≔ {
     h'0 ≔ {
         goal ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (0 ≤ 𝗦(y))∨(𝗦(y) ≤ 0)
 
-        ⤷ x_impl_or
-        ⤷ ignore
-        ⤷ reduce
-
         x_impl_or; goal↘ | reduce.MP
         ignore; goal | reduce.MP
 
@@ -1629,9 +1308,6 @@ x_less_succ ≔ {
      */
     h'S ≔ {
         goal ≔ (∀x((x ≤ y)∨(y ≤ x))) ⇒ (𝗦(a) ≤ 𝗦(y))∨(𝗦(y) ≤ 𝗦(a))
-
-        ⤷ or_impl_distr
-        ⤷ deduce
 
         m ≔ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
         b ≔ or_impl_distr['X ⇒ 'Y / m[X / x][Y / y]]['Z ⇒ 'W / m[X / y][Y / x]].MP.MP
@@ -1677,7 +1353,6 @@ x_less_succ ≔ {
 
 {
     goal ≔ x ∣ x * a
-    ⤷ exists_by_example
     x * a = x * M; M; a | exists_by_example
     ⊦ goal
     goal[x / X][a / A]
@@ -1694,15 +1369,6 @@ x_less_succ ≔ {
 
 {
     goal ≔ x ∣ y ⇒ x' ∣ y' ⇒ x * x' ∣ y * y'
-    ⤷ replace
-    ⤷ replace_cut
-    ⤷ eq_flip
-    ⤷ xyz_impl_and
-    ⤷ and_impl_xyz
-    ⤷ apply
-    ⤷ conditional_exists_by_example
-    ⤷ exists_ante
-    ⤷ commute_ante
     (x * x') * (a * a') = (x * a) * (x' * a') | eq_flip
     y * u; u; y'; x' * a' | replace; u; ↘↘↙ | ✂; x * a | replace_cut;
     u; ↘↘↘ | ✂; (x * x') * (a * a') | replace_cut.MP;
@@ -1727,6 +1393,7 @@ remainder ≔ λ{
     k ≔ ●ⅲ
     ↵ k < m ∧¬∀d¬n = d * m + k
 }
+⤶ remainder
 
 element ≔ λ{
     /*
@@ -1743,6 +1410,7 @@ element ≔ λ{
     x ≔ ●ⅳ
     ↵ b; i * c + c + 1; x | remainder
 }
+⤶ element
 
 singleton ≔ λ{
     /*
@@ -1751,19 +1419,10 @@ singleton ≔ λ{
      */
     ↵ ●; ●
 }
+⤶ singleton
 
 {
-    ⤷ singleton
-    ⤷ element
-
     goal ≔ n.singleton; 0; n | element
-
-    ⤷ replace
-    ⤷ eq_trans
-    ⤷ replace_cut
-    ⤷ eq_flip
-    ⤷ exists_by_example
-    ⤷ x_impl_y_impl_and
 
     0 = 0 * n
     n = 0 + n; (u + n; u; 0; 0 * n | replace.MP) | eq_trans
@@ -1871,38 +1530,17 @@ max_commutes ≔ {
  */
 
 {
-    ⤷ flip_preneg
     goal ≔ (¬∀x¬'x) ⇒ 'x
     ((¬'x).∀x).flip_preneg.MP
     ⊦ goal
 }
 
 {
-    ⤷ commute_ante
-    ⤷ replace
-    ⤷ peano4
-    ⤷ add_XY_ZW_eq_XZ_YW
-    ⤷ eq_trans
-    ⤷ add_comm
-    ⤷ replace_cut
-    ⤷ eq_flip
-    ⤷ neq_flip
-    ⤷ apply
-    ⤷ deduce
-    ⤷ flip_postneg
-    ⤷ flip_preneg
-    ⤷ ignore
-    ⤷ distr
-    ⤷ recontra
-    ⤷ rename_quantify
     q ≔ peano4↙[X / x][Y / y]; add_comm | apply
     (𝗦X + 𝗦Y = 𝗦𝗦(X + Y))[X / z][Y / z]
     w ≔ add_XY_ZW_eq_XZ_YW[X / Z][Z / x][Y / W][W / 𝗦z]; Z; ↘↘ | ✂; 𝗦𝗦(z + z) | replace_cut.MP
     e ≔ 𝗦(x + y) = x + 𝗦y; q | eq_trans
     r ≔ {
-        ⤷ replace_cut
-        ⤷ peano4
-        ⤷ flip_postneg
         goal ≔ a = b + 𝗦c ⇒ ¬a = b
         ¬y = 𝗦y + x; z; ↓↘ | ✂; 𝗦(y + x) | replace_cut.MP; z; ↓↘ | ✂; y + 𝗦x | replace_cut.MP[x / c][y / a];
         b; ↓↘↙ | ✂; b | replace_cut.flip_postneg.MP
@@ -1933,19 +1571,7 @@ max_commutes ≔ {
 ⊦ x.is_odd ⇒ ¬x.is_even
 
 {
-    ⤷ is_even
-    ⤷ is_odd
     goal ≔ x.is_odd ⇒ (𝗦x).is_even
-
-    ⤷ contrapose
-    ⤷ reduce
-    ⤷ deduce
-    ⤷ conditional_exists_by_example
-    ⤷ ignore
-    ⤷ exists_ante
-    ⤷ commute_ante
-    ⤷ prededuce
-    ⤷ or_impl_distr
 
     proof ≔ contrapose; goal | reduce
     i ≔ proof↙; x | ↺

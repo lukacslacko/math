@@ -16,23 +16,46 @@ struct Token {
     location: Rc<str>,
 }
 
+#[derive(Debug, Clone)]
+struct ThingInfo {
+    thing: Thing,
+    auto_import: bool,
+}
+
 #[derive(Debug, Default)]
 struct Namespace {
     parent: Option<Rc<Namespace>>,
-    stuff: RefCell<Vec<Thing>>,
+    stuff: RefCell<Vec<ThingInfo>>,
 }
 
 impl Namespace {
-    fn find(&self, name: &str) -> Option<Thing> {
+    fn find(&self, name: &str) -> Option<ThingInfo> {
         self.stuff
             .borrow()
             .iter()
             .rev()
-            .find(|thing| thing.name() == name)
+            .find(|thing_info| thing_info.thing.name() == name)
             .cloned()
     }
-    fn set(&self, thing: Thing) {
-        self.stuff.borrow_mut().push(thing);
+    fn mark_always_import(&self, name: &str) {
+        if let Some(thing_info) = self
+            .stuff
+            .borrow_mut()
+            .iter_mut()
+            .rev()
+            .find(|thing_info| thing_info.thing.name() == name)
+        {
+            thing_info.auto_import = true;
+        }
+    }
+    fn set(&self, thing_info: ThingInfo) {
+        self.stuff.borrow_mut().push(thing_info);
+    }
+    fn set_new(&self, thing: Thing) {
+        self.set(ThingInfo {
+            thing,
+            auto_import: false,
+        });
     }
     fn save(self: &Rc<Namespace>) -> SavedNamespace {
         SavedNamespace {
@@ -226,7 +249,7 @@ pub fn interpret(
         }),
     );
     let namespace: Rc<Namespace> = Rc::default();
-    namespace.set(Thing::NumericPhrase(
+    namespace.set_new(Thing::NumericPhrase(
         make_str("0"),
         make_numeric_constant_zero(),
     ));
@@ -473,7 +496,7 @@ fn interpret_inner(
                     .join("; "),
                 _ => unreachable!(),
             };
-            new_namespace.set(arg);
+            new_namespace.set_new(arg);
             let mut mut_logger = logger.borrow_mut();
             let entry = mut_logger
                 .new_entry("Function call".to_string(), "".to_string());
@@ -1173,7 +1196,7 @@ fn interpret_inner(
                 "".to_string(),
                 format!("{} := {}", ident, numeric_phrase.to_html()),
             );
-            namespace.set(Thing::NumericPhrase(
+            namespace.set_new(Thing::NumericPhrase(
                 ident.clone(),
                 numeric_phrase.clone(),
             ));
@@ -1192,8 +1215,10 @@ fn interpret_inner(
                 "".to_string(),
                 format!("{} := {}", ident, logic_phrase.to_html()),
             );
-            namespace
-                .set(Thing::LogicPhrase(ident.clone(), logic_phrase.clone()));
+            namespace.set_new(Thing::LogicPhrase(
+                ident.clone(),
+                logic_phrase.clone(),
+            ));
             stack.pop();
             stack.pop();
             stack.pop();
@@ -1216,7 +1241,7 @@ fn interpret_inner(
                         .join("; ")
                 ),
             );
-            namespace.set(Thing::List(ident.clone(), list.clone()));
+            namespace.set_new(Thing::List(ident.clone(), list.clone()));
             stack.pop();
             stack.pop();
             stack.pop();
@@ -1228,7 +1253,7 @@ fn interpret_inner(
             Some(Node::Lambda(saved, tokens)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
         {
-            namespace.set(Thing::Lambda(
+            namespace.set_new(Thing::Lambda(
                 ident.clone(),
                 saved.clone(),
                 tokens.clone(),
@@ -1301,9 +1326,12 @@ fn interpret_inner(
             }
             .into();
             // Find all identifiers in the current namespace which only have digits and import them.
-            for thing in old_namespace.stuff.borrow().iter() {
-                if thing.name().chars().all(|c| c.is_ascii_digit()) {
-                    namespace.set(thing.clone());
+            for thing_info in old_namespace.stuff.borrow().iter() {
+                if thing_info.thing.name().chars().all(|c| c.is_ascii_digit()) {
+                    namespace.set(thing_info.clone());
+                }
+                if thing_info.auto_import {
+                    namespace.set(thing_info.clone());
                 }
             }
             if let Some(arg) = arg {
@@ -1349,15 +1377,16 @@ fn interpret_inner(
                     "namespace does not contain identifier {ident}, cannot export"
                 ))?
             };
-            let Some(parent) = namespace.parent.clone() else {
-                Err("cannot export from global namespace")?
-            };
-            if parent.find(&ident).is_some() {
-                Err(format!(
-                    "identifier {ident} already exists in parent namespace, cannot export"
-                ))?
+            peek.take();
+            namespace.mark_always_import(&ident);
+            if let Some(parent) = namespace.parent.clone() {
+                if parent.find(&ident).is_some() {
+                    Err(format!(
+                        "identifier {ident} already exists in parent namespace, cannot export"
+                    ))?
+                }
+                parent.set(thing);
             }
-            parent.set(thing);
             continue;
         }
         if token == Some("∀") {
@@ -1408,18 +1437,21 @@ fn interpret_inner(
         }
         if token.is_some() {
             let token = peek.take().unwrap();
-            match namespace.find(&token.text) {
-                Some(Thing::LogicPhrase(_, logic_phrase)) => {
-                    stack.push(Node::LogicPhrase(logic_phrase))
+            if let Some(thing_info) = namespace.find(&token.text) {
+                match thing_info.thing {
+                    Thing::LogicPhrase(_, logic_phrase) => {
+                        stack.push(Node::LogicPhrase(logic_phrase))
+                    }
+                    Thing::NumericPhrase(_, numeric_phrase) => {
+                        stack.push(Node::NumericPhrase(numeric_phrase))
+                    }
+                    Thing::List(_, list) => stack.push(Node::List(list)),
+                    Thing::Lambda(_, saved, tokens) => {
+                        stack.push(Node::Lambda(saved, tokens))
+                    }
                 }
-                Some(Thing::NumericPhrase(_, numeric_phrase)) => {
-                    stack.push(Node::NumericPhrase(numeric_phrase))
-                }
-                Some(Thing::List(_, list)) => stack.push(Node::List(list)),
-                Some(Thing::Lambda(_, saved, tokens)) => {
-                    stack.push(Node::Lambda(saved, tokens))
-                }
-                None => stack.push(Node::Identifier(token.text)),
+            } else {
+                stack.push(Node::Identifier(token.text));
             }
             continue;
         }
