@@ -199,9 +199,19 @@ pub struct Substitution {
     pub term: Phrase,
 }
 
+struct NotExistsPieces {
+    var: Phrase,
+    predicate: Phrase,
+}
+
 struct ExistsPieces {
     var: Phrase,
     predicate: Phrase,
+}
+
+struct NotEqualsPieces {
+    left: Phrase,
+    right: Phrase,
 }
 
 struct LessThanOrEqualPieces {
@@ -623,22 +633,47 @@ impl PhraseData {
         self.pretty_print_level(0, false)
     }
 
+    fn not_exists_pieces(&self) -> Option<NotExistsPieces> {
+        if self.kind != Quantify {
+            return None;
+        }
+        let children = self.children.unwrap_two();
+        if children.1.kind != Not {
+            return None;
+        }
+        let (var, predicate) = children;
+        Some(NotExistsPieces {
+            var: var.clone(),
+            predicate: predicate.children.unwrap_one().clone(),
+        })
+    }
+
     fn exists_pieces(&self) -> Option<ExistsPieces> {
         if self.kind != Not {
             return None;
         }
         let child = self.children.unwrap_one();
-        if child.kind != Quantify {
+        if let Some(not_exists) = child.not_exists_pieces() {
+            return Some(ExistsPieces {
+                var: not_exists.var,
+                predicate: not_exists.predicate,
+            });
+        }
+        None
+    }
+
+    fn not_equals_pieces(&self) -> Option<NotEqualsPieces> {
+        if self.kind != Not {
             return None;
         }
-        let grandchildren = child.children.unwrap_two();
-        if grandchildren.1.kind != Not {
+        let child = self.children.unwrap_one();
+        if child.kind != Equals {
             return None;
         }
-        let (var, predicate) = grandchildren;
-        Some(ExistsPieces {
-            var: var.clone(),
-            predicate: predicate.children.unwrap_one().clone(),
+        let (left, right) = child.children.unwrap_two();
+        Some(NotEqualsPieces {
+            left: left.clone(),
+            right: right.clone(),
         })
     }
 
@@ -766,6 +801,13 @@ impl PhraseData {
                 divides.right.pretty_print_level(level + 1, color)
             ));
         }
+        if let Some(not_equals) = self.not_equals_pieces() {
+            return paint(format!(
+                "({} ≠ {})",
+                not_equals.left.pretty_print_level(level + 1, color),
+                not_equals.right.pretty_print_level(level + 1, color)
+            ));
+        }
         if let Some(or) = self.or_pieces() {
             return paint(format!(
                 "({} ∨ {})",
@@ -778,6 +820,13 @@ impl PhraseData {
                 "({} ∧ {})",
                 and.left.pretty_print_level(level + 1, color),
                 and.right.pretty_print_level(level + 1, color)
+            ));
+        }
+        if let Some(not_exists) = self.not_exists_pieces() {
+            return paint(format!(
+                "∄{} {}",
+                not_exists.var.pretty_print_level(level + 1, color),
+                not_exists.predicate.pretty_print_level(level + 1, color)
             ));
         }
         if let Some(exists) = self.exists_pieces() {

@@ -144,6 +144,7 @@ enum Node {
     SugarLess,
     SugarLessOrEqual,
     SugarDivides,
+    SugarNotEquals,
 }
 
 impl Node {
@@ -171,6 +172,7 @@ impl Node {
             | Node::SugarLess
             | Node::SugarLessOrEqual
             | Node::SugarDivides
+            | Node::SugarNotEquals
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -948,6 +950,21 @@ fn interpret_inner(
         }
         if let (
             Some(Node::NumericPhrase(l)),
+            Some(Node::SugarNotEquals),
+            Some(Node::NumericPhrase(r)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(make_equals(
+                l.clone(),
+                r.clone(),
+            )?)?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::NumericPhrase(l)),
             Some(Node::SugarLess),
             Some(Node::NumericPhrase(r)),
         ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
@@ -1033,6 +1050,11 @@ fn interpret_inner(
         if token == Some("∧") {
             peek.take();
             stack.push(Node::SugarAnd);
+            continue;
+        }
+        if token == Some("≠") {
+            peek.take();
+            stack.push(Node::SugarNotEquals);
             continue;
         }
         if let (

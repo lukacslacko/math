@@ -1573,7 +1573,7 @@ max_commutes ≔ {
 ⊦ (x + 𝗦y) + (x + 𝗦y) = (x + x) + 𝗦𝗦(y + y)
 ⊦ (x + 𝗦y) + (x + 𝗦y) = 𝗦(x + x) + 𝗦(y + y)
 ⊦ 𝗦(x + y) = 𝗦x + y
-⊦ a = b + 𝗦c ⇒ ¬a = b
+⊦ a = b + 𝗦c ⇒ a ≠ b
 ⊦ (¬∀x¬'x) ⇒ 'x
 ⊦ x.is_even ⇒ (𝗦x).is_odd
 ⊦ x.is_odd ∨ x.is_even
@@ -1601,3 +1601,6 @@ max_commutes ≔ {
 }
 ⊦ X.is_odd ⇒ (𝗦X).is_even
 ⊦ (𝗦X).is_even ∨ X.is_even
+
+distr['B / 'A]['C / 'B].commute_ante.MP
+⊦ ('A ⇒ 'A ⇒ 'B) ⇒ 'A ⇒ 'B
