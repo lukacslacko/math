@@ -145,6 +145,8 @@ enum Node {
     SugarLessOrEqual,
     SugarDivides,
     SugarNotEquals,
+    SugarExists,
+    SugarExistsVar(Phrase),
 }
 
 impl Node {
@@ -173,6 +175,8 @@ impl Node {
             | Node::SugarLessOrEqual
             | Node::SugarDivides
             | Node::SugarNotEquals
+            | Node::SugarExists
+            | Node::SugarExistsVar(_)
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -317,6 +321,21 @@ fn interpret_inner(
                 ))?
             }
             stack.push(Node::QuantifyVar(numeric_variable.clone()));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (
+            Some(Node::SugarExists),
+            Some(Node::NumericPhrase(numeric_variable)),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            if numeric_variable.get_kind() != NumericVariable {
+                Err(format!(
+                    "existential quantification requires a numeric variable, got '{numeric_variable:?}'"
+                ))?
+            }
+            stack.push(Node::SugarExistsVar(numeric_variable.clone()));
             stack.swap_remove(stack.len() - 3);
             stack.pop();
             continue;
@@ -1138,6 +1157,19 @@ fn interpret_inner(
             continue;
         }
         if let (
+            Some(Node::SugarExistsVar(variable)),
+            Some(Node::LogicPhrase(logic_phrase)),
+        ) = (back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(make_quantify(
+                variable.clone(),
+                make_not(logic_phrase.clone())?,
+            )?)?));
+            stack.swap_remove(stack.len() - 3);
+            stack.pop();
+            continue;
+        }
+        if let (
             Some(Node::List(_)),
             Some(Node::Semicolon),
             Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)),
@@ -1414,6 +1446,11 @@ fn interpret_inner(
         if token == Some("∀") {
             peek.take();
             stack.push(Node::Quantify);
+            continue;
+        }
+        if token == Some("∃") {
+            peek.take();
+            stack.push(Node::SugarExists);
             continue;
         }
         if token == Some("↵") {

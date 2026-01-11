@@ -828,7 +828,7 @@ exists_by_example ≔ λ{
     /*
     Arguments: phrase, variable, example_value
     Assumes: phrase[variable / example_value]is proven
-    Returns:¬∀variable¬phrase
+    Returns:∃variable phrase
      */
     phrase ≔ ●ⅰ
     var ≔ ●ⅱ
@@ -843,12 +843,12 @@ exists_by_example ≔ λ{
 conditional_exists_by_example ≔ λ{
     /*
     Argument: P ⇒ Q; example; var(that is, a cut result)
-    Returns: P ⇒ ¬∀var¬Q
+    Returns: P ⇒ ∃var Q
 
     Creates a conditional existential statement.A typical way to
     use this is by proving a statement of the shape of
     P ⇒ Q[var / example], then pass in P ⇒ R; example; var to get
-    P ⇒ ¬∀var¬Q.Typically var is present in both P ∧ Q ∧
+    P ⇒ ∃var Q.Typically var is present in both P ∧ Q ∧
     example is an appropriate expression depending on var, satisfying
     Q based on P.
      */
@@ -871,7 +871,7 @@ exists_ante ≔ λ{
     /*
     Argument: P ⇒ Q; var
     Assumes: P ⇒ Q is proven, var is not free in Q
-    Returns:(¬∀var¬P) ⇒ Q
+    Returns:(∃var P) ⇒ Q
 
     Introduces an exists quantifier on the antecedent of a proven
     implication.
@@ -1259,7 +1259,7 @@ x_less_succ ≔ {
 ⊦ 𝗦X ≤ 𝗦Y ⇒ X ≤ Y
 
 {
-    goal ≔ x = 0 ∨¬∀y¬x = 𝗦y
+    goal ≔ x = 0 ∨∃y x = 𝗦y
     i ≔ goal; x | ↺
     x_impl_or; i↙ | reduce.MP
     j ≔ i.MP
@@ -1270,7 +1270,7 @@ x_less_succ ≔ {
     ⊦ goal
     goal[x / X]
 }
-⊦ X = 0 ∨¬∀y¬X = 𝗦y
+⊦ X = 0 ∨∃y X = 𝗦y
 
 {
     goal ≔ ∀x(x ≤ y ∨ y ≤ x)
@@ -1328,9 +1328,9 @@ x_less_succ ≔ {
     }
 
     /*
-    TODO from h'0 ∧ h'S prove h' using X = 0 ∨¬∀y¬X = 𝗦y
+    TODO from h'0 ∧ h'S prove h' using X = 0 ∨∃y X = 𝗦y
      */
-    two_cases ≔ (X = 0 ∨¬∀y¬X = 𝗦y)[X / x]
+    two_cases ≔ (X = 0 ∨∃y X = 𝗦y)[X / x]
 
     /* Prove h' for x = 0 */
     ignore['A / h'0]['B / x = 0].MP; 0 = x ⇒ x = 0 | prededuce
@@ -1401,7 +1401,7 @@ remainder ≔ λ{
     n ≔ ●ⅰ
     m ≔ ●ⅱ
     k ≔ ●ⅲ
-    ↵ k < m ∧¬∀d¬n = d * m + k
+    ↵ k < m ∧∃d n = d * m + k
 }
 ⤶ remainder
 
@@ -1482,7 +1482,7 @@ gcd_divides_y ≔ {
 
 gcd_exists ≔ {
     ⤷ gcd
-    goal ≔ 1 ≤ x ∨ 1 ≤ y ⇒ ¬∀d¬x; y; d | gcd
+    goal ≔ 1 ≤ x ∨ 1 ≤ y ⇒ ∃d x; y; d | gcd
     goal
     ⊦ goal
 }
@@ -1504,7 +1504,7 @@ max ≔ λ{
 
 max_exists ≔ {
     ⤷ max
-    goal ≔ ∀x∀y¬∀m¬x; y; m | max
+    goal ≔ ∀x∀y∃m x; y; m | max
     ⊦ goal
 }
 
@@ -1540,7 +1540,7 @@ max_commutes ≔ {
  */
 
 {
-    goal ≔ (¬∀x¬'x) ⇒ 'x
+    goal ≔ (∃x 'x) ⇒ 'x
     ((¬'x).∀x).flip_preneg.MP
     ⊦ goal
 }
@@ -1565,7 +1565,7 @@ max_commutes ≔ {
     i ≔ (x = y ⇒ x ≤ y)[y / z][x / y][z / x]; z; ↙↘ | ✂; x + 0 | replace_cut.MP;
     o | deduce.flip_postneg.MP; (¬y = x + z; z).↺ | deduce; distr | apply.MP.MP
     p ≔ ∀y(i; (i↘; Z).rename_quantify | deduce.recontra.MP.recontra.MP; x ≤ y ∨ y ≤ x | deduce; o | deduce; 'x ∨ 'x ⇒ 'x | apply.MP.neq_flip)
-    (¬∀y¬𝗦x = y + y).∀y; (∀y((x = y ⇒ y = x)[x / z][y / x + x]; (p; z; ↘↓↙↓ | ✂;
+    (∃y𝗦x = y + y).∀y; (∀y((x = y ⇒ y = x)[x / z][y / x + x]; (p; z; ↘↓↙↓ | ✂;
                 z | replace_cut) | deduce[x / y][z / x].recontra.MP) ⇆.MP) | deduce.flip_preneg.MP
 }
 
@@ -1574,7 +1574,7 @@ max_commutes ≔ {
 ⊦ (x + 𝗦y) + (x + 𝗦y) = 𝗦(x + x) + 𝗦(y + y)
 ⊦ 𝗦(x + y) = 𝗦x + y
 ⊦ a = b + 𝗦c ⇒ a ≠ b
-⊦ (¬∀x¬'x) ⇒ 'x
+⊦ (∃x 'x) ⇒ 'x
 ⊦ x.is_even ⇒ (𝗦x).is_odd
 ⊦ x.is_odd ∨ x.is_even
 ⊦ x.is_even ⇒ ¬x.is_odd
@@ -1591,7 +1591,7 @@ max_commutes ≔ {
     x = y + y ⇒ y + y = x | prededuce[y / Y]
     a ≔ x = Y + Y ⇒ 𝗦𝗦x = y + y;
     𝗦Y; y | conditional_exists_by_example[Y / y]; y | exists_ante
-    b ≔ ('X ⇒ 'X)['X / ¬∀y¬𝗦x = y + y]
+    b ≔ ('X ⇒ 'X)['X / ∃y𝗦x = y + y]
     c ≔ or_impl_distr['X ⇒ 'Y / a]['Z ⇒ 'W / b].MP.MP
     ∀x(('X ∨ 'Y ⇒ 'Y ∨ 'X)['Y ∨ 'X / c↙]; c | deduce)
     j.MP[x].MP
