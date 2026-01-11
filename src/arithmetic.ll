@@ -365,6 +365,16 @@ apply ≔ λ{
 }
 ⤶ apply
 
+apply2 ≔ λ{
+    /*
+    Arguments: P'; Q'; P ⇒ Q ⇒ R
+    Assumptions: P' has the shape of P, ∧ Q' has the shape of Q
+    Result: P' ⇒ Q' ⇒ R[P / P'][Q / Q']
+     */
+    ↵ ●ⅲ[●ⅲⅰ / ●ⅰ][●ⅲⅱ / ●ⅱ]
+}
+⤶ apply2
+
 demorgan_and ≔ {
     goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
 
