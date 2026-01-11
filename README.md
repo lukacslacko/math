@@ -72,6 +72,7 @@ These get expanded by the interpreter to the expressions described below.
 | `x ≤ y` or `x <= y` | `¬∀Z(¬y = x + Z)` |
 | `x ∣ y` or `x <div> y` | `¬∀M(¬y = x * M)` |
 | `x ≠ y` or `x != y` | `¬x = y` |
+| `∃x P` or `?x P` | `¬∀x¬P` |
 
 ## Inference rules
 | Rule | Syntax | ASCII | Remarks |
