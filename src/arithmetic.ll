@@ -1588,7 +1588,7 @@ x_less_succ ≔ {
 }
 ⊦ X ∣ A * X
 
-{
+mul_div ≔ {
     goal ≔ x ∣ y ⇒ x' ∣ y' ⇒ x * x' ∣ y * y'
     (x * x') * (a * a') = (x * a) * (x' * a') | eq_flip
     y * u; u; y'; x' * a' | replace; u; ↘↘↙ | ✂; x * a | replace_cut;
@@ -1603,6 +1603,26 @@ x_less_succ ≔ {
     goal[x / X][x' / X'][y / Y][y' / Y']
 }
 ⊦ X ∣ Y ⇒ X' ∣ Y' ⇒ X * X' ∣ Y * Y'
+⤶ mul_div
+
+{
+    goal ≔ 1 ∣ x
+    x = 1 * M; x; M | exists_by_example
+    ⊦ goal
+    goal[x / X]
+}
+⊦ 1 ∣ X
+
+{
+    goal ≔ x ∣ y ⇒ x ∣ a * y
+
+    1 ∣ a; x ∣ y; mul_div | apply2.MP;
+    u; ↘↓↘↓↘↙ | ✂; x | replace_cut.MP
+
+    ⊦ goal
+    goal[x / X][y / Y][a / A]
+}
+⊦ X ∣ Y ⇒ X ∣ A * Y
 
 remainder ≔ λ{
     /*
@@ -1848,7 +1868,10 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     {
         goal ≔ (∀d d ≤ n ⇒ d ∣ m) ⇒ ∀d d ≤ 𝗦n ⇒ d ∣ m * 𝗦n
         goal ℻
+        a ≔ goal↙
         ⊦ d ≤ 𝗦n ⇒ d ≤ n ∨ d = 𝗦n
+        a[d]℻
+        ⊦ d | m ⇒ d | 𝗦n * m
         ⊦ goal
     }
     ⊦ goal
