@@ -1837,12 +1837,11 @@ distr['B / 'A]['C / 'B].commute_ante.MP
 ⊦ ('A ⇒ 'A ⇒ 'B) ⇒ 'A ⇒ 'B
 
 {
-    goal ≔ x ≤ 𝗦w ⇒ x ≤ w ∨ x = 𝗦w
+    goal ≔ x ≤ 𝗦w ⇒ x ≤ w ∨𝗦w = x
     {
-        goal ≔ 𝗦w = x + z ⇒ x ≤ w ∨ x = 𝗦w
+        goal ≔ 𝗦w = x + z ⇒ x ≤ w ∨𝗦w = x
         ⊦ (x = 0 ∨∃y x = 𝗦y)[x / z]
-        z0 ≔ 𝗦w = x + u; u; v | ⪮[u = v / z = 0]; u; ↘↘↘ | ✂; x | replace_cut.MP;
-        xyz_impl_and | apply.MP; 𝗦w = x ⇒ x = 𝗦w | deduce; and_impl_xyz | apply.MP
+        z0 ≔ 𝗦w = x + u; u; v | ⪮[u = v / z = 0]; u; ↘↘↘ | ✂; x | replace_cut.MP
         zS ≔ {
             𝗦w = x + u; u; v | ⪮[u = v / z = 𝗦t]
             𝗦w = x + 𝗦t; x + 𝗦t = 𝗦(x + t); equals_transitive | apply2.commute_ante.MP;
@@ -1857,22 +1856,34 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     ⊦ goal
     goal[x / X][w / Y]
 }
-⊦ X ≤ 𝗦Y ⇒ X ≤ Y ∨ X = 𝗦Y
+⊦ X ≤ 𝗦Y ⇒ X ≤ Y ∨𝗦Y = X
+
 {
     goal ≔ ∃m∀d d ≤ n ⇒ d ∣ m
     i ≔ goal; n | ↺
     0 = d * M; 0; M | exists_by_example
     ∀d(ignore['A / d ∣ 0]['B / d ≤ 0].MP); m; ↘↘↓↘↓↙ | ✂.exists_by_example
     j ≔ i.MP
-    j↙℻
-    {
-        goal ≔ (∀d d ≤ n ⇒ d ∣ m) ⇒ ∀d d ≤ 𝗦n ⇒ d ∣ m * 𝗦n
-        goal ℻
+    step ≔ {
+        goal ≔ (∀d d ≤ n ⇒ d ∣ m) ⇒ ∀d d ≤ 𝗦n ⇒ d ∣ 𝗦n * m
         a ≔ goal↙
-        ⊦ d ≤ 𝗦n ⇒ d ≤ n ∨ d = 𝗦n
-        a[d]℻
-        ⊦ d | m ⇒ d | 𝗦n * m
+        a_small ≔ a[d]; xyz_impl_and | apply.MP;
+        d ∣ m ⇒ d ∣ 𝗦n * m | deduce;
+        and_impl_xyz | apply.MP.commute_ante
+        a_sn ≔ ignore
+        ['A / u ∣ 𝗦n * m; u; v | ⪮[u = v / 𝗦n = d].commute_ante.MP]
+        ['B / ∀d d ≤ n ⇒ d ∣ m].MP.commute_ante
+        b ≔ ∀d(d ≤ 𝗦n ⇒ d ≤ n ∨𝗦n = d;
+            (a_small; a_sn; conditional_or | apply2.MP.MP)
+             | deduce.commute_ante) ⇆.MP
+        b↙↘.∀d; b | deduce
         ⊦ goal
+        goal
     }
+    ∀n(step[m / m']; m; ↘↘↘↓↘↓↙ |
+        ✂.conditional_exists_by_example[m' / m];
+        m | exists_ante)
+    j.MP[n].MP
     ⊦ goal
 }
+⊦ ∀n∃m∀d d ≤ n ⇒ d ∣ m
