@@ -525,7 +525,7 @@ iff_conseq ≔ λ{
 
     iff_then_xy['X / x]['Y / y]; chain'['X / z]['Y / x]['Z / y] | deduce;
     (iff_then_yx['X / x]['Y / y]; chain'['X / z]['Y / y]['Z / x] | deduce);
-    conditional_and | apply2.MP.MP[x/P][y/Q][z/A]
+    conditional_and | apply2.MP.MP[x / P][y / Q][z / A]
 
     ⊦ goal
     ↵ goal
@@ -543,15 +543,13 @@ iff_forall ≔ λ{
     var ≔ ●ⅱ
     goal ≔ P ⇔ Q ⇒ (∀var P) ⇔ (∀var Q)
 
-    x ≔ '_new_var1
-    y ≔ '_new_var2
-    z ≔ '_new_var3
-
-    iff_then_xy['X / x]['Y / y]; (x=>y).!z|deduce FAX
+    iff_then_xy['X / P]['Y / Q]; (P ⇒ Q).∀var | deduce; (∀var(P ⇒ Q) ⇆) | deduce;
+    (iff_then_yx['X / P]['Y / Q]; (Q ⇒ P).∀var | deduce; (∀var(Q ⇒ P) ⇆) | deduce);
+    conditional_and | apply2.MP.MP
     ⊦ goal
     ↵ goal
 }
-⊦ 'X ⇔ 'Y; u | iff_forall ℻
+⊦ 'a ⇔ 'b; u | iff_forall
 ⤶ iff_forall
 
 equals_symmetric ≔ {
