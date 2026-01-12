@@ -341,7 +341,7 @@ demorgan_or ≔ {
     chain'['X ⇒ 'Y / a]['X ⇒ 'Z / goal].MP.MP
 
     ⊦ goal
-    goal
+    goal['x / 'X]['y / 'Y]
 }
 ⤶ demorgan_or
 
@@ -386,6 +386,24 @@ demorgan_and ≔ {
     goal
 }
 ⤶ demorgan_and
+
+or_comm ≔ {
+    goal ≔ 'x ∨ 'y ⇒ 'y ∨ 'x
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⊦ 'X ∨ 'Y ⇒ 'Y ∨ 'X
+⤶ or_comm
+
+or_comm_iff ≔ {
+    goal ≔ 'x ∨ 'y ⇔ 'y ∨ 'x
+    or_comm['X / 'x]['Y / 'y];
+    or_comm['X / 'y]['Y / 'x];
+    x_impl_y_impl_and | apply2.MP.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⤶ or_comm_iff
 
 conditional_and ≔ {
     goal ≔ ('x ⇒ 'y) ⇒ ('x ⇒ 'z) ⇒ ('x ⇒ 'y ∧ 'z)
@@ -551,6 +569,81 @@ iff_forall ≔ λ{
 }
 ⊦ 'a ⇔ 'b; u | iff_forall
 ⤶ iff_forall
+
+{
+    goal ≔ 'x ⇔ 'x
+    x_impl_y_impl_and['X / 'x ⇒ 'x]['Y / 'x ⇒ 'x].MP.MP
+    ⊦ goal
+    goal['x / 'X]
+}
+⊦ 'X ⇔ 'X
+
+{
+    goal ≔ 'x ⇔ ¬¬'x
+    x_impl_y_impl_and['X / 'x ⇒ ¬¬'x]['Y / ¬¬'x ⇒ 'x].MP.MP
+    ⊦ goal
+    goal['x / 'X]
+}
+⊦ 'X ⇔ ¬¬'X
+
+{
+    goal ≔ ¬¬'x ⇔ 'x
+    iff_comm; goal | reduce.MP
+    ⊦ goal
+    goal['x / 'X]
+}
+⊦ ¬¬'X ⇔ 'X
+
+demorgan_or' ≔ {
+    goal ≔ ¬(¬'x ∧¬'y) ⇒ 'x ∨ 'y
+    (¬¬'y ⇔ 'y); ¬'x | iff_conseq.MP; iff_then_xy | apply.MP
+    (¬¬'X ⇒ 'X)['X / ¬'x ⇒ ¬¬'y]; (¬'x ⇒ ¬¬'y) ⇒ (¬'x ⇒ 'y) | deduce
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⤶ demorgan_or'
+
+or_assoc ≔ {
+    goal ≔ 'x ∨('y ∨ 'z) ⇒ ('x ∨ 'y)∨ 'z
+    a ≔ and_assoc['X / ¬'x]['Y / ¬'y]['Z / ¬'z]; contrapose | apply.MP
+    b ≔ 'x ⇒ 'x; demorgan_or['X / 'y]['Y / 'z]; or_impl_distr | apply2.MP.MP
+    c ≔ b; a | deduce
+    d ≔ ¬¬'z ⇔ 'z; ¬(¬'x ⇒ ¬¬'y) | iff_conseq.MP; iff_then_xy | apply.MP
+    e ≔ c; d | deduce
+    f ≔ ¬¬'y ⇔ 'y; ¬'x | iff_conseq.MP | iff_neg.MP; 'z | iff_ante.MP; iff_then_xy | apply.MP
+    e; f | deduce
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]['z / 'Z]
+}
+⊦ 'X ∨('Y ∨ 'Z) ⇒ ('X ∨ 'Y)∨ 'Z
+⤶ or_assoc
+
+or_permute ≔ {
+    or_comm['X / 'x ∨ 'y]['Y / 'z];
+    or_assoc['X / 'z]['Y / 'x]['Z / 'y] | deduce['x/'X]['y/'Y]['z/'Z]
+}
+export or_permute
+
+conditional_or' ≔ {
+    goal ≔ ('a ⇒ 'x)∨('a ⇒ 'y) ⇒ 'a ⇒ 'x ∨ 'y
+    'a ⇔ ¬¬'a; 'x | iff_ante.MP; and_impl_x | apply.MP
+    a := ('a ⇒ 'x) ⇒ ¬'a ∨ 'x;
+    ('a ⇒ 'y) ⇒ ¬'a ∨ 'y;
+    or_impl_distr | apply2.MP.MP
+    b:=a.>;or_permute|apply
+    c:=a;b|deduce
+    d := c;c.>.flip_preneg|deduce
+    e := d;((¬(¬¬'a ⇒ 'y) ⇒ ¬'a).contra; chain'|apply.MP['X/~'x])|deduce 
+    f := (~~'a<=>'a);'y|iff_ante.MP;'a|iff_conseq.MP; iff_then_xy|apply.MP;
+    distr['B / 'A]['C / 'B].commute_ante.MP['A/'a]['B/'y]|deduce; chain'|apply.MP['X/~'x]
+    g := e;f|deduce
+    g;(g.>;commute_antecedents|apply)|deduce
+    goal ℻
+    ⊦ goal
+    goal['a / 'A]['x / 'X]['y / 'Y]
+}
+⊦ ('A ⇒ 'X)∨('A ⇒ 'Y) ⇒ 'A ⇒ 'X ∨ 'Y
+⤶ conditional_or'
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
@@ -944,13 +1037,13 @@ mul_XY_ZW_eq_XZ_YW ≔ {
 
 exists_by_example ≔ λ{
     /*
-    Arguments: phrase, variable, example_value
+    Arguments: phrase, example_value, variable(that is, a cut result)
     Assumes: phrase[variable / example_value]is proven
     Returns:∃variable phrase
      */
     phrase ≔ ●ⅰ
-    var ≔ ●ⅱ
-    example ≔ ●ⅲ
+    var ≔ ●ⅲ
+    example ≔ ●ⅱ
     proof ≔ phrase[var / example]
     ('X ⇒ ¬¬'X)['X / proof].MP
     u ≔ (∀var¬phrase)[example]
@@ -1015,9 +1108,9 @@ is_even ≔ λ{↵ ¬●.is_odd}
 ⤶ is_odd
 ⤶ is_even
 
-0 = y + y; y; 0 | exists_by_example
+0 = y + y; 0; y | exists_by_example
 ⊦ 0.is_even
-2 = y + y; y; 1 | exists_by_example
+2 = y + y; 1; y | exists_by_example
 ⊦ 2.is_even
 
 {
@@ -1052,15 +1145,15 @@ is_even ≔ λ{↵ ¬●.is_odd}
     goal.eq_flip[x / X]
 }
 
-2 * x = y + y; y; x | exists_by_example
+2 * x = y + y; x; y | exists_by_example
 ⊦ 2 * x | is_even
 
 {
-    X = X + Z; Z; 0 | exists_by_example
+    X = X + Z; 0; Z | exists_by_example
     ⊦ ¬X < X
     ⊦ X ≤ X
 
-    X = 0 + Z; Z; X | exists_by_example
+    X = 0 + Z; X; Z | exists_by_example
     ⊦ ¬X < 0
     ⊦ 0 ≤ X
 
@@ -1116,7 +1209,7 @@ is_even ≔ λ{↵ ¬●.is_odd}
 
 {
     goal ≔ x ≤ x + a
-    x + a = x + Z; Z; a | exists_by_example
+    x + a = x + Z; a; Z | exists_by_example
     ⊦ goal
 }
 
@@ -1381,7 +1474,7 @@ x_less_succ ≔ {
     i ≔ goal; x | ↺
     x_impl_or; i↙ | reduce.MP
     j ≔ i.MP
-    a ≔ 𝗦x = 𝗦y; y; x | exists_by_example
+    a ≔ 𝗦x = 𝗦y; x; y | exists_by_example
     y_impl_or; j↙↘↘ | reduce.MP
     ∀x(ignore; j↙↘ | reduce.MP)
     j.MP[x].MP
@@ -1481,7 +1574,7 @@ x_less_succ ≔ {
 
 {
     goal ≔ x ∣ x * a
-    x * a = x * M; M; a | exists_by_example
+    x * a = x * M; a; M | exists_by_example
     ⊦ goal
     goal[x / X][a / A]
 }
@@ -1557,7 +1650,7 @@ singleton ≔ λ{
     a ≔ u + 1; u; n; (0 * n) + n | replace.MP | eq_flip
     goal1 ≔ n < u; u; v | ⪮[v = u / a].MP.MP
     X = u + X; u; v | ⪮[u = v / 0 = 0 * Y].MP.MP
-    goal2 ≔ n = d * (((0 * n) + n) + 1) + n; d; 0 | exists_by_example
+    goal2 ≔ n = d * (((0 * n) + n) + 1) + n; 0; d | exists_by_example
     x_impl_y_impl_and['X / goal1]['Y / goal2].MP.MP
     ⊦ goal
     goal[n / X]
@@ -1722,3 +1815,37 @@ max_commutes ≔ {
 
 distr['B / 'A]['C / 'B].commute_ante.MP
 ⊦ ('A ⇒ 'A ⇒ 'B) ⇒ 'A ⇒ 'B
+
+{
+    goal ≔ x ≤ 𝗦w ⇒ x ≤ w ∨ x = 𝗦w
+    {
+        goal ≔ 𝗦w = x + z ⇒ x ≤ w ∨ x = 𝗦w ℻
+        ⊦ (x = 0 ∨∃y x = 𝗦y)[x / z]
+        z0 ≔ 𝗦w = x + u; u; v | ⪮[u = v / z = 0]; u; ↘↘↘ | ✂; x | replace_cut.MP
+        zS ≔ {
+            𝗦w = x + u; u; v | ⪮[u = v / z = 𝗦t]
+            𝗦w = x + 𝗦t; x + 𝗦t = 𝗦(x + t); equals_transitive | apply2.commute_ante.MP;
+            peano2[X / w][Y / x + t] | deduce; Z; ↘↘↘ | ✂.conditional_exists_by_example;
+            u; ↙↘↘ | ✂; z | replace_cut; z = 𝗦t ⇒ 𝗦t = z | prededuce[t / y]; y | exists_ante
+        }
+        z0; zS; or_impl_distr | apply2.MP.MP.MP ℻
+        ⊦ ('A ⇒ 'B)∨('A ⇒ 'C) ⇒ 'A ⇒ 'B ∨ 'C
+        ⊦ goal
+    }
+    ⊦ goal
+}
+{
+    goal ≔ ∃m∀d d ≤ n ⇒ d ∣ m
+    i ≔ goal; n | ↺
+    0 = d * M; 0; M | exists_by_example
+    ∀d(ignore['A / d ∣ 0]['B / d ≤ 0].MP); m; ↘↘↓↘↓↙ | ✂.exists_by_example
+    j ≔ i.MP
+    j↙℻
+    {
+        goal ≔ (∀d d ≤ n ⇒ d ∣ m) ⇒ ∀d d ≤ 𝗦n ⇒ d ∣ m * 𝗦n
+        goal ℻
+        ⊦ d ≤ 𝗦n ⇒ d ≤ n ∨ d = 𝗦n
+        ⊦ goal
+    }
+    ⊦ goal
+}

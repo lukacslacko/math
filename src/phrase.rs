@@ -647,6 +647,13 @@ impl PhraseData {
             return None;
         }
         let (var, predicate) = children;
+        if predicate.children.unwrap_one().kind == Quantify
+            && predicate.children.unwrap_one().children.unwrap_two().1.kind
+                == Not
+        {
+            // ∀n∃m should not be rendered as ∄n∄m.
+            return None;
+        }
         Some(NotExistsPieces {
             var: var.clone(),
             predicate: predicate.children.unwrap_one().clone(),
