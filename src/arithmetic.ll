@@ -620,25 +620,25 @@ or_assoc ≔ {
 
 or_permute ≔ {
     or_comm['X / 'x ∨ 'y]['Y / 'z];
-    or_assoc['X / 'z]['Y / 'x]['Z / 'y] | deduce['x/'X]['y/'Y]['z/'Z]
+    or_assoc['X / 'z]['Y / 'x]['Z / 'y] | deduce['x / 'X]['y / 'Y]['z / 'Z]
 }
-export or_permute
+⤶ or_permute
 
 conditional_or' ≔ {
     goal ≔ ('a ⇒ 'x)∨('a ⇒ 'y) ⇒ 'a ⇒ 'x ∨ 'y
     'a ⇔ ¬¬'a; 'x | iff_ante.MP; and_impl_x | apply.MP
-    a := ('a ⇒ 'x) ⇒ ¬'a ∨ 'x;
+    a ≔ ('a ⇒ 'x) ⇒ ¬'a ∨ 'x;
     ('a ⇒ 'y) ⇒ ¬'a ∨ 'y;
     or_impl_distr | apply2.MP.MP
-    b:=a.>;or_permute|apply
-    c:=a;b|deduce
-    d := c;c.>.flip_preneg|deduce
-    e := d;((¬(¬¬'a ⇒ 'y) ⇒ ¬'a).contra; chain'|apply.MP['X/~'x])|deduce 
-    f := (~~'a<=>'a);'y|iff_ante.MP;'a|iff_conseq.MP; iff_then_xy|apply.MP;
-    distr['B / 'A]['C / 'B].commute_ante.MP['A/'a]['B/'y]|deduce; chain'|apply.MP['X/~'x]
-    g := e;f|deduce
-    g;(g.>;commute_antecedents|apply)|deduce
-    goal ℻
+    b ≔ a↘; or_permute | apply
+    c ≔ a; b | deduce
+    d ≔ c; c↘.flip_preneg | deduce
+    e ≔ d; ((¬(¬¬'a ⇒ 'y) ⇒ ¬'a).contra; chain' | apply.MP['X / ¬'x]) | deduce
+    f ≔ (¬¬'a ⇔ 'a); 'y | iff_ante.MP; 'a | iff_conseq.MP; iff_then_xy | apply.MP;
+    distr['B / 'A]['C / 'B].commute_ante.MP['A / 'a]['B / 'y] | deduce;
+    chain' | apply.MP['X / ¬'x]
+    g ≔ e; f | deduce
+    g; (g↘; commute_antecedents | apply) | deduce
     ⊦ goal
     goal['a / 'A]['x / 'X]['y / 'Y]
 }
@@ -1819,21 +1819,25 @@ distr['B / 'A]['C / 'B].commute_ante.MP
 {
     goal ≔ x ≤ 𝗦w ⇒ x ≤ w ∨ x = 𝗦w
     {
-        goal ≔ 𝗦w = x + z ⇒ x ≤ w ∨ x = 𝗦w ℻
+        goal ≔ 𝗦w = x + z ⇒ x ≤ w ∨ x = 𝗦w
         ⊦ (x = 0 ∨∃y x = 𝗦y)[x / z]
-        z0 ≔ 𝗦w = x + u; u; v | ⪮[u = v / z = 0]; u; ↘↘↘ | ✂; x | replace_cut.MP
+        z0 ≔ 𝗦w = x + u; u; v | ⪮[u = v / z = 0]; u; ↘↘↘ | ✂; x | replace_cut.MP;
+        xyz_impl_and | apply.MP; 𝗦w = x ⇒ x = 𝗦w | deduce; and_impl_xyz | apply.MP
         zS ≔ {
             𝗦w = x + u; u; v | ⪮[u = v / z = 𝗦t]
             𝗦w = x + 𝗦t; x + 𝗦t = 𝗦(x + t); equals_transitive | apply2.commute_ante.MP;
             peano2[X / w][Y / x + t] | deduce; Z; ↘↘↘ | ✂.conditional_exists_by_example;
             u; ↙↘↘ | ✂; z | replace_cut; z = 𝗦t ⇒ 𝗦t = z | prededuce[t / y]; y | exists_ante
         }
-        z0; zS; or_impl_distr | apply2.MP.MP.MP ℻
-        ⊦ ('A ⇒ 'B)∨('A ⇒ 'C) ⇒ 'A ⇒ 'B ∨ 'C
+        a ≔ z0; zS; or_impl_distr | apply2.MP.MP.MP; conditional_or' | apply.MP
+        a; (a↘; or_comm | apply) | deduce
         ⊦ goal
-    }
+        goal
+    }[z / Z]; Z | exists_ante
     ⊦ goal
+    goal[x / X][w / Y]
 }
+⊦ X ≤ 𝗦Y ⇒ X ≤ Y ∨ X = 𝗦Y
 {
     goal ≔ ∃m∀d d ≤ n ⇒ d ∣ m
     i ≔ goal; n | ↺
