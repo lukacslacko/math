@@ -209,6 +209,11 @@ struct ExistsPieces {
     predicate: Phrase,
 }
 
+struct EquivalentPieces {
+    left: Phrase,
+    right: Phrase,
+}
+
 struct NotEqualsPieces {
     left: Phrase,
     right: Phrase,
@@ -763,6 +768,36 @@ impl PhraseData {
         None
     }
 
+    fn equivalent_pieces(&self) -> Option<EquivalentPieces> {
+        if self.kind != Not {
+            return None;
+        }
+        let negand = self.children.unwrap_one();
+        if negand.kind != Imply {
+            return None;
+        }
+        let (antecedent, consequent) = negand.children.unwrap_two();
+        if consequent.kind != Not {
+            return None;
+        }
+        let negconsequent = consequent.children.unwrap_one();
+        if negconsequent.kind != Imply {
+            return None;
+        }
+        if antecedent.kind != Imply {
+            return None;
+        }
+        let (left, right) = antecedent.children.unwrap_two();
+        let (right2, left2) = negconsequent.children.unwrap_two();
+        if left == left2 && right == right2 {
+            return Some(EquivalentPieces {
+                left: left.clone(),
+                right: right.clone(),
+            });
+        }
+        None
+    }
+
     fn number_piece(&self) -> Option<usize> {
         if self.kind == Successor {
             let child = self.children.unwrap_one();
@@ -778,11 +813,13 @@ impl PhraseData {
     fn pretty_print_level(&self, level: usize, color: bool) -> String {
         let paint = |s: String| {
             if color {
-                s.black().on_truecolor(
-                    255 - level as u8 * 10,
-                    255 - level as u8 * 10,
-                    255 - level as u8 * 10,
-                ).to_string()
+                s.black()
+                    .on_truecolor(
+                        255 - level as u8 * 10,
+                        255 - level as u8 * 10,
+                        255 - level as u8 * 10,
+                    )
+                    .to_string()
             } else {
                 s
             }
@@ -791,7 +828,9 @@ impl PhraseData {
             return paint(format!(
                 "({} ≤ {})",
                 less_than_or_equal.left.pretty_print_level(level + 1, color),
-                less_than_or_equal.right.pretty_print_level(level + 1, color)
+                less_than_or_equal
+                    .right
+                    .pretty_print_level(level + 1, color)
             ));
         }
         if let Some(divides) = self.divides_pieces() {
@@ -808,12 +847,22 @@ impl PhraseData {
                 not_equals.right.pretty_print_level(level + 1, color)
             ));
         }
-        if let Some(or) = self.or_pieces() {
+        if let Some(equivalent) = self.equivalent_pieces() {
             return paint(format!(
-                "({} ∨ {})",
-                or.left.pretty_print_level(level + 1, color),
-                or.right.pretty_print_level(level + 1, color)
+                "({} <=> {})",
+                equivalent.left.pretty_print_level(level + 1, color),
+                equivalent.right.pretty_print_level(level + 1, color)
             ));
+        }
+        if let Some(or) = self.or_pieces() {
+            if let Some(_) = self.children.unwrap_two().0.equivalent_pieces() {
+            } else {
+                return paint(format!(
+                    "({} ∨ {})",
+                    or.left.pretty_print_level(level + 1, color),
+                    or.right.pretty_print_level(level + 1, color)
+                ));
+            }
         }
         if let Some(and) = self.and_pieces() {
             return paint(format!(
@@ -859,7 +908,10 @@ impl PhraseData {
             }
             Not => {
                 let child = self.children.unwrap_one();
-                paint(format!("¬{}", child.pretty_print_level(level + 1, color)))
+                paint(format!(
+                    "¬{}",
+                    child.pretty_print_level(level + 1, color)
+                ))
             }
             Equals => {
                 let (left, right) = self.children.unwrap_two();
@@ -871,7 +923,10 @@ impl PhraseData {
             }
             Successor => {
                 let child = self.children.unwrap_one();
-                paint(format!("𝗦({})", child.pretty_print_level(level + 1, color)))
+                paint(format!(
+                    "𝗦({})",
+                    child.pretty_print_level(level + 1, color)
+                ))
             }
             Add => {
                 let (left, right) = self.children.unwrap_two();

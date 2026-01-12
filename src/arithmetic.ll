@@ -434,6 +434,126 @@ conditional_or ≔ {
 ⊦ ('X ⇒ 'Z) ⇒ ('Y ⇒ 'Z) ⇒ 'X ∨ 'Y ⇒ 'Z
 ⤶ conditional_or
 
+iff_then_xy ≔ {
+    goal ≔ 'X ⇔ 'Y ⇒ 'X ⇒ 'Y
+    ⊦ goal
+    goal
+}
+⤶ iff_then_xy
+
+iff_then_yx ≔ {
+    goal ≔ 'X ⇔ 'Y ⇒ 'Y ⇒ 'X
+    ⊦ goal
+    goal
+}
+⤶ iff_then_yx
+
+iff ≔ {
+    goal ≔ ('X ⇒ 'Y) ⇒ ('Y ⇒ 'X) ⇒ ('X ⇔ 'Y)
+    ⊦ goal
+    goal
+}
+⤶ iff
+
+iff_comm ≔ {
+    goal ≔ 'X ⇔ 'Y ⇒ 'Y ⇔ 'X
+    ⊦ goal
+    goal
+}
+⤶ iff_comm
+
+iff_neg ≔ λ{
+    /*
+    Argument: P ⇔ Q
+    Returns: P ⇔ Q ⇒ ¬P ⇔ ¬Q
+     */
+    P ≔ ●↓↙↙
+    Q ≔ ●↓↙↘
+    goal ≔ P ⇔ Q ⇒ ¬P ⇔ ¬Q
+
+    x ≔ '_new_var1
+    y ≔ '_new_var2
+
+    iff_then_xy['X / x]['Y / y]; recontrapose['A / x]['B / y] | deduce;
+    (iff_then_yx['X / x]['Y / y]; recontrapose['A / y]['B / x] | deduce);
+    conditional_and | apply2.MP.MP;
+    iff_comm['X / ¬y]['Y / ¬x] | deduce[x / P][y / Q]
+    ⊦ goal
+    ↵ goal
+}
+⊦ 'A ⇔ 'B | iff_neg
+⤶ iff_neg
+
+iff_ante ≔ λ{
+    /*
+    Argument: P ⇔ Q; Z
+    Returns: P ⇔ Q ⇒ (P ⇒ Z) ⇔ (Q ⇒ Z)
+     */
+    P ≔ ●ⅰ↓↙↙
+    Q ≔ ●ⅰ↓↙↘
+    Z ≔ ●ⅱ
+    goal ≔ P ⇔ Q ⇒ (P ⇒ Z) ⇔ (Q ⇒ Z)
+
+    x ≔ '_new_var1
+    y ≔ '_new_var2
+    z ≔ '_new_var3
+
+    iff_then_xy['X / x]['Y / y]; chain['X / x]['Y / y]['Z / z] | deduce;
+    (iff_then_yx['X / x]['Y / y]; chain['X / y]['Y / x]['Z / z] | deduce);
+    conditional_and | apply2.MP.MP;
+    iff_comm['X / y ⇒ z]['Y / x ⇒ z] | deduce[x / P][y / Q][z / Z]
+
+    ⊦ goal
+    ↵ goal
+}
+⊦ 'A ⇔ 'B; 'C | iff_ante
+⤶ iff_ante
+
+iff_conseq ≔ λ{
+    /*
+    Argument: P ⇔ Q; A
+    Returns: P ⇔ Q ⇒ (A ⇒ P) ⇔ (A ⇒ Q)
+     */
+    P ≔ ●ⅰ↓↙↙
+    Q ≔ ●ⅰ↓↙↘
+    A ≔ ●ⅱ
+    goal ≔ P ⇔ Q ⇒ (A ⇒ P) ⇔ (A ⇒ Q)
+
+    x ≔ '_new_var1
+    y ≔ '_new_var2
+    z ≔ '_new_var3
+
+    iff_then_xy['X / x]['Y / y]; chain'['X / z]['Y / x]['Z / y] | deduce;
+    (iff_then_yx['X / x]['Y / y]; chain'['X / z]['Y / y]['Z / x] | deduce);
+    conditional_and | apply2.MP.MP[x/P][y/Q][z/A]
+
+    ⊦ goal
+    ↵ goal
+}
+⊦ 'A ⇔ 'B; 'C | iff_conseq
+⤶ iff_conseq
+
+iff_forall ≔ λ{
+    /*
+    Argument: P ⇔ Q; var
+    Returns: P ⇔ Q ⇒ (∀var P) ⇔ (∀var Q)
+     */
+    P ≔ ●ⅰ↓↙↙
+    Q ≔ ●ⅰ↓↙↘
+    var ≔ ●ⅱ
+    goal ≔ P ⇔ Q ⇒ (∀var P) ⇔ (∀var Q)
+
+    x ≔ '_new_var1
+    y ≔ '_new_var2
+    z ≔ '_new_var3
+
+    iff_then_xy['X / x]['Y / y]; (x=>y).!z|deduce FAX
+    ⊦ goal
+    ↵ goal
+}
+⊦ 'X ⇔ 'Y; u | iff_forall ℻
+⤶ iff_forall
+
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
 

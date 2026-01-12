@@ -147,6 +147,7 @@ enum Node {
     SugarNotEquals,
     SugarExists,
     SugarExistsVar(Phrase),
+    SugarEquivalent,
 }
 
 impl Node {
@@ -177,6 +178,7 @@ impl Node {
             | Node::SugarNotEquals
             | Node::SugarExists
             | Node::SugarExistsVar(_)
+            | Node::SugarEquivalent
             | Node::Dot => true,
 
             Node::Identifier(_)
@@ -1106,6 +1108,26 @@ fn interpret_inner(
                 make_not(a.clone())?,
                 b.clone(),
             )?));
+            stack.swap_remove(stack.len() - 4);
+            stack.pop();
+            stack.pop();
+            continue;
+        }
+        if token == Some("⇔") {
+            peek.take();
+            stack.push(Node::SugarEquivalent);
+            continue;
+        }
+        if let (
+            Some(Node::LogicPhrase(a)),
+            Some(Node::SugarEquivalent),
+            Some(Node::LogicPhrase(b)),
+        ) = (back(&stack, 3), back(&stack, 2), back(&stack, 1))
+        {
+            stack.push(Node::LogicPhrase(make_not(make_imply(
+                make_imply(a.clone(), b.clone())?,
+                make_not(make_imply(b.clone(), a.clone())?)?,
+            )?)?));
             stack.swap_remove(stack.len() - 4);
             stack.pop();
             stack.pop();
