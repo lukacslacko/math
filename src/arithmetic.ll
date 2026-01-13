@@ -1960,3 +1960,17 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     conditional_or' | apply.MP; M | exists_ante
     ⊦ goal
 }
+
+{
+    goal ≔ x ≤ 0 ⇒ x = 0
+
+    a ≔ 0 = u + Z; u; v | ⪮[u = v / x = 𝗦y]; xyz_impl_and | apply.MP;
+    (0 = u; u; v | ⪮[u = v / 𝗦y + Z = 𝗦(y + Z)].MP)
+     | deduce.flip_preneg.MP.MP; y | exists_ante;
+    x ≠ 0 ⇒ ∃y x = 𝗦y | prededuce
+
+    (∀Z a) ⇆.MP; (x ≠ 0).∀Z | prededuce; preneg_flip | apply.MP
+    ⊦ goal
+    goal[x / X]
+}
+⊦ X ≤ 0 ⇒ X = 0
