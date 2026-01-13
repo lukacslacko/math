@@ -1345,6 +1345,7 @@ leq_mul ≔ {
     goal[x / X][y / Y][a / A]
 }
 ⊦ X ≤ Y ⇒ A * X ≤ A * Y
+⤶ leq_mul
 
 {
     goal ≔ 1.is_odd
@@ -1920,4 +1921,23 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     conditional_or | apply2.MP.MP.MP
     ⊦ goal
     goal[n / X]
+}
+
+{
+    goal ≔ d ∣ n ⇒ n = 0 ∨ d ≤ n
+    {
+        goal ≔ n = d * M ⇒ n = 0 ∨ d ≤ n
+        m0 ≔ n = d * u; u; v | ⪮[u = v / M = 0];
+        xyz_impl_and | apply.MP;
+        (n = u; u; v | ⪮[u = v / d * 0 = 0].MP) | deduce;
+        and_impl_xyz | apply.MP
+        m_large ≔ 1 ≤ M ⇒ d * 1 ≤ d * M; u; ↘↓↘↓↘↙ | ✂;
+        d | replace_cut.MP; u; ↘↓↘↓↙ | ✂;
+        n | replace_cut; n = d * M ⇒ d * M = n | prededuce.commute_ante
+        m0; m_large; or_impl_distr | apply2.MP.MP.MP;
+        conditional_or' | apply.MP
+        ⊦ goal
+        goal
+    }; M | exists_ante
+    ⊦ goal
 }
