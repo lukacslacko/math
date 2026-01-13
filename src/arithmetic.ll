@@ -1785,7 +1785,7 @@ max_commutes ≔ {
     goal ≔ x; y; m | max ⇒ y; x; m | max
     ⊦ goal
 }
-*/
+ */
 
 {
     goal ≔ (∃x 'x) ⇒ 'x
@@ -1939,5 +1939,24 @@ distr['B / 'A]['C / 'B].commute_ante.MP
         ⊦ goal
         goal
     }; M | exists_ante
+    ⊦ goal
+}
+
+{
+    goal ≔ d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d
+    a ≔ n = d * u; u; v | ⪮[u = v / M = 0];
+    xyz_impl_and | apply.MP; n = d * 0 ⇒ n = 0 | deduce;
+    and_impl_xyz | apply.MP
+    b ≔ n = d * u; u; v | ⪮[u = v / M = 𝗦m]; xyz_impl_and | apply.MP
+    c ≔ b; (n = u; u; v | ⪮[u = v / d * 𝗦m = d * m + d].MP) | deduce;
+    and_impl_xyz | apply.MP
+    c2 ≔ c; xyz_impl_and | apply.MP
+    c3 ≔ ignore['A / d ∣ d * m]['B / c2↙].MP
+    c4 ≔ c3; c2; conditional_and | apply2.MP.MP
+    c5 ≔ c4; k; ↘↓↘↓↘↙ | ✂ⅰ; k;
+    ↘↓↙↓↘↓↙ | ✂.conditional_exists_by_example
+    c6 ≔ c5; and_impl_xyz | apply.MP[m / y]; y | exists_ante
+    a; c6; or_impl_distr | apply2.MP.MP.MP;
+    conditional_or' | apply.MP; M | exists_ante
     ⊦ goal
 }
