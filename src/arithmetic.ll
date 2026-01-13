@@ -1724,21 +1724,37 @@ gcd_unique ≔ {
     goal
     ⊦ goal
 }
+ */
 
 max ≔ λ{
     /*
     Argument: x; y; m
     Returns: whether m equals the max of x; y
      */
+    x ≔ ●ⅰ
+    y ≔ ●ⅱ
+    m ≔ ●ⅲ
     ↵ (m = x ∧ y ≤ x)∨(m = y ∧ x ≤ y)
 }
 
 max_exists ≔ {
     ⤷ max
-    goal ≔ ∀x∀y∃m x; y; m | max
+    goal ≔ ∃m x; y; m | max
+    q ≔ x_impl_y_impl_and['X / a = a]['Y / b ≤ a].MP; x; ↘↓↙↙ | ✂.conditional_exists_by_example
+    q; q[a / c][b / a][c / b]; or_impl_distr | apply2.MP.MP.MP
+    x = a ∧ b ≤ a; x = b ∧ a ≤ b | λ{
+        A ≔ ●ⅰ
+        B ≔ ●ⅱ
+        a ≔ ∀x x_impl_or['X / A]['Y / B].recontra.MP ⇆.MP;
+        (∀x y_impl_or['X / A]['Y / B].recontra.MP ⇆.MP);
+        conditional_and | apply2.MP.MP.flip_postneg.MP
+        ↵ ('x ⇒ ¬¬'x)['x / ∀x¬A]; a↙; chain | apply2.MP; a | deduce
+    }.MP
+    ∀m¬a; b; m | max; x | rename_quantify.recontra.MP.MP[a / x][b / y]
     ⊦ goal
 }
 
+/*
 max_unique ≔ {
     ⤷ max
     goal ≔ x; y; m | max ∧ x; y; m' | max ⇒ m = m'
@@ -1768,7 +1784,7 @@ max_commutes ≔ {
     goal ≔ x; y; m | max ⇒ y; x; m | max
     ⊦ goal
 }
- */
+*/
 
 {
     goal ≔ (∃x 'x) ⇒ 'x
