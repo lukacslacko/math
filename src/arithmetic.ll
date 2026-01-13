@@ -1887,3 +1887,21 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     ⊦ goal
 }
 ⊦ ∀n∃m∀d d ≤ n ⇒ d ∣ m
+
+{
+    goal ≔ n = 0 ∨ 1 ≤ n
+    ⊦ n = 0 ∨∃y n = 𝗦y
+    step ≔ {
+        goal ≔ n = 𝗦y ⇒ 1 ≤ n
+        𝗦y = y + 1; y + 1 = 1 + y | eq_trans
+        n = u; u; v | ⪮[u = v / 𝗦y = 1 + y].MP;
+        Z; ↘↘↘ | ✂.conditional_exists_by_example
+        ⊦ goal
+        goal
+    }
+    n = 0 ⇒ goal;
+    (step; 1 ≤ n ⇒ goal | deduce; y | exists_ante);
+    conditional_or | apply2.MP.MP.MP
+    ⊦ goal
+    goal[n / X]
+}
