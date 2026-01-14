@@ -1974,3 +1974,51 @@ distr['B / 'A]['C / 'B].commute_ante.MP
     goal[x / X]
 }
 ⊦ X ≤ 0 ⇒ X = 0
+
+no_zero_factor ≔ {
+    goal ≔ x ≠ 0 ⇒ x = a * b ⇒ b ≠ 0
+    h ≔ and_impl_xyz; goal | reduce
+    g ≔ recontrapose; h↙ | reduce
+    chain'['X ⇒ 'Z / g↙]['Y ⇒ 'Z / recontrapose; g↙↘ | reduce].MP.MP
+    g.MP
+    h.MP
+    ⊦ goal
+    goal[x / X][a / A][b / B]
+}
+⊦ X ≠ 0 ⇒ X = A * B ⇒ B ≠ 0
+⤶ no_zero_factor
+
+no_zero_factor' ≔ {
+    goal ≔ x ≠ 0 ⇒ x = a * b ⇒ a ≠ 0
+    no_zero_factor[X / x][A / b][B / a];
+    u; ↘↙↘ | ✂; a * b | replace_cut.MP
+    ⊦ goal
+    goal[x / X][a / A][b / B]
+}
+⊦ X ≠ 0 ⇒ X = A * B ⇒ A ≠ 0
+
+divisor_not_greater ≔ {
+    goal ≔ n ≠ 0 ⇒ d ∣ n ⇒ d ≤ n
+
+    h ≔ no_zero_factor[X / n][A / d][B / M]; xyz_impl_and | apply.MP;
+    M ≠ 0 ⇒ ∃y M = 𝗦y | deduce
+
+    a ≔ n = d * u; u; v | ⪮[u = v / M = 𝗦y]; xyz_impl_and | apply.MP;
+    (
+        n = d * u; u; v | ⪮[u = v / 𝗦y = 1 + y].MP;
+        (n = u; u; v | ⪮[u = v / d * (1 + y) = d * 1 + d * y].MP) | deduce;
+        u; ↘↘↙ | ✂; d | replace_cut.MP
+    ) | deduce;
+    Z; ↘↘↘ | ✂.conditional_exists_by_example;
+    and_impl_xyz | apply.MP; y | exists_ante.commute_ante
+
+    b ≔ ignore['A / a]['B / n ≠ 0].MP; xyz_impl_and | apply.MP
+
+    b; h; distr | apply2.MP.MP;
+    and_impl_xyz | apply.MP.commute_ante;
+    M | exists_ante.commute_ante
+
+    ⊦ goal
+    goal[n / N][d / D]
+}
+⊦ N ≠ 0 ⇒ D ∣ N ⇒ D ≤ N
