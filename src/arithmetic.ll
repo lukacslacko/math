@@ -1741,27 +1741,38 @@ max ≔ λ{
 max_exists ≔ {
     ⤷ max
     goal ≔ ∃m x; y; m | max
-    q ≔ x_impl_y_impl_and['X / a = a]['Y / b ≤ a].MP; x; ↘↓↙↙ | ✂.conditional_exists_by_example
-    q; q[a / c][b / a][c / b]; or_impl_distr | apply2.MP.MP.MP
-    x = a ∧ b ≤ a; x = b ∧ a ≤ b | λ{
+    q ≔ x_impl_y_impl_and['X / x = x]['Y / y ≤ x].MP; m; ↘↓↙↙ | ✂.conditional_exists_by_example
+    q; q[x / z][y / x][z / y]; or_impl_distr | apply2.MP.MP.MP
+    m = x ∧ y ≤ x; m = y ∧ x ≤ y; m | λ{
         A ≔ ●ⅰ
         B ≔ ●ⅱ
-        a ≔ ∀x x_impl_or['X / A]['Y / B].recontra.MP ⇆.MP;
-        (∀x y_impl_or['X / A]['Y / B].recontra.MP ⇆.MP);
+        X ≔ ●ⅲ
+        a ≔ ∀X x_impl_or['X / A]['Y / B].recontra.MP ⇆.MP;
+        (∀X y_impl_or['X / A]['Y / B].recontra.MP ⇆.MP);
         conditional_and | apply2.MP.MP.flip_postneg.MP
-        ↵ ('x ⇒ ¬¬'x)['x / ∀x¬A]; a↙; chain | apply2.MP; a | deduce
+        ↵ ('x ⇒ ¬¬'x)['x / ∀X¬A]; a↙; chain | apply2.MP; a | deduce
     }.MP
-    ∀m¬a; b; m | max; x | rename_quantify.recontra.MP.MP[a / x][b / y]
+    ⊦ goal
+}
+
+max_unique ≔ {
+    ⤷ max
+    goal ≔ x; y; m | max ⇒ x; y; m' | max ⇒ m = m'
+    a ≔ equals_symmetric[X / m][Y / x]; equals_transitive[X / m][Y / x][Z / m']
+     | deduce.commute_ante; equals_symmetric[X / m'][Y / x] | prededuce;
+    (m' = x ∧ y ≤ x; and_impl_x).apply | prededuce.commute_ante;
+    (m = x ∧ y ≤ x; and_impl_x).apply | prededuce.commute_ante
+    b ≔ x ≤ y ⇒ y ≤ x ⇒ x = y; chain['X / y ≤ x]['Y ⇒ 'Z / m' = z ⇒ m = x ⇒ m = m';
+    z; y | ⪮[z / x].commute_ante.MP] | deduce.commute_ante.MP
+    c ≔ b↘; commute_antecedents | apply; b | prededuce.commute_ante; xyz_impl_and | apply.MP.commute_ante
+    d ≔ a; (c↘; commute_antecedents | apply; c | prededuce.commute_ante;
+        xyz_impl_and | apply.MP.commute_ante); conditional_or | apply2.MP.MP
+    d.commute_ante; (d↙; or_comm | apply; d[x / z][y / x][z / y] | deduce.commute_ante);
+    conditional_or | apply2.MP.MP
     ⊦ goal
 }
 
 /*
-max_unique ≔ {
-    ⤷ max
-    goal ≔ x; y; m | max ∧ x; y; m' | max ⇒ m = m'
-    ⊦ goal
-}
-
 max_is_x_or_y ≔ {
     ⤷ max
     goal ≔ x; y; m | max ⇒ m = x ∨ m = y ℻

@@ -856,7 +856,7 @@ impl PhraseData {
         }
         if let Some(equivalent) = self.equivalent_pieces() {
             return paint(format!(
-                "({} <=> {})",
+                "({} ⇔ {})",
                 equivalent.left.pretty_print_level(level + 1, color),
                 equivalent.right.pretty_print_level(level + 1, color)
             ));
@@ -908,7 +908,7 @@ impl PhraseData {
             Imply => {
                 let (antecedent, consequent) = self.children.unwrap_two();
                 paint(format!(
-                    "( {}  =>  {} )",
+                    "( {}  ⇒  {} )",
                     antecedent.pretty_print_level(level + 1, color),
                     consequent.pretty_print_level(level + 1, color)
                 ))
