@@ -1574,6 +1574,23 @@ x_less_succ ≔ {
 ⊦ X ≤ Y ∨ Y ≤ X
 
 {
+    goal ≔ x ≤ y ⇒ x < 𝗦y
+    preneg_flip; goal | reduce
+    a ≔ ∀Z{
+        goal ≔ x = 𝗦y + z ⇒ y ≠ x + w
+        (y ≠ 𝗦y + x)[x / w + z]
+        y = u + w; u; v | ⪮[u = v / x = 𝗦y + z]; xyz_impl_and | apply.MP;
+        (y = u; u; v | ⪮[u = v / (𝗦y + z) + w = 𝗦y + (z + w)].MP) | deduce;
+        recontrapose | apply.MP.MP; (¬¬'X ⇒ 'X) | apply.MP
+        ⊦ goal
+        goal
+    }[w / Z]
+    a↘↙.∀Z; (a ⇆.MP) | deduce[z / Z]; Z | exists_ante
+    ⊦ goal
+}
+⊦ X ≤ Y ⇒ X < 𝗦Y
+
+{
     goal ≔ x ∣ x * a
     x * a = x * M; a; M | exists_by_example
     ⊦ goal
@@ -2033,3 +2050,4 @@ divisor_not_greater ≔ {
     goal[n / N][d / D]
 }
 ⊦ N ≠ 0 ⇒ D ∣ N ⇒ D ≤ N
+⤶ divisor_not_greater
