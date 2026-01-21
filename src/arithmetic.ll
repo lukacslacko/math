@@ -375,6 +375,20 @@ apply2 ≔ λ{
 }
 ⤶ apply2
 
+apply_deduce ≔ λ{
+    /*
+    Argument: P ⇒ Q; Q' ⇒ R'
+    Assumption: Q' has the shape of Q, both arguments are proven
+    Result: P ⇒ R'[Q' / Q]
+
+    Continues the proven implication P ⇒ Q with the theorem Q' ⇒ R'.
+     */
+    A ≔ ●ⅰ
+    B ≔ ●ⅱ
+    ↵ A; B[B↙ / A↘] | deduce
+}
+⤶ apply_deduce
+
 demorgan_and ≔ {
     goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
 
@@ -644,6 +658,24 @@ conditional_or' ≔ {
 }
 ⊦ ('A ⇒ 'X)∨('A ⇒ 'Y) ⇒ 'A ⇒ 'X ∨ 'Y
 ⤶ conditional_or'
+
+permute_antecedents ≔ {
+    goal ≔ ('A ⇒ 'B ⇒ 'C ⇒ 'D) ⇒ ('C ⇒ 'A ⇒ 'B ⇒ 'D)
+    a ≔ goal↙; xyz_impl_and | apply
+    b ≔ a↘; commute_antecedents | apply
+    c ≔ a; b | deduce
+    d ≔ c↘↘; and_impl_xyz | apply
+    c; chain'['X / 'C]['Y ⇒ 'Z / d].MP | deduce
+    ⊦ goal
+    goal
+}
+⊦ ('X ⇒ 'Y ⇒ 'Z ⇒ 'W) ⇒ ('Z ⇒ 'X ⇒ 'Y ⇒ 'W)
+⤶ permute_antecedents
+
+permute_ante ≔ λ{
+    ↵ ●; permute_antecedents | apply.MP
+}
+⤶ permute_ante
 
 equals_symmetric ≔ {
     goal ≔ x = y ⇒ y = x
@@ -1102,6 +1134,72 @@ exists_ante ≔ λ{
     ↵ chain['X ⇒ 'Y / w]['Z / Q].MP.MP
 }
 ⤶ exists_ante
+
+exists_deduce ≔ λ{
+    /*
+    Argument:∃var P; Q
+    Returns:(∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var P ∧ Q
+
+    Intuitive meaning: if there is a var so that P is true for it,
+    and for all vars Q follows from P, then there is a var (actually,
+    the same one, but we don't need that information) so that
+    P and Q are true for it.
+     */
+    var ≔ ●ⅰ↓↙
+    P ≔ ●ⅰ↓↘↓
+    Q ≔ ●ⅱ
+    goal ≔ (∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var P ∧ Q
+
+    step1 ≔ and_impl_xyz; goal | reduce
+    step2 ≔ recontrapose; step1↙ | reduce
+
+    a ≔ P ⇒ ¬Q; P ⇒ Q; conditional_and | apply2; xyz_impl_and | apply.MP
+    a2 ≔ a↘; recontrapose | apply
+    ('X ⇒ ¬¬'X)['X / ¬Q ⇒ ¬Q].MP
+    b ≔ a; a2 | deduce; and_impl_xyz | apply.MP.permute_ante.MP
+    c ≔ ∀var((¬¬'X ⇒ 'X)['X / P ⇒ ¬Q]; (P ⇒ ¬Q) ⇒ (P ⇒ Q) ⇒ ¬P | deduce) ⇆.MP
+    d ≔ c; (c↘ ⇆) | deduce
+    d; (d↘; recontrapose | apply) | deduce
+
+    step2.MP
+    step1.MP
+
+    ⊦ goal
+    ↵ goal
+}
+∃x 'P; 'Q | exists_deduce
+⤶ exists_deduce
+
+chain3' ≔ {
+    goal ≔ ('A ⇒ 'B ⇒ 'C) ⇒ ('P ⇒ 'A) ⇒ ('P ⇒ 'B) ⇒ ('P ⇒ 'C)
+
+    chain'['X / 'P]['Y ⇒ 'Z / 'A ⇒ 'B ⇒ 'C];
+    xyz_impl_and | apply.MP;
+    distr['A / 'P] | deduce;
+    and_impl_xyz | apply.MP
+
+    ⊦ goal
+    goal
+}
+⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ ('W ⇒ 'X) ⇒ ('W ⇒ 'Y) ⇒ ('W ⇒ 'Z)
+⤶ chain3'
+
+conditional_exists_deduce ≔ λ{
+    /*
+    Argument:P ⇒ ∃var Q; R
+    Returns:(P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
+     */
+    P ≔ ●ⅰ↙
+    var ≔ ●ⅰ↘↓↙
+    Q ≔ ●ⅰ↘↓↘↓
+    R ≔ ●ⅱ
+    chain3'['P / P]['A ⇒ 'B ⇒ 'C / ∃var Q; R | exists_deduce].MP
+    goal ≔ (P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
+    ⊦ goal
+    ↵ goal
+}
+'P ⇒ ∃x 'Q; 'R | conditional_exists_deduce
+export conditional_exists_deduce
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
 is_even ≔ λ{↵ ¬●.is_odd}
