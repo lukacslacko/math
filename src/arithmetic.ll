@@ -1135,15 +1135,15 @@ exists_ante ≔ λ{
 }
 ⤶ exists_ante
 
-exists_deduce ≔ λ{
+exists_compose ≔ λ{
     /*
     Argument:∃var P; Q
     Returns:(∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var P ∧ Q
 
     Intuitive meaning: if there is a var so that P is true for it,
-    and for all vars Q follows from P, then there is a var (actually,
-    the same one, but we don't need that information) so that
-    P and Q are true for it.
+    ∧ for all vars Q follows from P, then there is a var(actually,
+        the same one, but we don't need that information)so that
+    P ∧ Q are true for it.
      */
     var ≔ ●ⅰ↓↙
     P ≔ ●ⅰ↓↘↓
@@ -1167,8 +1167,8 @@ exists_deduce ≔ λ{
     ⊦ goal
     ↵ goal
 }
-∃x 'P; 'Q | exists_deduce
-⤶ exists_deduce
+∃x 'P; 'Q | exists_compose
+⤶ exists_compose
 
 chain3' ≔ {
     goal ≔ ('A ⇒ 'B ⇒ 'C) ⇒ ('P ⇒ 'A) ⇒ ('P ⇒ 'B) ⇒ ('P ⇒ 'C)
@@ -1184,7 +1184,7 @@ chain3' ≔ {
 ⊦ ('X ⇒ 'Y ⇒ 'Z) ⇒ ('W ⇒ 'X) ⇒ ('W ⇒ 'Y) ⇒ ('W ⇒ 'Z)
 ⤶ chain3'
 
-conditional_exists_deduce ≔ λ{
+conditional_exists_compose ≔ λ{
     /*
     Argument:P ⇒ ∃var Q; R
     Returns:(P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
@@ -1193,13 +1193,41 @@ conditional_exists_deduce ≔ λ{
     var ≔ ●ⅰ↘↓↙
     Q ≔ ●ⅰ↘↓↘↓
     R ≔ ●ⅱ
-    chain3'['P / P]['A ⇒ 'B ⇒ 'C / ∃var Q; R | exists_deduce].MP
+    chain3'['P / P]['A ⇒ 'B ⇒ 'C / ∃var Q; R | exists_compose].MP
     goal ≔ (P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
     ⊦ goal
     ↵ goal
 }
-'P ⇒ ∃x 'Q; 'R | conditional_exists_deduce
-export conditional_exists_deduce
+'P ⇒ ∃x 'Q; 'R | conditional_exists_compose
+⤶ conditional_exists_compose
+
+exists_deduce ≔ λ{
+    /*
+    Argument:∃var P; ∀var P ⇒ Q
+    Returns:(∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var Q
+
+    Intuition: if P is true for some variable, ∧ Q follows from P
+    for all variables, then Q is also true for some variable.If we need
+    the extra information that P ∧ Q are true for the same variable,
+    use exists_compose instead.
+     */
+    var ≔ ●ⅰ↓↙
+    P ≔ ●ⅰ↓↘↓
+    Q ≔ ●ⅱ↘↘
+    goal ≔ (∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var Q
+
+    a ≔ ∀x((P ⇒ Q) ⇒ P ⇒ Q | commute_ante;
+        ((P ⇒ Q) ⇒ Q; recontrapose | apply) | deduce;
+        recontrapose | apply.MP;
+        and_impl_xyz | apply.MP) ⇆.MP
+    b ≔ a; (a↘ ⇆) | deduce
+    c ≔ b; (b↘; recontrapose | apply) | deduce
+    c; recontrapose | apply.MP; and_impl_xyz | apply.MP
+    ⊦ goal
+    goal
+}
+∃x 'P; ∀x 'P ⇒ 'Q | exists_deduce ℻
+⤶ exists_deduce
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
 is_even ≔ λ{↵ ¬●.is_odd}
