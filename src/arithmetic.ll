@@ -1224,10 +1224,28 @@ exists_deduce ≔ λ{
     c ≔ b; (b↘; recontrapose | apply) | deduce
     c; recontrapose | apply.MP; and_impl_xyz | apply.MP
     ⊦ goal
-    goal
+    ↵ goal
 }
 ∃x 'P; ∀x 'P ⇒ 'Q | exists_deduce ℻
 ⤶ exists_deduce
+
+conditional_exists_deduce ≔ λ{
+    /*
+    Argument:A ⇒ ∃var P; A ⇒ ∀var P ⇒ Q
+    Returns:(A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ A ⇒ ∃var Q
+     */
+    A ≔ ●ⅰ↙
+    var ≔ ●ⅰ↘↓↙
+    P ≔ ●ⅰ↘↓↘↓
+    Q ≔ ●ⅱ↘↘↘
+
+    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ A ⇒ ∃var Q
+    chain3'['P / A]['A ⇒ 'B ⇒ 'C / ∃var P; ∀var P ⇒ Q | exists_deduce].MP
+    ⊦ goal
+    ↵ goal
+}
+('a ⇒ ∃x 'p); ('a ⇒ ∀x 'p ⇒ 'q) | conditional_exists_deduce
+⤶ conditional_exists_deduce
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
 is_even ≔ λ{↵ ¬●.is_odd}
