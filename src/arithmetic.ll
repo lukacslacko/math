@@ -389,6 +389,12 @@ apply_deduce ≔ λ{
 }
 ⤶ apply_deduce
 
+& ≔ λ{↵ ●; xyz_impl_and | apply.MP}
+⤶ &
+
+&' ≔ λ{↵ ●; and_impl_xyz | apply.MP}
+⤶ &'
+
 demorgan_and ≔ {
     goal ≔ 'x ∧ 'y ⇒ ¬(¬'x ∨¬'y)
 
@@ -1203,7 +1209,7 @@ conditional_exists_compose ≔ λ{
 
 exists_deduce ≔ λ{
     /*
-    Argument:∃var P; ∀var P ⇒ Q
+    Argument: var; P; Q
     Returns:(∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var Q
 
     Intuition: if P is true for some variable, ∧ Q follows from P
@@ -1211,40 +1217,39 @@ exists_deduce ≔ λ{
     the extra information that P ∧ Q are true for the same variable,
     use exists_compose instead.
      */
-    var ≔ ●ⅰ↓↙
-    P ≔ ●ⅰ↓↘↓
-    Q ≔ ●ⅱ↘↘
+    var ≔ ●<1>
+    P ≔ ●<2>
+    Q ≔ ●<3>
+
     goal ≔ (∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var Q
 
-    a ≔ ∀x((P ⇒ Q) ⇒ P ⇒ Q | commute_ante;
+    a ≔ ∀var((P ⇒ Q) ⇒ P ⇒ Q | commute_ante;
         ((P ⇒ Q) ⇒ Q; recontrapose | apply) | deduce;
         recontrapose | apply.MP;
         and_impl_xyz | apply.MP) ⇆.MP
     b ≔ a; (a↘ ⇆) | deduce
     c ≔ b; (b↘; recontrapose | apply) | deduce
-    c; recontrapose | apply.MP; and_impl_xyz | apply.MP
+    return c; recontrapose | apply.MP; and_impl_xyz | apply.MP FAX
     ⊦ goal
     ↵ goal
 }
-∃x 'P; ∀x 'P ⇒ 'Q | exists_deduce ℻
 ⤶ exists_deduce
 
 conditional_exists_deduce ≔ λ{
     /*
-    Argument:A ⇒ ∃var P; A ⇒ ∀var P ⇒ Q
+    Argument: A; var; P; Q
     Returns:(A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ A ⇒ ∃var Q
      */
-    A ≔ ●ⅰ↙
-    var ≔ ●ⅰ↘↓↙
-    P ≔ ●ⅰ↘↓↘↓
-    Q ≔ ●ⅱ↘↘↘
+    A ≔ ●<1>
+    var ≔ ●<2>
+    P ≔ ●<3>
+    Q ≔ ●<4>
 
-    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ A ⇒ ∃var Q
-    chain3'['P / A]['A ⇒ 'B ⇒ 'C / ∃var P; ∀var P ⇒ Q | exists_deduce].MP
+    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ <arg><2>) ⇒ (A ⇒ ∃var Q)
+    return chain3'['P / A]['A ⇒ 'B ⇒ 'C / var; P; Q | exists_deduce].MP
     ⊦ goal
     ↵ goal
 }
-('a ⇒ ∃x 'p); ('a ⇒ ∀x 'p ⇒ 'q) | conditional_exists_deduce
 ⤶ conditional_exists_deduce
 
 is_odd ≔ λ{↵ ∀y¬● = y + y}
@@ -2195,3 +2200,78 @@ divisor_not_greater ≔ {
 }
 ⊦ N ≠ 0 ⇒ D ∣ N ⇒ D ≤ N
 ⤶ divisor_not_greater
+
+{
+    goal ≔ 2 ≤ d ⇒ d ∣ n ⇒ ¬d ∣ 𝗦n
+    {
+        goal ≔ 2 ≤ d ⇒ ∀k k ≤ n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
+        step0 ≔ {
+            goal ≔ 2 ≤ d ⇒ k ≤ 0 ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
+            a ≔ {
+                goal ≔ 2 ≤ d ⇒ k ≤ 0 ⇒ ¬d ∣ 𝗦k
+                a ≔ {
+                    goal ≔ 2 ≤ d ⇒ ¬d ∣ 1
+                    divisor_not_greater[N / 1][D / d].MP;
+                    d ≤ 1 ⇒ d < 2 | deduce
+                    recontrapose; goal | reduce.MP
+                    ⊦ goal
+                    goal
+                }
+                k ≤ 0 ⇒ k = 0; k = 0 ⇒ 0 = k | deduce;
+                (a; u; ↘↓↓↘↓↙↓ | ✂ⅰ; u; v) |
+                ⪮[u = v / 0 = k].commute_ante.MP | deduce.commute_ante
+                ⊦ goal
+                goal
+            }
+            ignore['A / a]['B / d ∣ k].MP.commute_ante.permute_ante.commute_ante
+            ⊦ goal
+            goal
+        }
+        (2 ≤ d).∀k; ((∀k step0) ⇆.MP) | deduce
+        step ≔ goal; n | ↺.MP
+
+        /*
+        Now we need to prove that
+        2 ≤ d ⇒ ∀k k ≤ 𝗦n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
+        from the induction hypothesis of
+        2 ≤ d ⇒ ∀k k ≤ n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
+         */
+
+        a ≔ {
+            goal ≔ 2 ≤ d ⇒ 𝗦n = k + d ⇒ k ≤ n
+            k + u; u; 2 + z; z + 2 | replace.MP;
+            k + (z + 2) = (k + z) + 2 | eq_trans;
+            ((k + z) + u; u; 2; 1 + 1 | replace.MP) | eq_trans;
+            (k + z) + (1 + 1) = ((k + z) + 1) + 1 | eq_trans;
+            ((k + z) + 1) + 1 = 𝗦((k + z) + 1) | eq_trans
+            𝗦n = k + u; u; v | ⪮[u = v / d = 2 + z]; u; ↘↘↘ | ✂;
+            𝗦((k + z) + 1) | replace_cut.MP;
+            xyz_impl_and | apply.MP;
+            peano2 | apply_deduce;
+            and_impl_xyz | apply.MP;
+            u; ↘↘↘ | ✂; k + (z + 1) | replace_cut.MP;
+            xyz_impl_and | apply.MP;
+            Z; ↘↘↘ | ✂.conditional_exists_by_example;
+            and_impl_xyz | apply.MP[z / Z]; Z | exists_ante
+            ⊦ goal
+            goal
+        }
+
+        hypothesis ≔ step↙↘↙
+        /*
+        First, we show that 2 ≤ d ⇒ d ∣ 𝗦n ⇒ ¬d ∣ 𝗦𝗦n,
+        then we'll use k ≤ 𝗦n ⇒ k ≤ n ∨𝗦n = k to conclude the
+        induction step.
+         */
+
+        chain'['X / 2 ≤ d]['Y ⇒ 'Z / hypothesis↘[k]].MP
+
+        ignore[
+        'A / (d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d)[n / 𝗦n].commute_ante.MP
+        ][
+        'B / 2 ≤ d
+        ].MP.&
+        /* ⊦ goal */
+    }
+    /* ⊦ goal */
+}
