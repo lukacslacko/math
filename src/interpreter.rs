@@ -1247,6 +1247,24 @@ fn interpret_inner(
             peek.take();
             continue;
         }
+        if let Some(Node::List(list)) = back(&stack, 1)
+            && token == Some("℻")
+        {
+            println!(
+                "{}\n{}",
+                peek.location(),
+                list.iter()
+                    .map(|phrase| format!("{:b}", **phrase))
+                    .collect::<Vec<_>>()
+                    .join("================================\n")
+                    .lines()
+                    .map(|line| format!("\t|{line}"))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            );
+            peek.take();
+            continue;
+        }
         if let Some(Node::LogicPhrase(phrase) | Node::NumericPhrase(phrase)) =
             back(&stack, 1)
             && token == Some("📜")
@@ -1270,7 +1288,7 @@ fn interpret_inner(
         {
             logger.borrow_mut().log(
                 "".to_string(),
-                format!("{} := {}", ident, numeric_phrase.to_html()),
+                format!("{} ≔ {}", ident, numeric_phrase.to_html()),
             );
             namespace.set_new(Thing::NumericPhrase(
                 ident.clone(),
@@ -1289,7 +1307,7 @@ fn interpret_inner(
         {
             logger.borrow_mut().log(
                 "".to_string(),
-                format!("{} := {}", ident, logic_phrase.to_html()),
+                format!("{} ≔ {}", ident, logic_phrase.to_html()),
             );
             namespace.set_new(Thing::LogicPhrase(
                 ident.clone(),
@@ -1309,7 +1327,7 @@ fn interpret_inner(
             logger.borrow_mut().log(
                 "".to_string(),
                 format!(
-                    "{} := {}",
+                    "{} ≔ {}",
                     ident,
                     list.iter()
                         .map(|p| p.to_html())
