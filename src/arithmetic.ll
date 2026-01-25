@@ -665,6 +665,20 @@ conditional_or' ≔ {
 ⊦ ('A ⇒ 'X)∨('A ⇒ 'Y) ⇒ 'A ⇒ 'X ∨ 'Y
 ⤶ conditional_or'
 
+restrict_impl ≔ {
+    /*
+    If x implies y, then both sides can be restricted to when a applies.
+     */
+    goal ≔ ('x ⇒ 'y) ⇒ ('a ∧ 'x) ⇒ ('a ∧ 'y)
+    chain'['X / 'a]['Y / ¬'y]['Z / ¬'x];
+    (('a ⇒ ¬'y) ⇒ 'a ⇒ ¬'x; recontrapose | apply) | deduce;
+    recontrapose['A / 'x]['B / 'y] | prededuce
+    ⊦ goal
+    goal['a / 'A]['x / 'X]['y / 'Y]
+}
+⊦ ('X ⇒ 'Y) ⇒ ('A ∧ 'X) ⇒ ('A ∧ 'Y)
+⤶ restrict_impl
+
 permute_antecedents ≔ {
     goal ≔ ('A ⇒ 'B ⇒ 'C ⇒ 'D) ⇒ ('C ⇒ 'A ⇒ 'B ⇒ 'D)
     a ≔ goal↙; xyz_impl_and | apply
@@ -1143,7 +1157,7 @@ exists_ante ≔ λ{
 
 exists_compose ≔ λ{
     /*
-    Argument:∃var P; Q
+    Argument: var; P; Q
     Returns:(∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var P ∧ Q
 
     Intuitive meaning: if there is a var so that P is true for it,
@@ -1151,9 +1165,9 @@ exists_compose ≔ λ{
         the same one, but we don't need that information)so that
     P ∧ Q are true for it.
      */
-    var ≔ ●ⅰ↓↙
-    P ≔ ●ⅰ↓↘↓
-    Q ≔ ●ⅱ
+    var ≔ ●ⅰ
+    P ≔ ●ⅱ
+    Q ≔ ●ⅲ
     goal ≔ (∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var P ∧ Q
 
     step1 ≔ and_impl_xyz; goal | reduce
@@ -1173,7 +1187,6 @@ exists_compose ≔ λ{
     ⊦ goal
     ↵ goal
 }
-∃x 'P; 'Q | exists_compose
 ⤶ exists_compose
 
 chain3' ≔ {
@@ -1192,19 +1205,18 @@ chain3' ≔ {
 
 conditional_exists_compose ≔ λ{
     /*
-    Argument:P ⇒ ∃var Q; R
-    Returns:(P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
+    Argument: A; var; P; Q
+    Returns:(A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ (A ⇒ ∃var P ∧ Q)
      */
-    P ≔ ●ⅰ↙
-    var ≔ ●ⅰ↘↓↙
-    Q ≔ ●ⅰ↘↓↘↓
-    R ≔ ●ⅱ
-    chain3'['P / P]['A ⇒ 'B ⇒ 'C / ∃var Q; R | exists_compose].MP
-    goal ≔ (P ⇒ ∃var Q) ⇒ (P ⇒ ∀var Q ⇒ R) ⇒ (P ⇒ ∃var Q ∧ R)
+    A ≔ ●ⅰ
+    var ≔ ●ⅱ
+    P ≔ ●ⅲ
+    Q ≔ ●ⅳ
+    chain3'['P / A]['A ⇒ 'B ⇒ 'C / var; P; Q | exists_compose].MP
+    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ (A ⇒ ∃var P ∧ Q)
     ⊦ goal
     ↵ goal
 }
-'P ⇒ ∃x 'Q; 'R | conditional_exists_compose
 ⤶ conditional_exists_compose
 
 exists_deduce ≔ λ{
@@ -1217,9 +1229,9 @@ exists_deduce ≔ λ{
     the extra information that P ∧ Q are true for the same variable,
     use exists_compose instead.
      */
-    var ≔ ●<1>
-    P ≔ ●<2>
-    Q ≔ ●<3>
+    var ≔ ●ⅰ
+    P ≔ ●ⅱ
+    Q ≔ ●ⅲ
 
     goal ≔ (∃var P) ⇒ (∀var P ⇒ Q) ⇒ ∃var Q
 
@@ -1229,7 +1241,7 @@ exists_deduce ≔ λ{
         and_impl_xyz | apply.MP) ⇆.MP
     b ≔ a; (a↘ ⇆) | deduce
     c ≔ b; (b↘; recontrapose | apply) | deduce
-    return c; recontrapose | apply.MP; and_impl_xyz | apply.MP FAX
+    ↵ c; recontrapose | apply.MP; and_impl_xyz | apply.MP
     ⊦ goal
     ↵ goal
 }
@@ -1240,13 +1252,13 @@ conditional_exists_deduce ≔ λ{
     Argument: A; var; P; Q
     Returns:(A ⇒ ∃var P) ⇒ (A ⇒ ∀var P ⇒ Q) ⇒ A ⇒ ∃var Q
      */
-    A ≔ ●<1>
-    var ≔ ●<2>
-    P ≔ ●<3>
-    Q ≔ ●<4>
+    A ≔ ●ⅰ
+    var ≔ ●ⅱ
+    P ≔ ●ⅲ
+    Q ≔ ●ⅳ
 
-    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ <arg><2>) ⇒ (A ⇒ ∃var Q)
-    return chain3'['P / A]['A ⇒ 'B ⇒ 'C / var; P; Q | exists_deduce].MP
+    goal ≔ (A ⇒ ∃var P) ⇒ (A ⇒ ∀var(P ⇒ Q)) ⇒ (A ⇒ ∃var Q)
+    ↵ chain3'['P / A]['A ⇒ 'B ⇒ 'C / var; P; Q | exists_deduce].MP
     ⊦ goal
     ↵ goal
 }
@@ -2256,6 +2268,8 @@ divisor_not_greater ≔ {
             ⊦ goal
             goal
         }
+        ignore['A / a]['B / d ∣ 𝗦n].MP.commute_ante.&
+        ⊦ 2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n
 
         hypothesis ≔ step↙↘↙
         /*
@@ -2264,13 +2278,26 @@ divisor_not_greater ≔ {
         induction step.
          */
 
-        chain'['X / 2 ≤ d]['Y ⇒ 'Z / hypothesis↘[k]].MP
-
         ignore[
         'A / (d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d)[n / 𝗦n].commute_ante.MP
         ][
         'B / 2 ≤ d
         ].MP.&
+        ⊦ 2 ≤ d ∧ d ∣ 𝗦n ⇒ ∃k d ∣ k ∧𝗦n = k + d
+
+        {
+            goal ≔ 2 ≤ d ∧ d ∣ 𝗦n ⇒ ∀k(d ∣ k ∧𝗦n = k + d ⇒ d ∣ k ∧ k ≤ n)
+            ∀k(restrict_impl
+                ['X ⇒ 'Y / (2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n).&]
+                ['A / d ∣ k]
+                .MP.&'.commute_ante.&'
+                .permute_ante.permute_ante.commute_ante.&.commute_ante)
+             ⇆.MP; (2 ≤ d ∧ d ∣ 𝗦n).∀k | prededuce
+            ⊦ goal
+        }
+
+        chain'['X / 2 ≤ d]['Y ⇒ 'Z / hypothesis↘[k]].MP
+
         /* ⊦ goal */
     }
     /* ⊦ goal */
