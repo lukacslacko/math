@@ -407,6 +407,14 @@ demorgan_and ≔ {
 }
 ⤶ demorgan_and
 
+demorgan_and' ≔ {
+    goal ≔ ¬'x ∧¬'y ⇒ ¬('x ∨ 'y)
+    chain'['X / ¬'x]['Y ⇒ 'Z / 'y ⇒ ¬¬'y].MP.recontra.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⤶ demorgan_and'
+
 or_comm ≔ {
     goal ≔ 'x ∨ 'y ⇒ 'y ∨ 'x
     ⊦ goal
@@ -1839,6 +1847,14 @@ x_less_succ ≔ {
 ⊦ X + 1 ≤ Y ⇒ X ≠ Y
 
 {
+    u ≤ y ⇒ x ≠ y; u; v | ⪮[u = v / x + 1 = 𝗦x].MP.MP
+    ⊦ 𝗦x ≤ y ⇒ x ≠ y
+}
+⊦ 𝗦X ≤ Y ⇒ X ≠ Y
+
+⊦ X < Y ⇒ X ≠ Y
+
+{
     goal ≔ x ∣ x * a
     x * a = x * M; a; M | exists_by_example
     ⊦ goal
@@ -2356,5 +2372,40 @@ divisor_not_greater ≔ {
 
     c ≔ (∀M b) ⇆.MP
     d ≔ c↙↘.∀M; c | deduce
-    d; ('X ⇒ ¬¬'X)['X / d↘] | deduce.&'.commute_ante[x / M]; M | exists_ante.commute_ante ℻
+    d; ('X ⇒ ¬¬'X)['X / d↘] | deduce.&'.commute_ante[x / M]; M | exists_ante.commute_ante
+}
+
+is_prime ≔ λ{
+    ↵ ∀d(d ∣ ● ⇒ d = 1 ∨ d = ●)
+}
+⤶ is_prime
+
+{
+    goal ≔ 2 ≤ n ⇒ ¬(2 * n).is_prime
+
+    ⊦ n ∣ 2 * n
+    a ≔ ignore['A / n ∣ 2 * n]['B / 2 ≤ n].MP
+    ⊦ 2 ≤ n ⇒ n ∣ 2 * n
+
+    (𝗦X ≤ Y ⇒ X ≠ Y)[X / 1][Y / n]; 1 ≠ n ⇒ n ≠ 1 | deduce
+    ⊦ 2 ≤ n ⇒ n ≠ 1
+
+    ⊦ 2 * n = n + n
+    2 = 1 + Z; 1; Z | exists_by_example
+    ⊦ 1 ≤ 2
+    (n ≤ n ⇒ 1 ≤ n ⇒ n + 1 ≤ n + n)⁇.MP;
+    (x + 1 ≤ y ⇒ x ≠ y)[x / n][y / n + n] | deduce;
+    (1 ≤ 2; 2 ≤ n; leq_trans | apply2.MP) | prededuce;
+    u; ↘↓↘ | ✂; 2 * n | replace_cut.MP
+    ⊦ 2 ≤ n ⇒ n ≠ 2 * n
+
+    b ≔ 2 ≤ n ⇒ n ≠ 1; 2 ≤ n ⇒ n ≠ 2 * n;
+    conditional_and | apply2.MP.MP;
+    demorgan_and'['X / n = 1]['Y / n = 2 * n]; chain | apply2.MP.MP
+
+    c ≔ a; b; conditional_and | apply2.MP.MP
+    e ≔ c; ((¬¬'X ⇔ 'X)['X / c↘↓↘↓↓];
+        c↘↓↙ | iff_conseq.MP.iff_neg.MP; iff_then_xy | apply.MP) | deduce
+    e; ((2 * n).is_prime[d]; recontrapose | apply.MP[d / n]) | deduce
+    ⊦ goal
 }
