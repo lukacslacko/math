@@ -1347,7 +1347,7 @@ is_even ≔ λ{↵ ¬●.is_odd}
     ⊦ goal
 }
 
-{
+leq_sum ≔ {
     goal ≔ x0 ≤ y0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
     step ≔ {
         goal ≔ y0 = x0 + a0 ⇒ x1 ≤ y1 ⇒ x0 + x1 ≤ y0 + y1
@@ -1372,6 +1372,7 @@ is_even ≔ λ{↵ ¬●.is_odd}
 }
 ⊦ A = B + C ⇒ A' = B' + C' ⇒ A + A' = (B + B') + (C + C')
 ⊦ X ≤ Y ⇒ X' ≤ Y' ⇒ X + X' ≤ Y + Y'
+⤶ leq_sum
 
 {
     goal ≔ x ≤ x + a
@@ -1533,7 +1534,7 @@ leq_mul' ≔ {
     ⊦ goal
     goal[a / A][x / X][y / Y]
 }
-⊦ X ≤ y ⇒ X * A ⇒ Y * A
+⊦ X ≤ Y ⇒ X * A ≤ Y * A
 ⤶ leq_mul'
 
 {
@@ -1828,6 +1829,14 @@ x_less_succ ≔ {
     ⊦ goal
 }
 ⊦ X < Y ⇒ 𝗦X ≤ Y
+
+{
+    goal ≔ x + 1 ≤ y ⇒ x ≠ y
+    (x < x + 1)[z].MP; u; ↓↙ | ✂;
+    y | replace_cut.flip_postneg.MP[z / Z]; Z | exists_ante
+    ⊦ goal
+}
+⊦ X + 1 ≤ Y ⇒ X ≠ Y
 
 {
     goal ≔ x ∣ x * a
@@ -2293,93 +2302,59 @@ divisor_not_greater ≔ {
 
 {
     goal ≔ 2 ≤ d ⇒ d ∣ n ⇒ ¬d ∣ 𝗦n
-    {
-        goal ≔ 2 ≤ d ⇒ ∀k k ≤ n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
-        step0 ≔ {
-            goal ≔ 2 ≤ d ⇒ k ≤ 0 ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
-            a ≔ {
-                goal ≔ 2 ≤ d ⇒ k ≤ 0 ⇒ ¬d ∣ 𝗦k
-                a ≔ {
-                    goal ≔ 2 ≤ d ⇒ ¬d ∣ 1
-                    divisor_not_greater[N / 1][D / d].MP;
-                    d ≤ 1 ⇒ d < 2 | deduce
-                    recontrapose; goal | reduce.MP
-                    ⊦ goal
-                    goal
-                }
-                k ≤ 0 ⇒ k = 0; k = 0 ⇒ 0 = k | deduce;
-                (a; u; ↘↓↓↘↓↙↓ | ✂ⅰ; u; v) |
-                ⪮[u = v / 0 = k].commute_ante.MP | deduce.commute_ante
-                ⊦ goal
-                goal
-            }
-            ignore['A / a]['B / d ∣ k].MP.commute_ante.permute_ante.commute_ante
-            ⊦ goal
-            goal
-        }
-        (2 ≤ d).∀k; ((∀k step0) ⇆.MP) | deduce
-        step ≔ goal; n | ↺.MP
+    a ≔ {
+        goal ≔ 2 ≤ d ⇒ 𝗦(d * x) ≠ d * y
 
-        /*
-        Now we need to prove that
-        2 ≤ d ⇒ ∀k k ≤ 𝗦n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
-        from the induction hypothesis of
-        2 ≤ d ⇒ ∀k k ≤ n ⇒ d ∣ k ⇒ ¬d ∣ 𝗦k
-         */
+        g ≔ y ≤ x ⇒ d * y ≤ d * x;
+        d * y ≤ d * x ⇒ d * y ≠ 𝗦(d * x) | deduce;
+        d * y ≠ 𝗦(d * x) ⇒ 𝗦(d * x) ≠ d * y | deduce
+        ⊦ y ≤ x ⇒ 𝗦(d * x) ≠ d * y
 
-        a ≔ {
-            goal ≔ 2 ≤ d ⇒ 𝗦n = k + d ⇒ k ≤ n
-            k + u; u; 2 + z; z + 2 | replace.MP;
-            k + (z + 2) = (k + z) + 2 | eq_trans;
-            ((k + z) + u; u; 2; 1 + 1 | replace.MP) | eq_trans;
-            (k + z) + (1 + 1) = ((k + z) + 1) + 1 | eq_trans;
-            ((k + z) + 1) + 1 = 𝗦((k + z) + 1) | eq_trans
-            𝗦n = k + u; u; v | ⪮[u = v / d = 2 + z]; u; ↘↘↘ | ✂;
-            𝗦((k + z) + 1) | replace_cut.MP;
-            xyz_impl_and | apply.MP;
-            peano2 | apply_deduce;
-            and_impl_xyz | apply.MP;
-            u; ↘↘↘ | ✂; k + (z + 1) | replace_cut.MP;
-            xyz_impl_and | apply.MP;
-            Z; ↘↘↘ | ✂.conditional_exists_by_example;
-            and_impl_xyz | apply.MP[z / Z]; Z | exists_ante
-            ⊦ goal
-            goal
-        }
-        ignore['A / a]['B / d ∣ 𝗦n].MP.commute_ante.&
-        ⊦ 2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n
+        d * (x + 1) = d * x + d * 1; u; ↘↘ | ✂; d | replace_cut.MP
 
-        hypothesis ≔ step↙↘↙
-        /*
-        First, we show that 2 ≤ d ⇒ d ∣ 𝗦n ⇒ ¬d ∣ 𝗦𝗦n,
-        then we'll use k ≤ 𝗦n ⇒ k ≤ n ∨𝗦n = k to conclude the
-        induction step.
-         */
+        e ≔ x < y ⇒ u ≤ y; u; v | ⪮[u = v / 𝗦x = x + 1].MP.MP;
+        x + 1 ≤ y ⇒ d * (x + 1) ≤ d * y | deduce; u; ↘↓↘↓↘↙ | ✂;
+        d * x + d | replace_cut.MP
+        ⊦ x < y ⇒ d * x + d ≤ d * y
 
+        a ≔ u + 1; u; 𝗦(d * x); d * x + 1 | replace.MP;
+        (d * x + 1) + 1 = d * x + (1 + 1) | eq_trans;
+        u; ↘↘ | ✂; 2 | replace_cut.MP; X = Y ⇒ X ≤ Y | apply.MP
+        ⊦ 𝗦(d * x) + 1 ≤ d * x + 2
+
+        a2 ≔ ignore['A / a]['B / 2 ≤ d].MP
+        b ≔ d * x ≤ d * x; 2 ≤ d; leq_sum | apply2.MP
+        c ≔ chain3'
+        ['P / 2 ≤ d]
+        ['A / a2↘]
+        ['B / b↘]
+        ['C / 𝗦(d * x) + 1 ≤ d * x + d].MP.MP.MP
+        ⊦ 2 ≤ d ⇒ 𝗦(d * x) + 1 ≤ d * x + d
+
+        ignore['A / c]['B / x < y].MP.commute_ante.&;
+        ignore['A / e]['B / 2 ≤ d].MP.&;
+        conditional_and | apply2.MP.MP;
+        (𝗦(d * x) + 1 ≤ d * x + d; d * x + d ≤ d * y;
+            leq_trans | apply2.&) | deduce
+
+        f ≔ distr['A ⇒ 'B ⇒ 'C /
         ignore
-        ['A / (d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d)[n / 𝗦n].commute_ante.MP]
-        ['B / 2 ≤ d].MP.&
-        ⊦ 2 ≤ d ∧ d ∣ 𝗦n ⇒ ∃k d ∣ k ∧𝗦n = k + d
+        ['A / (X + 1 ≤ Y ⇒ X ≠ Y)[X / 𝗦(d * x)][Y / d * y]]
+        ['B / 2 ≤ d ∧ x < y].MP].MP.MP.&'
+        ⊦ 2 ≤ d ⇒ x < y ⇒ 𝗦(d * x) ≠ d * y
 
-        b ≔ {
-            goal ≔ 2 ≤ d ∧ d ∣ 𝗦n ⇒ d ∣ k ∧𝗦n = k + d ⇒ d ∣ k ∧ k ≤ n
-            restrict_impl
-            ['X ⇒ 'Y / (2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n).&]
-            ['A / d ∣ k]
-            .MP.&'.commute_ante.&'
-            .permute_ante.permute_ante.commute_ante.&.commute_ante
-            ⊦ goal
-            goal
-        }
-        c ≔ ignore
-        ['A / d ∣ k ∧𝗦n = k + d; and_impl_y | apply]
-        ['B / 2 ≤ d ∧ d ∣ 𝗦n].MP ℻
-        b.& ℻
-        b.&; c; conditional_and | apply2.MP ℻
+        ignore['A / g]['B / 2 ≤ d].MP.commute_ante;
+        f.commute_ante; conditional_or | apply2.MP.MP.MP
 
-        chain'['X / 2 ≤ d]['Y ⇒ 'Z / hypothesis↘[k]].MP
-
-        /* ⊦ goal */
+        ⊦ goal
+        goal
     }
-    /* ⊦ goal */
+
+    b ≔ a;
+    (𝗦u ≠ d * y; u; v | ⪮[v = u / n = d * x];
+        n = d * x ⇒ d * x = n | prededuce.commute_ante) | deduce.&[y / M]
+
+    c ≔ (∀M b) ⇆.MP
+    d ≔ c↙↘.∀M; c | deduce
+    d; ('X ⇒ ¬¬'X)['X / d↘] | deduce.&'.commute_ante[x / M]; M | exists_ante.commute_ante ℻
 }
