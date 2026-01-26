@@ -716,6 +716,11 @@ eq_flip ≔ λ{
 }
 ⤶ eq_flip
 
+neq_symm ≔ {
+    y = x ⇒ x = y; recontrapose | apply.MP[x / X][y / Y]
+}
+⊦ X ≠ Y ⇒ Y ≠ X
+
 neq_flip ≔ λ{
     /*
     Argument:¬a = b
@@ -1400,8 +1405,10 @@ leq_trans ≔ {
     g ≔ step[w / Z]; Z | exists_ante
 
     ⊦ goal
-    goal
+    goal[x / A][y / B][z / C]
 }
+⊦ A ≤ B ⇒ B ≤ C ⇒ A ≤ C
+⤶ leq_trans
 
 {
     goal ≔ x = x + y ⇒ y = 0
@@ -1507,6 +1514,27 @@ leq_mul ≔ {
 }
 ⊦ X ≤ Y ⇒ A * X ≤ A * Y
 ⤶ leq_mul
+
+eq_leq ≔ {
+    ⊦ x = y ⇒ x ≤ y
+    X = Y ⇒ X ≤ Y
+}
+⤶ eq_leq
+
+leq_mul' ≔ {
+    goal ≔ x ≤ y ⇒ x * a ≤ y * a
+
+    x * a = a * x; eq_leq | apply.MP; a * x ≤ a * y;
+    leq_trans | apply2.MP;
+    (x * a ≤ a * y; (a * y = y * a; eq_leq | apply.MP);
+        leq_trans | apply2.commute_ante.MP) | deduce;
+    x ≤ y ⇒ a * x ≤ a * y | prededuce
+
+    ⊦ goal
+    goal[a / A][x / X][y / Y]
+}
+⊦ X ≤ y ⇒ X * A ⇒ Y * A
+⤶ leq_mul'
 
 {
     goal ≔ 1.is_odd
@@ -1750,6 +1778,56 @@ x_less_succ ≔ {
     ⊦ goal
 }
 ⊦ X ≤ Y ⇒ X < 𝗦Y
+
+{
+    goal ≔ x < y ⇒ x ≤ y
+    a ≔ y ≤ x ∨ x ≤ y
+    a; ('X ⇒ ¬¬'X)['X / a↙↓↓] | prededuce
+    ⊦ goal
+}
+⊦ X < Y ⇒ X ≤ Y
+
+{
+    goal ≔ x + 𝗦y = 𝗦x + y
+    𝗦u; u; y + x; x + y | replace.MP
+    x + 𝗦y = 𝗦(x + y) | eq_flip
+    y + 𝗦x = 𝗦(y + x); 𝗦(y + x) = 𝗦(x + y) | eq_trans;
+    𝗦(x + y) = x + 𝗦y | eq_trans.eq_flip;
+    y + 𝗦x = 𝗦x + y | eq_trans
+    ⊦ goal
+}
+⊦ X + 𝗦Y = 𝗦X + Y
+
+{
+    goal ≔ x < y ⇒ 𝗦x ≤ y
+    x < y ⇒ x ≤ y; x < y ⇒ x ≠ y; conditional_and | apply2.MP.MP
+    ⊦ x < y ⇒ x ≤ y ∧ x ≠ y
+
+    y = x + z; z; u | ⪮[u / 0]; u; ↘↘↘ | ✂;
+    x | replace_cut.MP.commute_ante;
+    (z = 0 ⇒ y = x; recontrapose | apply) | deduce.&;
+    z ≠ 0 ⇒ ∃y z = 𝗦y | deduce.&'
+    ⊦ y = x + z ⇒ y ≠ x ⇒ ∃y z = 𝗦y
+
+    y = x + z; z; u | ⪮[u / 𝗦t].commute_ante; u; ↘↘↘ | ✂;
+    𝗦x + t | replace_cut.MP.&;
+    Z; ↘↘↘ | ✂.conditional_exists_by_example.&'
+    [y / Y][t / y].commute_ante; y | exists_ante.commute_ante[Y / y]
+    ⊦ y = x + z ⇒ (∃y z = 𝗦y) ⇒ 𝗦x ≤ y
+
+    a ≔ y ≠ x
+    b ≔ ∃y z = 𝗦y
+    c ≔ 𝗦x ≤ y
+    chain3'['P / y = x + z]['A / a ⇒ b]['B / b ⇒ c]['C / a ⇒ c].MP.MP.MP
+    [z / Z]; Z | exists_ante.commute_ante;
+    x ≠ y ⇒ y ≠ x | prededuce.commute_ante.&
+    ⊦ x ≤ y ∧ x ≠ y ⇒ 𝗦x ≤ y
+
+    x < y ⇒ x ≤ y ∧ x ≠ y; x ≤ y ∧ x ≠ y ⇒ 𝗦x ≤ y | deduce
+
+    ⊦ goal
+}
+⊦ X < Y ⇒ 𝗦X ≤ Y
 
 {
     goal ≔ x ∣ x * a
@@ -2278,23 +2356,26 @@ divisor_not_greater ≔ {
         induction step.
          */
 
-        ignore[
-        'A / (d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d)[n / 𝗦n].commute_ante.MP
-        ][
-        'B / 2 ≤ d
-        ].MP.&
+        ignore
+        ['A / (d ∣ n ⇒ n = 0 ∨∃k d ∣ k ∧ n = k + d)[n / 𝗦n].commute_ante.MP]
+        ['B / 2 ≤ d].MP.&
         ⊦ 2 ≤ d ∧ d ∣ 𝗦n ⇒ ∃k d ∣ k ∧𝗦n = k + d
 
-        {
-            goal ≔ 2 ≤ d ∧ d ∣ 𝗦n ⇒ ∀k(d ∣ k ∧𝗦n = k + d ⇒ d ∣ k ∧ k ≤ n)
-            ∀k(restrict_impl
-                ['X ⇒ 'Y / (2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n).&]
-                ['A / d ∣ k]
-                .MP.&'.commute_ante.&'
-                .permute_ante.permute_ante.commute_ante.&.commute_ante)
-             ⇆.MP; (2 ≤ d ∧ d ∣ 𝗦n).∀k | prededuce
+        b ≔ {
+            goal ≔ 2 ≤ d ∧ d ∣ 𝗦n ⇒ d ∣ k ∧𝗦n = k + d ⇒ d ∣ k ∧ k ≤ n
+            restrict_impl
+            ['X ⇒ 'Y / (2 ≤ d ∧ d ∣ 𝗦n ⇒ 𝗦n = k + d ⇒ k ≤ n).&]
+            ['A / d ∣ k]
+            .MP.&'.commute_ante.&'
+            .permute_ante.permute_ante.commute_ante.&.commute_ante
             ⊦ goal
+            goal
         }
+        c ≔ ignore
+        ['A / d ∣ k ∧𝗦n = k + d; and_impl_y | apply]
+        ['B / 2 ≤ d ∧ d ∣ 𝗦n].MP ℻
+        b.& ℻
+        b.&; c; conditional_and | apply2.MP ℻
 
         chain'['X / 2 ≤ d]['Y ⇒ 'Z / hypothesis↘[k]].MP
 
