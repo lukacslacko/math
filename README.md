@@ -47,6 +47,7 @@ To convert to the ASCII representation, run `cargo run --bin asciify filename.ll
 | Parallel substitution | `phrase ⇅(template)` | `phrase <match>(template)` | If phrase has the same structure as template, substitute variables in template so that it results in phrase |
 | Auto-prove | `phrase⁇` | `phrase<prove>` | Try parallel substitute the phrase against all *proven phrases* in order to try to prove it |
 | List element | `aⅰ`, `aⅱ`, `aⅲ`, ... | `a<1>`, `a<2>`, `a<3>`, ... | Abbreviation for `a↙`, `a↘↙`, `a↘↘↙`, ... for the *n*th element of a list |
+| Previous phrase | `↶` | `<prev>` | The phrase before the last `;` |
 | Negation | `¬A` | `~A` | `A` must be a logic phrase |
 | Equality | `x = y` | | `x` and `y` must be numeric phrases |
 | Implication | `A ⇒ B` | `A -> B` `A => B` | `A` and `B` must be logic phrases |
@@ -105,7 +106,7 @@ These get expanded by the interpreter to the expressions described below.
 | -- | -- | -- | -- |
 | Indiscernibility of identicals | `P; x; y \| ⪮` | `P; x; y \| <eq_subs>` |  `x = y ⇒ P ⇒ P[x / y]` |
 | Distribution of quantification | `P ⇆` | `P <distribute>` | `P` must be of the shape `∀x A ⇒ B`, the resulting axiom is `(∀x A ⇒ B) ⇒ (∀x A) ⇒ ∀x B` |
-| Vacuous generalization | `P.∀x` or `P\|∀x` | `P.!x` or `P\|.x` | If `x` is not free in `P`, produces `P ⇒ ∀x P` as an axiom. Note that this differs from the universal generalization inference rule in that it doesn't require that `P` is a *proven phrase*, at the cost of requiring that `x` is not free in `P` |
+| Vacuous generalization | `P.∀x` or `P\|∀x` | `P.!x` or `P\|!x` | If `x` is not free in `P`, produces `P ⇒ ∀x P` as an axiom. Note that this differs from the universal generalization inference rule in that it doesn't require that `P` is a *proven phrase*, at the cost of requiring that `x` is not free in `P` |
 | Instantiation | `phrase[term]` | | `phrase` must be of the shape `∀x P`, the resulting axiom is `(∀x P) ⇒ P[x / term]` |
 | Induction | `P; x \| ↺` | `P; x \| <induction>` | `P` must be a logic phrase and `x` must be a numeric variable, the resulting axiom is `P[x / 0] ⇒ (∀x P ⇒ P[x / 𝗦(x)]) ⇒ ∀x P` |
 

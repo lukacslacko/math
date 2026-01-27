@@ -1527,6 +1527,50 @@ fn interpret_inner(
             }
             Err(format!("syntax error, top of stack is {top:?}"))?
         }
+        if token == Some("↶") {
+            peek.take();
+            let mut idx = 1;
+            let found_phrase;
+            loop {
+                match back(&stack, idx) {
+                    Some(Node::Semicolon) => {
+                        if let Some(Node::LogicPhrase(phrase))
+                            | Some(Node::NumericPhrase(phrase)) =
+                            back(&stack, idx + 1)
+                        {
+                            found_phrase = Some(phrase.clone());
+                            break;
+                        }
+                        if let Some(Node::List(list)) = back(&stack, idx + 1) {
+                            if let Some(phrase) = list.last() {
+                                found_phrase = Some(phrase.clone());
+                                break;
+                            }
+                            Err(
+                                "expected non-empty list before semicolon before ↶",
+                            )?
+                        }
+                        Err("expected list before semicolon before ↶")?
+                    }
+                    Some(_) => {
+                        idx += 1;
+                    }
+                    None => Err("did not find semicolon before ↶")?,
+                }
+            }
+            if let Some(phrase) = found_phrase {
+                if phrase.is_proposition() {
+                    stack.push(Node::LogicPhrase(phrase));
+                } else if phrase.is_numeric() {
+                    stack.push(Node::NumericPhrase(phrase));
+                } else {
+                    Err("phrase for ↶ is neither logic nor numeric")?
+                }
+                continue;
+            } else {
+                Err("could not find phrase for ↶")?
+            }
+        }
         if token.as_ref().map(|t| t.starts_with('\'')) == Some(true) {
             let token = peek.take();
             stack.push(Node::LogicPhrase(make_logic_variable(

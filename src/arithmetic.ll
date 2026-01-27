@@ -1632,8 +1632,8 @@ succ_is_not_leq ≔ {
     ⊦ goal4
     peano3[X / 𝗦y]
     (¬x = 𝗦x)[x / y]
-    a ≔ y = x + 0; x; z | ⪮[z / 𝗦y]; z; ↘↘↘ | ✂; 𝗦y | replace_cut.MP
-    b ≔ a; a↘.recontra | deduce.commute_ante.MP;
+    b ≔ y = x + 0; x; z | ⪮[z / 𝗦y]; z; ↘↘↘ | ✂; 𝗦y | replace_cut.MP;
+    ↶↘.recontra | deduce.commute_ante.MP;
     (¬y = x + Z; Z).↺ | deduce
     goal4[x / 𝗦Z]
     c ≔ y = x + 𝗦Z; x; z | ⪮[z / 𝗦y]
@@ -1766,8 +1766,7 @@ x_less_succ ≔ {
 
         m ≔ X ≤ Y ⇒ 𝗦X ≤ 𝗦Y
         b ≔ or_impl_distr['X ⇒ 'Y / m[X / x][Y / y]]['Z ⇒ 'W / m[X / y][Y / x]].MP.MP
-        c ≔ (∀x b) ⇆.MP
-        c; c↘[a] | deduce
+        (∀x b) ⇆.MP; ↶↘[a] | deduce
         ⊦ goal
         goal
     }
@@ -1825,8 +1824,7 @@ x_less_succ ≔ {
 
 {
     goal ≔ x < y ⇒ x ≤ y
-    a ≔ y ≤ x ∨ x ≤ y
-    a; ('X ⇒ ¬¬'X)['X / a↙↓↓] | prededuce
+    y ≤ x ∨ x ≤ y; ('X ⇒ ¬¬'X)['X / ↶↙↓↓] | prededuce
     ⊦ goal
 }
 ⊦ X < Y ⇒ X ≤ Y
@@ -2197,8 +2195,9 @@ distr['B / 'A]['C / 'B].commute_ante.MP
             peano2[X / w][Y / x + t] | deduce; Z; ↘↘↘ | ✂.conditional_exists_by_example;
             u; ↙↘↘ | ✂; z | replace_cut; z = 𝗦t ⇒ 𝗦t = z | prededuce[t / y]; y | exists_ante
         }
-        a ≔ z0; zS; or_impl_distr | apply2.MP.MP.MP; conditional_or' | apply.MP
-        a; (a↘; or_comm | apply) | deduce
+        z0; zS; or_impl_distr | apply2.MP.MP.MP;
+        conditional_or' | apply.MP;
+        (↶↘; or_comm | apply) | deduce
         ⊦ goal
         goal
     }[z / Z]; Z | exists_ante
@@ -2410,9 +2409,11 @@ divisor_not_greater ≔ {
     (𝗦u ≠ d * y; u; v | ⪮[v = u / n = d * x];
         n = d * x ⇒ d * x = n | prededuce.commute_ante) | deduce.&[y / M]
 
-    c ≔ (∀M b) ⇆.MP
-    d ≔ c↙↘.∀M; c | deduce
-    d; ('X ⇒ ¬¬'X)['X / d↘] | deduce.&'.commute_ante[x / M]; M | exists_ante.commute_ante
+    (∀M b) ⇆.MP; ↶↙↘.∀M | prededuce;
+    ('X ⇒ ¬¬'X)['X / ↶↘] | deduce.&'.commute_ante[x / M];
+    M | exists_ante.commute_ante
+
+    ⊦ goal
 }
 
 is_prime ≔ λ{
