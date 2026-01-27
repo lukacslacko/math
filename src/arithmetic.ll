@@ -622,6 +622,30 @@ iff_forall ≔ λ{
 }
 ⊦ ¬¬'X ⇔ 'X
 
+impl_as_or ≔ {
+    goal ≔ ('x ⇒ 'y) ⇔ ¬'x ∨ 'y
+    ¬¬'x ⇔ 'x; 'y | iff_ante.MP; iff_then_xy | apply.MP
+    ('x ⇒ 'y) ⇒ ¬'x ∨ 'y;
+    (¬'x ∨ 'y) ⇒ 'x ⇒ 'y; iff | apply2.MP.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⊦ ('X ⇒ 'Y) ⇔ ¬'X ∨ 'Y
+⊦ ('X ⇒ 'Y) ⇒ ¬'X ∨ 'Y
+⊦ (¬'X ∨ 'Y) ⇒ 'X ⇒ 'Y
+
+neg_impl_as_and ≔ {
+    goal ≔ ¬('x ⇒ 'y) ⇔ 'x ∧¬'y
+    'y ⇔ ¬¬'y; 'x | iff_conseq.MP.iff_neg.MP; iff_then_xy | apply.MP
+    goal; iff_then_xy | apply.MP
+    goal; iff_then_yx | apply.MP
+    ⊦ goal
+    goal['x / 'X]['y / 'Y]
+}
+⊦ ¬('X ⇒ 'Y) ⇔ 'X ∧¬'Y
+⊦ ¬('X ⇒ 'Y) ⇒ 'X ∧¬'Y
+⊦ ('X ∧¬'Y) ⇒ ¬('X ⇒ 'Y)
+
 demorgan_or' ≔ {
     goal ≔ ¬(¬'x ∧¬'y) ⇒ 'x ∨ 'y
     (¬¬'y ⇔ 'y); ¬'x | iff_conseq.MP; iff_then_xy | apply.MP
@@ -1099,6 +1123,17 @@ mul_XY_ZW_eq_XZ_YW ≔ {
 }
 ⤶ mul_XY_ZW_eq_XZ_YW
 ⊦ (X * Y) * (Z * W) = (X * Z) * (Y * W)
+
+exists_by_negation ≔ λ{
+    /*
+    Argument:∀var P
+    Returns:¬(∀var P) ⇒ ∃var¬P
+     */
+    var ≔ ●↙
+    P ≔ ●↘
+    ↵ (∀var(¬¬'X ⇒ 'X)['X / P]) ⇆.MP.recontra.MP
+}
+⤶ exists_by_negation
 
 exists_by_example ≔ λ{
     /*
@@ -1894,6 +1929,11 @@ mul_div ≔ {
     goal[x / X]
 }
 ⊦ 1 ∣ X
+
+{
+    X = X * M; 1; M | exists_by_example
+}
+⊦ X ∣ X
 
 {
     goal ≔ x ∣ y ⇒ x ∣ a * y
