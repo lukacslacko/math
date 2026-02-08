@@ -509,16 +509,26 @@ impl PhraseData {
         }
     }
 
+    fn substitute_all(
+        self: &Phrase,
+        substitutions: &Vec<Substitution>,
+    ) -> Result {
+        let mut new_phrase = self.clone();
+        for substitution in substitutions {
+            new_phrase = new_phrase.substitute(
+                substitution.variable.clone(),
+                substitution.term.clone(),
+            )?;
+        }
+        Ok(new_phrase)
+    }
+
     /// Try to substitute `self` to get `other`.
     ///
     /// Returns the substituted phrase if successful.
     pub fn parallel(self: &Phrase, other: &Phrase) -> Result {
         let substitutions = self.find_parallel_substitutions(other)?;
-        let mut new_phrase = self.clone();
-        for substitution in substitutions {
-            new_phrase = new_phrase
-                .substitute(substitution.variable, substitution.term)?;
-        }
+        let new_phrase = self.clone().substitute_all(&substitutions)?;
         if new_phrase == *other {
             Ok(new_phrase)
         } else {
@@ -531,15 +541,40 @@ impl PhraseData {
     }
 
     pub fn try_prove(self: Phrase) -> Result {
+        self.try_prove_by_steps(1)
+    }
+
+    fn try_prove_by_steps(self: Phrase, steps: usize) -> Result {
         if self.get_is_proven() {
             return Ok(self);
         }
         let known_true_phrases = KNOWN_TRUTHS.with_borrow(|known_truths| {
             known_truths.keys().cloned().collect::<Vec<Phrase>>()
         });
-        for known_true in known_true_phrases {
+        for known_true in &known_true_phrases {
             if let Ok(matched_phrase) = known_true.parallel(&self) {
                 return Ok(matched_phrase);
+            }
+        }
+        // Try A=>B with self matching B.
+        if steps > 0 {
+            for known_true in &known_true_phrases {
+                if known_true.kind != Imply {
+                    continue;
+                }
+                let (antecedent, consequent) = known_true.children.unwrap_two();
+                if let Ok(substitutions) =
+                    consequent.find_parallel_substitutions(&self)
+                {
+                    if let Ok(_) = antecedent
+                        .substitute_all(&substitutions)?
+                        .try_prove_by_steps(steps - 1)
+                    {
+                        known_true
+                            .substitute_all(&substitutions)?
+                            .modus_ponens()?;
+                    }
+                }
             }
         }
         Err(format!("Cannot prove phrase: {self}"))?
